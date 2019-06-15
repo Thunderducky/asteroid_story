@@ -2,3 +2,6 @@ html {
     background: #333333;
     color:#DDDDDD;
 }
+canvas {
+    border:1px solid; #CCCCCD;
+}
