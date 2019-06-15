@@ -30,7 +30,7 @@ const ZCode =       code('Z')
 
 
 const ctrhHelper = (code, x, y) => {
-    CODE_TO_RECT_HASH[code] = makeRect(x,y, TILE_WIDTH, TILE_HEIGHT);
+    CODE_TO_RECT_HASH[code] = makeRect(x,y, TILE_WIDTH, TILE_HEIGHT)
 }
 
 // We will fill in the other characters as necessary
