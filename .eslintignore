@@ -1,2 +1,4 @@
 node_modules/
 client/public/dist/
+jest.config.js
+jestload.js

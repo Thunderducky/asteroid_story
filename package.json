@@ -10,9 +10,10 @@
     "express": "^4.17.1"
   },
   "scripts": {
+    "test": "node ./jestload.js",
     "build": "webpack",
     "watch": "webpack --watch",
-    "lint": "eslint client"
+    "lint": "eslint client/"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
