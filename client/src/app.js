@@ -22,6 +22,20 @@ function loadImage(url){
         img.src = url
     })
 }
+
+function drawSection(tilesheet, srcRect, destRect, foreColor, backColor){
+    ctx.clearRect(destRect.x, destRect.y, destRect.width, destRect.height)
+    ctx.drawImage(tilesheet, srcRect.x, srcRect.y, srcRect.width, srcRect.height, destRect.x, destRect.y, destRect.width, destRect.height)
+    ctx.globalCompositeOperation = 'xor'
+    ctx.fillStyle=foreColor
+    ctx.fillRect(destRect.x,destRect.y, destRect.width, destRect.height)
+
+    ctx.globalCompositeOperation = 'destination-over'
+    ctx.fillStyle=backColor
+    ctx.fillRect(destRect.x,destRect.y, destRect.width, destRect.height)
+    ctx.globalCompositeOperation = 'source-over'
+}
+
 // sizing
 const TILE_WIDTH = 10
 const TILE_HEIGHT = 10
@@ -58,7 +72,8 @@ loadImage('assets/out.png').then(image => {
         if(km.getKeyState('ArrowDown').isDown && (km.getKeyState('ArrowDown').halfSteps > 0 || km.getKeyState('z').isDown)){
             player.y += 10
         }
-        for(var i = 0; i < myText.length; i++){
+        
+        for(let i = 0; i < myText.length; i++){
             const src = CODE_TO_RECT_HASH[myText.charCodeAt(i)]
             const dest = makeRect(20 + i * 10, 20, TILE_WIDTH, TILE_HEIGHT)
             drawSection(image, src, dest, blueIsh, blackIsh)
@@ -72,20 +87,3 @@ loadImage('assets/out.png').then(image => {
 
 
 }).catch(err => console.log(err)) //eslint-disable-line no-console
-
-// This would be good for a console renderer type thing in the platform later, especially with all the modifications that would happen eventually
-function drawSection(tilesheet, srcRect, destRect, foreColor, backColor){
-    ctx.clearRect(destRect.x, destRect.y, destRect.width, destRect.height)
-    ctx.drawImage(tilesheet, srcRect.x, srcRect.y, srcRect.width, srcRect.height, destRect.x, destRect.y, destRect.width, destRect.height)
-    ctx.globalCompositeOperation = 'xor'
-    ctx.fillStyle=foreColor
-    ctx.fillRect(destRect.x,destRect.y, destRect.width, destRect.height)
-
-    ctx.globalCompositeOperation = 'destination-over'
-    ctx.fillStyle=backColor
-    ctx.fillRect(destRect.x,destRect.y, destRect.width, destRect.height)
-    ctx.globalCompositeOperation = 'source-over'
-}
-// what keys has the player pressed since last time
-
-// What Mouse Presses have happened since last time
