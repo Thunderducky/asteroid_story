@@ -96,7 +96,11 @@
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _renderHelpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./renderHelpers */ "./client/src/renderHelpers.js");
+/* harmony import */ var _keyboardMonitor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./keyboardMonitor */ "./client/src/keyboardMonitor.js");
 
+
+
+const km = new _keyboardMonitor__WEBPACK_IMPORTED_MODULE_1__["KeyboardMonitor"]().attach(document)
 
 // We'll definitely be reusing this one
 const makeRect = (x,y,width,height) => {
@@ -124,22 +128,47 @@ const TILE_HEIGHT = 10
 // colors
 const blueIsh = '#6688CC'
 const blackIsh = '#222222'
-const code = char => char.charCodeAt(0)
+
+const player = {
+    x:30,
+    y:40
+}
 
 loadImage('assets/out.png').then(image => {
-    ctx.drawImage(image, 0, 500)
-    drawSection(image, makeRect(0, 10, TILE_WIDTH, TILE_HEIGHT), makeRect(20, 20, TILE_WIDTH, TILE_HEIGHT), '#6688CC', '#222222')
-    const myText = 'Something wicked this way comes  @   maybe it is me'
-    
-    drawSection(image, _renderHelpers__WEBPACK_IMPORTED_MODULE_0__["CODE_TO_RECT_HASH"][code(_renderHelpers__WEBPACK_IMPORTED_MODULE_0__["CHARACTER_HELPER"].VERTICAL_LINE)], makeRect(30, 40, TILE_WIDTH*2, TILE_HEIGHT*2), blackIsh, blueIsh)
+    const loop = () => {
+        ctx.clearRect(0,0, canvas.width, canvas.height)
+        ctx.fillStyle = blackIsh
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        // Process and render
+        drawSection(image, makeRect(0, 10, TILE_WIDTH, TILE_HEIGHT), makeRect(20, 20, TILE_WIDTH, TILE_HEIGHT), '#6688CC', '#222222')
+        const myText = 'Something wicked this way comes  @   maybe it is me'
+        
+        drawSection(image, _renderHelpers__WEBPACK_IMPORTED_MODULE_0__["CODE_TO_RECT_HASH"][Object(_renderHelpers__WEBPACK_IMPORTED_MODULE_0__["code"])('@')], makeRect(player.x, player.y, TILE_WIDTH, TILE_HEIGHT), blackIsh, blueIsh)
 
-    ctx.fillStyle = blackIsh
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    for(var i = 0; i < myText.length; i++){
-        const src = _renderHelpers__WEBPACK_IMPORTED_MODULE_0__["CODE_TO_RECT_HASH"][myText.charCodeAt(i)]
-        const dest = makeRect(20 + i * 10, 20, TILE_WIDTH, TILE_HEIGHT)
-        drawSection(image, src, dest, blueIsh, blackIsh)
+        if(km.getKeyState('ArrowLeft').isDown && (km.getKeyState('ArrowLeft').halfSteps > 0 || km.getKeyState('z').isDown)){
+            player.x -= 10
+        }
+        if(km.getKeyState('ArrowRight').isDown && (km.getKeyState('ArrowRight').halfSteps > 0 || km.getKeyState('z').isDown)){
+            player.x += 10
+        }
+        if(km.getKeyState('ArrowUp').isDown && (km.getKeyState('ArrowUp').halfSteps > 0 || km.getKeyState('z').isDown)){
+            player.y -= 10
+        }
+        if(km.getKeyState('ArrowDown').isDown && (km.getKeyState('ArrowDown').halfSteps > 0 || km.getKeyState('z').isDown)){
+            player.y += 10
+        }
+        for(var i = 0; i < myText.length; i++){
+            const src = _renderHelpers__WEBPACK_IMPORTED_MODULE_0__["CODE_TO_RECT_HASH"][myText.charCodeAt(i)]
+            const dest = makeRect(20 + i * 10, 20, TILE_WIDTH, TILE_HEIGHT)
+            drawSection(image, src, dest, blueIsh, blackIsh)
+        }
+        ctx.drawImage(image, 0, 500)
+        km.resetSteps()
+        window.requestAnimationFrame(loop)
     }
+    window.requestAnimationFrame(loop)
+
+
 
 }).catch(err => console.log(err)) //eslint-disable-line no-console
 
@@ -154,7 +183,90 @@ function drawSection(tilesheet, srcRect, destRect, foreColor, backColor){
     ctx.globalCompositeOperation = 'destination-over'
     ctx.fillStyle=backColor
     ctx.fillRect(destRect.x,destRect.y, destRect.width, destRect.height)
+    ctx.globalCompositeOperation = 'source-over'
 }
+// what keys has the player pressed since last time
+
+// What Mouse Presses have happened since last time
+
+/***/ }),
+
+/***/ "./client/src/keyboardMonitor.js":
+/*!***************************************!*\
+  !*** ./client/src/keyboardMonitor.js ***!
+  \***************************************/
+/*! exports provided: KeyboardMonitor */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "KeyboardMonitor", function() { return KeyboardMonitor; });
+const makeKeyState = (key, isDown = false, halfSteps = 0) => {
+    return {
+        key,
+        isDown,
+        halfSteps
+    }
+}
+
+class KeyboardMonitor {
+    constructor(){
+        this.keyHash = {}
+    }
+    attach(element){
+        // lets add event listeners
+        element.addEventListener('keydown', event => {
+            const {key} = event
+            if(!this.keyHash[key]){
+                this.keyHash[key] = makeKeyState(key, true)
+            }
+            const keyState = this.keyHash[key]
+            if(!keyState.isDown){
+                keyState.halfSteps++
+            }
+            keyState.isDown = true
+        })
+        element.addEventListener('keyup', event => {
+            const {key} = event
+            if(!this.keyHash[key]){
+                this.keyHash[key] = makeKeyState(key)
+            }
+            const keyState = this.keyHash[key]
+            if(keyState.isDown){
+                keyState.halfSteps++
+            }
+            keyState.isDown = false
+        })
+        return this
+    }
+    getKeyState(key){
+        if(!this.keyHash[key]){
+            this.keyHash[key] = makeKeyState(key)
+        }
+        return this.keyHash[key]
+    }
+    resetSteps(){
+        const keys = Object.keys(this.keyHash)
+        for(var i = 0; i < keys.length; i++){
+            this.keyHash[keys[i]].halfSteps = 0
+        }
+    }
+}
+
+// test case
+// eslint-disable-next-line no-unused-vars
+// const km = new KeyboardMonitor().attach(document)
+// setInterval(() => {
+//     const {key, halfSteps, isDown } = km.getKeyState('q')
+//     // eslint-disable-next-line no-console
+//     console.log(`You have half-pressed '${key}' ${halfSteps} times, '${key}' is currently ${isDown ? 'pressed' : 'released'} `)
+
+//     km.resetSteps()
+// },1000)
+
+
+
+
 
 /***/ }),
 
@@ -162,19 +274,20 @@ function drawSection(tilesheet, srcRect, destRect, foreColor, backColor){
 /*!*************************************!*\
   !*** ./client/src/renderHelpers.js ***!
   \*************************************/
-/*! exports provided: CODE_TO_RECT_HASH, CHARACTER_HELPER */
+/*! exports provided: CODE_TO_RECT_HASH, CHARACTER_HELPER, code */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CODE_TO_RECT_HASH", function() { return CODE_TO_RECT_HASH; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CHARACTER_HELPER", function() { return CHARACTER_HELPER; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "code", function() { return code; });
 const makeRect = (x,y,width,height) => {
     return {
         x,y,width,height
     }
 }
-
+const code = char => char.charCodeAt(0)
 const CHARACTER_HELPER = {
     VERTICAL_LINE: '│',
     HORIZONTAL_LINE: '─',
@@ -188,7 +301,7 @@ const CHARACTER_HELPER = {
     BOTTOL_LEFT: '┐',
     TOP_LEFT: '┘'
 }
-const code = char => char.charCodeAt(0)
+
 const TILE_WIDTH = 10, TILE_HEIGHT = 10
 
 const CODE_TO_RECT_HASH = {}

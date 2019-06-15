@@ -3,7 +3,7 @@ const makeRect = (x,y,width,height) => {
         x,y,width,height
     }
 }
-
+const code = char => char.charCodeAt(0)
 const CHARACTER_HELPER = {
     VERTICAL_LINE: '│',
     HORIZONTAL_LINE: '─',
@@ -17,7 +17,7 @@ const CHARACTER_HELPER = {
     BOTTOL_LEFT: '┐',
     TOP_LEFT: '┘'
 }
-const code = char => char.charCodeAt(0)
+
 const TILE_WIDTH = 10, TILE_HEIGHT = 10
 
 const CODE_TO_RECT_HASH = {}
@@ -59,4 +59,4 @@ ctrhHelper(code(CH.TOP_LEFT), 240,10)
 
 
 
-export  { CODE_TO_RECT_HASH, CHARACTER_HELPER }
+export  { CODE_TO_RECT_HASH, CHARACTER_HELPER, code }
