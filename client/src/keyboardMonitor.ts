@@ -1,4 +1,14 @@
-const makeKeyState = (key, isDown = false, halfSteps = 0) => {
+interface KeyState {
+    key: string;
+    isDown: boolean;
+    halfSteps: number;
+}
+
+interface Hash<T> {
+    [key: string]: T;
+}
+
+const makeKeyState = (key: string, isDown: boolean = false, halfSteps: number = 0): KeyState => {
     return {
         key,
         isDown,
@@ -7,12 +17,13 @@ const makeKeyState = (key, isDown = false, halfSteps = 0) => {
 }
 
 class KeyboardMonitor {
+    keyHash: Hash<KeyState>;
     constructor(){
         this.keyHash = {}
     }
-    attach(element){
-        // lets add event listeners
-        element.addEventListener('keydown', event => {
+    // Attach to the DOM, usually the document as a whole, but you can make it more specific if you want
+    attach(element: any): KeyboardMonitor {
+        element.addEventListener('keydown', (event: any): void => {
             const {key} = event
             if(!this.keyHash[key]){
                 this.keyHash[key] = makeKeyState(key, true)
@@ -23,7 +34,7 @@ class KeyboardMonitor {
             }
             keyState.isDown = true
         })
-        element.addEventListener('keyup', event => {
+        element.addEventListener('keyup', (event: any): void => {
             const {key} = event
             if(!this.keyHash[key]){
                 this.keyHash[key] = makeKeyState(key)
@@ -36,31 +47,19 @@ class KeyboardMonitor {
         })
         return this
     }
-    getKeyState(key){
+    getKeyState(key: string): KeyState{
         if(!this.keyHash[key]){
             this.keyHash[key] = makeKeyState(key)
         }
         return this.keyHash[key]
     }
-    resetSteps(){
+    resetSteps(): void {
         const keys = Object.keys(this.keyHash)
-        for(var i = 0; i < keys.length; i++){
+        for(let i = 0; i < keys.length; i++){
             this.keyHash[keys[i]].halfSteps = 0
         }
     }
 }
-
-// test case
-// eslint-disable-next-line no-unused-vars
-// const km = new KeyboardMonitor().attach(document)
-// setInterval(() => {
-//     const {key, halfSteps, isDown } = km.getKeyState('q')
-//     // eslint-disable-next-line no-console
-//     console.log(`You have half-pressed '${key}' ${halfSteps} times, '${key}' is currently ${isDown ? 'pressed' : 'released'} `)
-
-//     km.resetSteps()
-// },1000)
-
 
 
 export { KeyboardMonitor }

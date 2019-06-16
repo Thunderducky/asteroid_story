@@ -3,7 +3,7 @@ const path = require('path')
 module.exports = {
     mode: "development",
     entry: './client/src/app.js',
-    devtool: "inline-srouce-map",
+    devtool: "inline-source-map",
     devServer: {
         contentBase: './dist/public'
     },
@@ -11,11 +11,14 @@ module.exports = {
         filename: 'app.js',
         path: path.resolve(__dirname, 'client/public/dist')
     },
+    resolve: {
+        extensions: ['.ts', '.js']
+    },
     module: {
         rules: [{
-            test: /\.js$/,
+            test: /\.ts$/,
             exclude: /node_modules/,
-            loader: "eslint-loader",
+            loader: 'ts-loader',
             options: {}
         }]
     }
