@@ -13,10 +13,10 @@ interface ForEachFn {
 /**
  * Grid to represent 2d collections, please don't resize it after creating it
  */
-class Grid {
+class Grid<T> {
     height: number;
     width: number;
-    cells: any[];
+    cells: T[];
     constructor(width: number, height: number){
         this.width = width
         this.height = height
@@ -28,13 +28,14 @@ class Grid {
      * Primarily used for initialization of the grid, overwrites previous entries based on the current entry, don't use this unless entries are independent from each other
      * @param fn this function takes the cell itself as the first property and 
      */
-    setEach(fn: SetEachFn): any{
+    setEach(fn: SetEachFn): Grid<T>{
         let x = 0, y = 0
         for(let i = 0; i < this.cells.length; i++){
             x = i % this.width
             y = (i - x)/this.width
             this.cells[i] = fn(this.cells[i], i, x , y)
         }
+        return this
     }
 
     // TODO: structure this
@@ -56,7 +57,7 @@ class Grid {
      * @param x x coordinate of the grid
      * @param y 
      */
-    getXY(x: number, y: number): any {
+    getXY(x: number, y: number): T | undefined {
         if(x < 0 || x >= this.width || y < 0 || y >= this.height){
             return undefined
         }
@@ -66,7 +67,7 @@ class Grid {
      * Convenience method for getXY. The grid starts at the top left, x increase to the right and y increases down, silently fails if out of bounds and just returns undefined
      * @param point contains the x and y coordinates of the cell you want to get
      */
-    getP(point: IPoint): any {
+    getP(point: IPoint): T | undefined {
         return this.getXY(point.x, point.y)
     }
 }
