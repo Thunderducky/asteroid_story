@@ -21,9 +21,9 @@ class KeyboardMonitor {
     constructor(){
         this.keyHash = {}
     }
-    attach(element: any): any {
-        // lets add event listeners
-        element.addEventListener('keydown', (event: any): any => {
+    // Attach to the DOM, usually the document as a whole, but you can make it more specific if you want
+    attach(element: any): KeyboardMonitor {
+        element.addEventListener('keydown', (event: any): void => {
             const {key} = event
             if(!this.keyHash[key]){
                 this.keyHash[key] = makeKeyState(key, true)
@@ -34,7 +34,7 @@ class KeyboardMonitor {
             }
             keyState.isDown = true
         })
-        element.addEventListener('keyup', (event: any): any => {
+        element.addEventListener('keyup', (event: any): void => {
             const {key} = event
             if(!this.keyHash[key]){
                 this.keyHash[key] = makeKeyState(key)

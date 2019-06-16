@@ -1,0 +1,3 @@
+class MouseMonitor {}
+
+export { MouseMonitor }
