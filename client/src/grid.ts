@@ -1,8 +1,14 @@
 import { IPoint } from './shapes/point'
 
 interface SetEachFn {
-    (cell?: any, index?: number): any;
+    (cell?: any, index?: number, x?: number, y?: number): any;
 }
+
+interface ForEachFn {
+    (cell?: any, index?: number, x?: number, y?: number): void;
+}
+
+// TODO: FIGURE OUT HOW TO CREATE A GENERIC TYPE FOR THIS, CAUSE TYPES WOULD PROBABLY BE GOOD FOR THIS
 
 /**
  * Grid to represent 2d collections, please don't resize it after creating it
@@ -23,8 +29,25 @@ class Grid {
      * @param fn this function takes the cell itself as the first property and 
      */
     setEach(fn: SetEachFn): any{
+        let x = 0, y = 0
         for(let i = 0; i < this.cells.length; i++){
-            this.cells[i] = fn(this.cells[i], i)
+            x = i % this.width
+            y = (i - x)/this.width
+            this.cells[i] = fn(this.cells[i], i, x , y)
+        }
+    }
+
+    // TODO: structure this
+    /**
+     * Do something for each member of a cell, going row by row from left to right
+     * @param fn Get passed the cell, index, x and y
+     */
+    forEach(fn: ForEachFn): void{
+        let x = 0, y = 0
+        for(let i = 0; i < this.cells.length; i++){
+            x = i % this.width
+            y = (i - x)/this.width
+            fn(this.cells[i], i, x , y)
         }
     }
 
