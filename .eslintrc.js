@@ -17,6 +17,8 @@ module.exports = {
     'rules': {
         '@typescript-eslint/explicit-member-accessibility': 0,
         '@typescript-eslint/no-explicit-any': 0,
+        '@typescript-eslint/interface-name-prefix':0,
+        'no-console':1,
         'no-var': 2,
         'indent': [
             'error',

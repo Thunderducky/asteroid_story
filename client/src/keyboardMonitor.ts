@@ -1,4 +1,4 @@
-interface KeyState {
+interface KeyState { 
     key: string;
     isDown: boolean;
     halfSteps: number;
