@@ -1,0 +1,4 @@
+# Beginning of my yaml file!
+language: node_js
+node_js:
+  - "node"
