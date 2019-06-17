@@ -136,6 +136,6 @@ loadImage('assets/out.png').then((image: any): void => {
     }
     window.requestAnimationFrame(loop)
 
-
+    console.log("this is just here to fail the linter");
 
 }).catch((err: any): void => console.log(err)) //eslint-disable-line no-console
