@@ -1,12 +1,11 @@
-import { CODE_TO_RECT_HASH, code, drawSection } from './renderHelpers'
 import { KeyboardMonitor } from './keyboardMonitor'
 import { MouseMonitor } from './mouseMonitor'
 import { Grid } from './grid'
 import { IRenderCell, RenderCell } from './renderCell'
 import { Tile } from './tile'
 import { Entity } from './entity'
-import { Rect } from './shapes/rect'
 import { loadImage } from './assetHelper'
+import { CanvasRenderer } from './canvasRenderer'
 
 // sizing
 const TILE_WIDTH = 10
@@ -33,18 +32,19 @@ const entities: Entity[] = [player,npc]
 const canvas = document.querySelector('canvas') as HTMLCanvasElement
 canvas.width = SCREEN_WIDTH * TILE_WIDTH
 canvas.height = SCREEN_HEIGHT * TILE_HEIGHT
-const ctx: CanvasRenderingContext2D = canvas.getContext('2d') as CanvasRenderingContext2D
 
 const km = new KeyboardMonitor().attach(document)
 const mm = new MouseMonitor().attach(canvas)
 
-const renderGrid = new Grid<IRenderCell>(SCREEN_WIDTH, SCREEN_HEIGHT)
+const renderer = new CanvasRenderer
+
+const renderGrid = new Grid<IRenderCell>(MAP_WIDTH, MAP_HEIGHT)
 renderGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell => {
     return RenderCell.make(x,y,' ',COLORS.black,COLORS.dark_ground)
 })
 
 const tileGrid: Grid<Tile> = new Grid<Tile>(MAP_WIDTH, MAP_HEIGHT)
-tileGrid.setEach((cell: IRenderCell, index: number, x: number, y: number): Tile => {
+tileGrid.setEach((cell: Tile, index: number, x: number, y: number): Tile => {
     return new Tile(x,y, false)
 })
 
@@ -68,6 +68,9 @@ const renderToGrid = (tileGrid: Grid<Tile>, entities: Entity[], renderGrid: Grid
         
     })
     entities.forEach((entity: Entity): void => {
+        if(!renderGrid.inBoundsXY(entity.x, entity.y)){
+            return
+        }
         const rCell: IRenderCell = renderGrid.getXY(entity.x, entity.y)
         rCell.foreColor = entity.color
         rCell.character = entity.character
@@ -75,9 +78,10 @@ const renderToGrid = (tileGrid: Grid<Tile>, entities: Entity[], renderGrid: Grid
 }
 
 loadImage('assets/out.png').then((image: any): void => {
+    renderer.init(canvas, image)
     // Loop
     const loop = (): void => {
-        ctx.clearRect(0,0, canvas.width, canvas.height)
+        renderer.clear()
 
         // Look at player input
         // Z lets us be in ZOOM MODE!!!!
@@ -99,13 +103,7 @@ loadImage('assets/out.png').then((image: any): void => {
 
         // we might move all of this into some offscreen 
         renderToGrid(tileGrid, entities, renderGrid)
-
-        // DRAW THE RENDER GRID
-        renderGrid.forEach((cell: IRenderCell, index: number, x: number, y: number): void => {
-            const { character, foreColor, backColor} = cell
-            // TODO: WE WILL BE THRASHING THE GARBAGE COLLECTOR IF WE ARE CONSTANTLY MAKING RECTS LIKE THIS, FIX THAT
-            drawSection(ctx, image, CODE_TO_RECT_HASH[code(character)], Rect.make(x * TILE_WIDTH,y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT), foreColor, backColor)
-        })
+        renderer.render(renderGrid)
 
         // ctx.drawImage(image, 0, 500)
         km.resetSteps()
