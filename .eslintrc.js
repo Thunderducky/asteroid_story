@@ -15,10 +15,10 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     plugins: ['@typescript-eslint'],
     'rules': {
-        '@typescript-eslint/explicit-member-accessibility': 0,
-        '@typescript-eslint/no-explicit-any': 0,
-        '@typescript-eslint/interface-name-prefix':0,
-        '@typescript-eslint/no-non-null-assertion':0,
+        '@typescript-eslint/explicit-member-accessibility': 0,  // I actually LIKE things being public, I'll turn this on when it becomes a problem
+        '@typescript-eslint/no-explicit-any': 0,                // sometimes we just don't know
+        '@typescript-eslint/interface-name-prefix':0,           // Let me name my interfaces what I want please, thank you
+        '@typescript-eslint/no-non-null-assertion':0,           // We allow null in this here town
         'no-console':1,
         'no-var': 2,
         'indent': [

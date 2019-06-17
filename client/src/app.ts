@@ -6,6 +6,8 @@ import { Tile } from './tile'
 import { Entity } from './entity'
 import { loadImage } from './assetHelper'
 import { CanvasRenderer } from './canvasRenderer'
+import { Point } from './shapes/point'
+import { PUBSUB } from './pubSub/pubSub'
 
 // sizing
 const TILE_WIDTH = 10
@@ -77,6 +79,17 @@ const renderToGrid = (tileGrid: Grid<Tile>, entities: Entity[], renderGrid: Grid
     })
 }
 
+// clean this up
+const moves: any[] = []
+const MoveProcessor = {
+    // currently just tied to the player
+    moves
+}
+
+PUBSUB.subscribe('move', (delta): void =>{
+    MoveProcessor.moves.push(delta)
+}) 
+
 loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)
     // Loop
@@ -89,17 +102,28 @@ loadImage('assets/out.png').then((image: any): void => {
         // we'll just do the move section
 
         if(km.getKeyState('ArrowLeft').isDown && (km.getKeyState('ArrowLeft').halfSteps > 0 || km.getKeyState('z').isDown)){
-            player.x -= 1
+            PUBSUB.publish('move', Point.make(-1, 0))
         }
         if(km.getKeyState('ArrowRight').isDown && (km.getKeyState('ArrowRight').halfSteps > 0 || km.getKeyState('z').isDown)){
-            player.x += 1
+            PUBSUB.publish('move', Point.make(1, 0))
         }
         if(km.getKeyState('ArrowUp').isDown && (km.getKeyState('ArrowUp').halfSteps > 0 || km.getKeyState('z').isDown)){
-            player.y -= 1
+            PUBSUB.publish('move', Point.make(0, -1))
         }
         if(km.getKeyState('ArrowDown').isDown && (km.getKeyState('ArrowDown').halfSteps > 0 || km.getKeyState('z').isDown)){
-            player.y += 1
+            PUBSUB.publish('move', Point.make(0, 1))
         }
+
+        // process moves
+        MoveProcessor.moves.forEach((move: any): void => {
+            if(tileGrid.inBoundsXY(player.x + move.x, player.y + move.y)){
+                const tile = tileGrid.getXY(player.x + move.x, player.y + move.y)
+                if(!tile.blockMove){
+                    player.move(move.x, move.y)
+                }
+            }            
+        })
+        MoveProcessor.moves.length = 0
 
         // we might move all of this into some offscreen 
         renderToGrid(tileGrid, entities, renderGrid)
