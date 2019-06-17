@@ -3,3 +3,4 @@ client/public/dist/
 jest.config.js
 jestload.js
 webpack.config.js
+server.js

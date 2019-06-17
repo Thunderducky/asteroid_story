@@ -1,11 +1,11 @@
 import { IPoint } from './shapes/point'
 
-interface SetEachFn {
-    (cell: any, index: number, x: number, y: number): any;
+interface SetEachFn<T> {
+    (cell: T, index: number, x: number, y: number): any;
 }
 
-interface ForEachFn {
-    (cell: any, index: number, x: number, y: number): void;
+interface ForEachFn<T> {
+    (cell: T, index: number, x: number, y: number): void;
 }
 
 // TODO: FIGURE OUT HOW TO CREATE A GENERIC TYPE FOR THIS, CAUSE TYPES WOULD PROBABLY BE GOOD FOR THIS
@@ -28,7 +28,7 @@ class Grid<T> {
      * Primarily used for initialization of the grid, overwrites previous entries based on the current entry, don't use this unless entries are independent from each other
      * @param fn this function takes the cell itself as the first property and 
      */
-    setEach(fn: SetEachFn): Grid<T>{
+    setEach(fn: SetEachFn<T>): Grid<T>{
         let x = 0, y = 0
         for(let i = 0; i < this.cells.length; i++){
             x = i % this.width
@@ -43,7 +43,7 @@ class Grid<T> {
      * Do something for each member of a cell, going row by row from left to right
      * @param fn Get passed the cell, index, x and y
      */
-    forEach(fn: ForEachFn): void{
+    forEach(fn: ForEachFn<T>): void{
         let x = 0, y = 0
         for(let i = 0; i < this.cells.length; i++){
             x = i % this.width
@@ -57,7 +57,7 @@ class Grid<T> {
      * @param x x coordinate of the grid
      * @param y 
      */
-    getXY(x: number, y: number): T {
+    getXY(x: number, y: number): T  {
         if(!this.inBoundsXY(x,y)){
             throw new Error('boundary access issue')
         }
