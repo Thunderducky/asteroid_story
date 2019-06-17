@@ -35,5 +35,6 @@ class PubSub {
         return this.topics[topic].subscribe(fn, priority)
     }
 }
-
-export {PubSub}
+// OUR UNIVERSAL DEFAULT PUBSUB
+const PUBSUB = new PubSub()
+export {PUBSUB, PubSub}
