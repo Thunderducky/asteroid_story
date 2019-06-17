@@ -7,6 +7,8 @@ class Tile {
     /**
      * Can the player/monsters/mobile entities move through/into this tile
      */
+    x: number;
+    y: number;
     blockMove: boolean;
     /**
      * Does this tile block line of sight
@@ -18,7 +20,9 @@ class Tile {
      * @param blockMove Can the player/monsters/mobile entities move through/into this tile
      * @param blockSight optional, will default to whatever blockMove is 
      */
-    constructor(blockMove: boolean, blockSight?: boolean ){
+    constructor(x: number, y: number, blockMove: boolean, blockSight?: boolean ){
+        this.x = x
+        this.y = y
         this.blockMove = blockMove
         if(blockSight === undefined){
             this.blockSight = blockMove
