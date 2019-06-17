@@ -8,7 +8,7 @@ import { Entity } from './entity'
 import { Rect } from './shapes/rect'
 import { loadImage } from './assetHelper'
 import { Point } from './shapes/point'
-import { PUBSUB } from "./pubSub/pubSub"
+import { PUBSUB } from './pubSub/pubSub'
 
 // sizing
 const TILE_WIDTH = 10
