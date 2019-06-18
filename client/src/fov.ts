@@ -18,18 +18,18 @@ const isBetweenInclusive = (a: number,b: number,t: number): boolean => {
     }
 }
 
-const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, start: IPoint, maxDistance: number,
+const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoint: IPoint, maxDistance: number,
     horizontalNotVertical: boolean, xDirection: number, yDirection: number): void => {
     
     // Our shadows we will cast
     const shadowRanges: ShadowRange[] = []
     // our starting location is always visible
-    fovGrid.getP(start).visible = true
+    fovGrid.getP(startPoint).visible = true
     for(let row = 1; row < maxDistance; row++){
         const rowSize = row + 1
         for(let column = 0; column < rowSize; column++){
             // Depending on the octant, the traveller will move differently
-            const traveller = Point.copy(start)
+            const traveller = Point.copy(startPoint)
             traveller.x += horizontalNotVertical ? xDirection * column : xDirection * row
             traveller.y += horizontalNotVertical ? yDirection * row : xDirection * column
 
@@ -46,7 +46,7 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, start: IP
             const middle = (start + end) / 2
 
             // test for visiblity
-            let visiblity = true
+            let visibility = true
 
             // different edges are clear or not
             let startClear = true
@@ -71,12 +71,12 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, start: IP
                 shadowRanges.push({start, end})
             }
 
-            fovCell.visible = visiblity
+            fovCell.visible = visibility
         }
     }
 }
 
-const calculateFOV = (fovGrid: Grid<boolean>, tileGrid: Grid<Tile>, start: IPoint, maxDistance: number): void => {
+const calculateFOV = (fovGrid: Grid<boolean>, tileGrid: Grid<Tile>, startPoint: IPoint, maxDistance: number): void => {
     // be default we are going to shadowCast
     // by default everything is not visible
     fovGrid.setEach((): boolean => false)
