@@ -1,6 +1,6 @@
 import { Grid } from './grid'
 import { Tile } from './tile'
-import { IPoint } from './shapes/point';
+import { IPoint } from './shapes/point'
 
 const calculateOctant = (fovGrid: Grid<boolean>, tileGrid: Grid<Tile>, start: IPoint, maxDistance: number,
     horizontalNotVertical: boolean, xDirection: number, yDirection: number) => {
