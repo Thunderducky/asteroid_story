@@ -11,6 +11,13 @@ interface IRectSides {
     bottom: number;
 }
 
+interface IRectCorners {
+    tl: IPoint;
+    tr: IPoint;
+    bl: IPoint;
+    br: IPoint;
+}
+
 /**
  * Create a rectangle
  * @param x 
@@ -39,6 +46,14 @@ const sides = (rect: IRect): IRectSides => {
         bottom: rect.y + rect.height
     }
 }
+const corners = (rect: IRect): IRectCorners => {
+    return {
+        tl: Point.make(rect.x, rect.y),
+        tr: Point.make(rect.x + rect.width, rect.y),
+        bl: Point.make(rect.x, rect.y + rect.height),
+        br: Point.make(rect.x + rect.width, rect.y + rect.height),
+    }
+}
 
 /**
  * Get the center point: NOTE: This finds the INTEGER center, coordinates are truncated
@@ -64,6 +79,7 @@ const intersects = (a: IRect, b: IRect): boolean => {
 const Rect = {
     make,
     sides,
+    corners,
     center,
     intersects
 }

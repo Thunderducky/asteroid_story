@@ -1,11 +1,12 @@
 import { Grid } from './grid'
 import { Tile } from './tile'
 import { IRect, Rect } from './shapes/rect'
+import { IEllipse, Ellipse } from './shapes/ellipse'
 
 /**
  * A collection of static methods for helping to manipulate maps
  */
-class MapGenerator {
+class MapGenHelper {
     // TODO: Maybe come up with a better name
     /**
      * Place a room inside a group of tiles
@@ -47,7 +48,16 @@ class MapGenerator {
         }
     }
 
+    static carveEllipse(tileGrid: Grid<Tile>, ellipse: IEllipse): void {
+        tileGrid.forEach((tile, index, x, y): void => {
+            if(Ellipse.containsXY(ellipse, x,y)){ 
+                tile.blockMove = false
+                tile.blockSight = false
+            }
+        })
+    }
+
     
 }
 
-export { MapGenerator }
+export { MapGenHelper }

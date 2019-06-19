@@ -8,11 +8,11 @@ import { loadImage } from './assetHelper'
 import { CanvasRenderer } from './canvasRenderer'
 import { Point } from './shapes/point'
 import { PUBSUB } from './pubSub/pubSub'
-import { MapGenerator } from './mapGenerator'
 import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
+import { mapGenerator1 } from './mapGeneration'
 
 
 // sizing
@@ -26,8 +26,8 @@ const MAP_WIDTH = 80
 const MAP_HEIGHT = 45
 
 // Let's look for query params with which to seed the generator
+// INITIALIZE OUR SEED
 const urlParams = new URLSearchParams(window.location.search)
-
 const seedStr = urlParams.get('seed') 
 if(!seedStr){
     const seed = RANDOM.seed(seedStr || undefined)
@@ -42,11 +42,6 @@ if(!seedStr){
     RANDOM.seed(seedStr)
 }
 
-
-
-
-
-
 const COLORS = {
     'black': '#000000',
     'dark_wall': '#000064',
@@ -57,7 +52,6 @@ const COLORS = {
 
 const player: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', '#FFFFFF')
 const npc: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', '#BBAA00')
-
 const entities: Entity[] = [player,npc]
 
 
@@ -68,7 +62,7 @@ canvas.height = SCREEN_HEIGHT * TILE_HEIGHT
 const km = new KeyboardMonitor().attach(document)
 const mm = new MouseMonitor().attach(canvas)
 
-const renderer = new CanvasRenderer
+const renderer = new CanvasRenderer()
 
 const renderGrid = new Grid<IRenderCell>(MAP_WIDTH, MAP_HEIGHT)
 renderGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell => {
@@ -85,69 +79,23 @@ let fovRecompute = true
 const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(MAP_WIDTH, MAP_HEIGHT)
 // if we turn fov on it'll change it over to false
 fovGrid.setEach((): FOVCell => { return {
-    visible: true
+    visible: true,
+    explored: false
 }})
 
-/**
- * Return an integer between min and max inclusive
- * @param min 
- * @param max 
- */
-const randint = (min: number, max: number): number => {
-    return Math.floor(RANDOM.next() * (max - min + 1)) + min
-}
-
-
-
-const ROOM_MAX_SIZE = 10
-const ROOM_MIN_SIZE = 10
-const MAX_ROOMS = 30
-
-// GET READY FOR SOME MAP GENERATION!
+// this will also populate the rooms
 const rooms: IRect[] = []
-// MapGenerator.createRoom(tileGrid, Rect.make(1,1,20,20))
-for(let r = 0; r < MAX_ROOMS; r++){
-    
-    const w = randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-    const h = randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-    const x = randint(0, MAP_WIDTH - w - 1)
-    const y = randint(0, MAP_HEIGHT  - h - 1)
+// generate the relevant terrain
+mapGenerator1(tileGrid, rooms)
 
-    const newRoom = Rect.make(x,y,w,h)
-    let intersects = false
-    for(let i = 0; i < rooms.length; i++){
-        if(Rect.intersects(newRoom, rooms[i])){
-            intersects = true
-            break
-        }
-    }
-    if(!intersects){
-        MapGenerator.createRoom(tileGrid, newRoom)
-        const center = Rect.center(newRoom)
-        if(rooms.length === 0){
-            Point.set(player, center.x, center.y)
-        } else {
-            const lastCenter = Rect.center(rooms[rooms.length -1])
-            if(randint(0,1) === 1){
-                MapGenerator.createHTunnel(tileGrid, lastCenter.x, center.x, lastCenter.y)
-                MapGenerator.createVTunnel(tileGrid, lastCenter.y, center.y, center.x)
-            }
-            else {
-                MapGenerator.createVTunnel(tileGrid, lastCenter.y, center.y, lastCenter.x)
-                MapGenerator.createHTunnel(tileGrid, lastCenter.x, center.x, center.y)
-            }
-
-        }
-        rooms.push(newRoom)
-    }
-}
-// SET NPC LOCATION
+// SET Entity Locations
 {
-    const center = Rect.center(rooms[rooms.length - 1])
-    Point.set(npc, center.x, center.y)
+    const pcenter = Rect.center(rooms[0])
+    Point.set(player, pcenter.x, pcenter.y) 
+    const npcenter = Rect.center(rooms[rooms.length - 1])
+    Point.set(npc, npcenter.x, npcenter.y)
 }
 
-//
 const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>): void => {
     tileGrid.forEach((tile: Tile, index): void => {
         const renderCell = renderGrid.getI(index)
@@ -155,18 +103,22 @@ const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: En
 
         renderCell.foreColor = COLORS.black
         renderCell.character = ' '
-        if(!fovCell.visible){
-            if(tile.blockMove){
-                renderCell.backColor = COLORS.dark_wall
+        if(fovCell.explored){
+            if(!fovCell.visible){
+                if(tile.blockMove){
+                    renderCell.backColor = COLORS.dark_wall
+                } else {
+                    renderCell.backColor = COLORS.dark_ground
+                }
             } else {
-                renderCell.backColor = COLORS.dark_ground
+                if(tile.blockMove){
+                    renderCell.backColor = COLORS.light_wall
+                } else {
+                    renderCell.backColor = COLORS.light_ground
+                }
             }
         } else {
-            if(tile.blockMove){
-                renderCell.backColor = COLORS.light_wall
-            } else {
-                renderCell.backColor = COLORS.light_ground
-            }
+            renderCell.backColor = COLORS.black
         }
         
     })
@@ -214,6 +166,12 @@ loadImage('assets/out.png').then((image: any): void => {
         if(km.getKeyState('ArrowDown').isDown && (km.getKeyState('ArrowDown').halfSteps > 0 || km.getKeyState('z').isDown)){
             PUBSUB.publish('move', {id: player.id, delta: Point.make(0, 1)})
         }
+        // quick number generator
+        if(!km.getKeyState('n').isDown && (km.getKeyState('n').halfSteps > 0)){
+            const seed = btoa(new Date().toString())
+            const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?seed=' + seed
+            window.location.href = newurl
+        }
 
         // process moves
         // eventually we'll componentize this better
@@ -230,6 +188,7 @@ loadImage('assets/out.png').then((image: any): void => {
                     mover.move(move.x, move.y)
                     if(mover.id === player.id){
                         fovRecompute = true
+                        PUBSUB.publish('moved', msg) // only publish move if the entity actually completed the move
                     }
                 }
             }            
@@ -238,7 +197,6 @@ loadImage('assets/out.png').then((image: any): void => {
         if(fovRecompute){
             calculateFOV(fovGrid, tileGrid, player, FOV_RADIUS)
         }
-        // recompute fov here
 
         // we might move all of this into some offscreen 
         renderToGrid(tileGrid, fovGrid, entities, renderGrid)
