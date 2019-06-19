@@ -3,11 +3,13 @@
  * For that, see the Tile class
  */
 class Entity {
+    id: number;
     x: number;
     y: number;
     character: string;
     color: string;
-    constructor(x: number,y: number, character: string, color: string){
+    constructor(id: number, x: number,y: number, character: string, color: string){
+        this.id = id
         this.x = x
         this.y = y
         this.character = character
