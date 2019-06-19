@@ -4,6 +4,7 @@ import { IPoint, Point } from './shapes/point'
 
 interface FOVCell  {
     visible: boolean;
+    explored: boolean;
 }
 interface ShadowRange {
     start: number;
@@ -72,6 +73,9 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoin
             }
 
             fovCell.visible = visibility
+            if(fovCell.visible){
+                fovCell.explored = true
+            }
         }
     }
 }
@@ -79,7 +83,7 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoin
 const calculateFOV = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoint: IPoint, maxDistance: number): void => {
     // be default we are going to shadowCast
     // by default everything is not visible
-    fovGrid.setEach((): FOVCell => {return { visible: false} })
+    fovGrid.forEach((cell): void => { cell.visible = false })
     // NNW
     calculateOctant(fovGrid, tileGrid, startPoint, maxDistance, true, -1, -1)
     // WNW

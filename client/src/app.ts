@@ -13,6 +13,7 @@ import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
+import { Ellipse } from './shapes/ellipse'
 
 
 // sizing
@@ -41,10 +42,6 @@ if(!seedStr){
 } else {
     RANDOM.seed(seedStr)
 }
-
-
-
-
 
 
 const COLORS = {
@@ -85,7 +82,8 @@ let fovRecompute = true
 const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(MAP_WIDTH, MAP_HEIGHT)
 // if we turn fov on it'll change it over to false
 fovGrid.setEach((): FOVCell => { return {
-    visible: true
+    visible: true,
+    explored: false
 }})
 
 /**
@@ -98,7 +96,7 @@ const randint = (min: number, max: number): number => {
 }
 
 
-
+ 
 const ROOM_MAX_SIZE = 10
 const ROOM_MIN_SIZE = 10
 const MAX_ROOMS = 30
@@ -141,6 +139,48 @@ for(let r = 0; r < MAX_ROOMS; r++){
         rooms.push(newRoom)
     }
 }
+// let's go ahead and blow up some random parts of the map
+const MAX_ELLIPSE_RADIUS = ROOM_MAX_SIZE / 2
+const MIN_ELLIPSE_RADIUS = ROOM_MAX_SIZE / 4
+
+const carveRandomEllipse = (): void => {
+    const el = Ellipse.make(
+        randint(MAX_ELLIPSE_RADIUS, MAP_WIDTH - MAX_ELLIPSE_RADIUS),
+        randint(MAX_ELLIPSE_RADIUS, MAP_HEIGHT - MAX_ELLIPSE_RADIUS),
+        randint(MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS),
+        randint(MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS),
+        RANDOM.next() * Math.PI * 2
+    )
+
+    tileGrid.forEach((tile, index, x, y): void => {
+        if(Ellipse.containsXY(el, x,y)){ 
+            tile.blockMove = false
+            tile.blockSight = false
+        }
+    })
+
+}
+
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
+carveRandomEllipse()
 // SET NPC LOCATION
 {
     const center = Rect.center(rooms[rooms.length - 1])
@@ -155,18 +195,22 @@ const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: En
 
         renderCell.foreColor = COLORS.black
         renderCell.character = ' '
-        if(!fovCell.visible){
-            if(tile.blockMove){
-                renderCell.backColor = COLORS.dark_wall
+        if(fovCell.explored){
+            if(!fovCell.visible){
+                if(tile.blockMove){
+                    renderCell.backColor = COLORS.dark_wall
+                } else {
+                    renderCell.backColor = COLORS.dark_ground
+                }
             } else {
-                renderCell.backColor = COLORS.dark_ground
+                if(tile.blockMove){
+                    renderCell.backColor = COLORS.light_wall
+                } else {
+                    renderCell.backColor = COLORS.light_ground
+                }
             }
         } else {
-            if(tile.blockMove){
-                renderCell.backColor = COLORS.light_wall
-            } else {
-                renderCell.backColor = COLORS.light_ground
-            }
+            renderCell.backColor = COLORS.black
         }
         
     })
@@ -213,6 +257,12 @@ loadImage('assets/out.png').then((image: any): void => {
         }
         if(km.getKeyState('ArrowDown').isDown && (km.getKeyState('ArrowDown').halfSteps > 0 || km.getKeyState('z').isDown)){
             PUBSUB.publish('move', {id: player.id, delta: Point.make(0, 1)})
+        }
+        // quick number generator
+        if(!km.getKeyState('n').isDown && (km.getKeyState('n').halfSteps > 0)){
+            const seed = btoa(new Date().toString())
+            const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?seed=' + seed
+            window.location.href = newurl
         }
 
         // process moves
