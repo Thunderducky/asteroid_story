@@ -15,6 +15,7 @@ import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
 
 
+// << Exctractable
 // sizing
 const TILE_WIDTH = 10
 const TILE_HEIGHT = 10
@@ -46,7 +47,7 @@ if(!seedStr){
 
 
 
-
+// << Exctractable
 const COLORS = {
     'black': '#000000',
     'dark_wall': '#000064',
@@ -88,6 +89,7 @@ fovGrid.setEach((): FOVCell => { return {
     visible: true
 }})
 
+// << Extractable
 /**
  * Return an integer between min and max inclusive
  * @param min 
@@ -99,6 +101,7 @@ const randint = (min: number, max: number): number => {
 
 
 
+// << Extractable
 const ROOM_MAX_SIZE = 10
 const ROOM_MIN_SIZE = 10
 const MAX_ROOMS = 30
@@ -191,6 +194,14 @@ PUBSUB.subscribe('move', (msg): void =>{
     MoveProcessor.moves.push(msg)
 }) 
 
+const pastMoves: any[] = []
+let recording = true
+PUBSUB.subscribe('moved', (msg): void => {
+    if(recording){
+        pastMoves.push(msg)
+    }
+})
+
 loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)
     // Loop
@@ -204,15 +215,37 @@ loadImage('assets/out.png').then((image: any): void => {
         
         if(km.getKeyState('ArrowLeft').isDown && (km.getKeyState('ArrowLeft').halfSteps > 0 || km.getKeyState('z').isDown)){
             PUBSUB.publish('move', {id: player.id, delta: Point.make(-1, 0)})
+            recording = true
         }
         if(km.getKeyState('ArrowRight').isDown && (km.getKeyState('ArrowRight').halfSteps > 0 || km.getKeyState('z').isDown)){
             PUBSUB.publish('move', {id: player.id, delta: Point.make(1, 0)})
+            recording = true
         }
         if(km.getKeyState('ArrowUp').isDown && (km.getKeyState('ArrowUp').halfSteps > 0 || km.getKeyState('z').isDown)){
             PUBSUB.publish('move', {id: player.id, delta: Point.make(0, -1)})
+            recording = true
         }
         if(km.getKeyState('ArrowDown').isDown && (km.getKeyState('ArrowDown').halfSteps > 0 || km.getKeyState('z').isDown)){
             PUBSUB.publish('move', {id: player.id, delta: Point.make(0, 1)})
+            recording = true
+        }
+
+        //const newClick = (q: string): boolean => !km.getKeyState(q).isDown && km.getKeyState(q).halfSteps > 0
+        // This obviously doesn't work quite right
+        if(km.getKeyState('q').isDown && (km.getKeyState('q').halfSteps > 0 || km.getKeyState('z').isDown)&& pastMoves.length > 0){
+            recording = false
+            const lastMove = pastMoves.pop()
+            console.log(lastMove)
+            PUBSUB.publish('move', {id: lastMove.id, delta: Point.make(-lastMove.delta.x, -lastMove.delta.y)})
+        }
+
+        // Let's have N create a new map by reloading the page with a different seed
+        if(!km.getKeyState('n').isDown && km.getKeyState('n').halfSteps > 0){
+            if(confirm('Generate a new level?')){ // TODO: handle this better
+                const newSeed = btoa(new Date().toString())
+                const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?seed=' + newSeed
+                window.location.href = newurl
+            }
         }
 
         // process moves
@@ -230,6 +263,7 @@ loadImage('assets/out.png').then((image: any): void => {
                     mover.move(move.x, move.y)
                     if(mover.id === player.id){
                         fovRecompute = true
+                        PUBSUB.publish('moved', msg)
                     }
                 }
             }            
