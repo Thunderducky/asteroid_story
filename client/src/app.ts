@@ -8,7 +8,7 @@ import { loadImage } from './assetHelper'
 import { CanvasRenderer } from './canvasRenderer'
 import { Point } from './shapes/point'
 import { PUBSUB } from './pubSub/pubSub'
-import { MapGenerator } from './mapGenerator'
+import { MapGenHelper } from './mapGenHelper'
 import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
@@ -122,19 +122,19 @@ for(let r = 0; r < MAX_ROOMS; r++){
         }
     }
     if(!intersects){
-        MapGenerator.createRoom(tileGrid, newRoom)
+        MapGenHelper.createRoom(tileGrid, newRoom)
         const center = Rect.center(newRoom)
         if(rooms.length === 0){
             Point.set(player, center.x, center.y)
         } else {
             const lastCenter = Rect.center(rooms[rooms.length -1])
             if(randint(0,1) === 1){
-                MapGenerator.createHTunnel(tileGrid, lastCenter.x, center.x, lastCenter.y)
-                MapGenerator.createVTunnel(tileGrid, lastCenter.y, center.y, center.x)
+                MapGenHelper.createHTunnel(tileGrid, lastCenter.x, center.x, lastCenter.y)
+                MapGenHelper.createVTunnel(tileGrid, lastCenter.y, center.y, center.x)
             }
             else {
-                MapGenerator.createVTunnel(tileGrid, lastCenter.y, center.y, lastCenter.x)
-                MapGenerator.createHTunnel(tileGrid, lastCenter.x, center.x, center.y)
+                MapGenHelper.createVTunnel(tileGrid, lastCenter.y, center.y, lastCenter.x)
+                MapGenHelper.createHTunnel(tileGrid, lastCenter.x, center.x, center.y)
             }
 
         }
@@ -230,6 +230,7 @@ loadImage('assets/out.png').then((image: any): void => {
                     mover.move(move.x, move.y)
                     if(mover.id === player.id){
                         fovRecompute = true
+                        PUBSUB.publish('moved', msg) // only publish move if the entity actually completed the move
                     }
                 }
             }            

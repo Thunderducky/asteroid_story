@@ -5,7 +5,7 @@ import { IRect, Rect } from './shapes/rect'
 /**
  * A collection of static methods for helping to manipulate maps
  */
-class MapGenerator {
+class MapGenHelper {
     // TODO: Maybe come up with a better name
     /**
      * Place a room inside a group of tiles
@@ -50,4 +50,4 @@ class MapGenerator {
     
 }
 
-export { MapGenerator }
+export { MapGenHelper }
