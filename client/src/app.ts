@@ -12,6 +12,8 @@ import { MapGenerator } from './mapGenerator'
 import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
+import { RANDOM } from './rngHelper'
+
 
 // sizing
 const TILE_WIDTH = 10
@@ -22,6 +24,26 @@ const SCREEN_WIDTH = 80
 const SCREEN_HEIGHT = 50
 const MAP_WIDTH = 80
 const MAP_HEIGHT = 45
+
+// Let's look for query params with which to seed the generator
+const urlParams = new URLSearchParams(window.location.search)
+
+const seedStr = urlParams.get('seed') 
+if(!seedStr){
+    const seed = RANDOM.seed(seedStr || undefined)
+    const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?seed=' + seed
+    if (history.pushState) {
+        window.history.pushState({path:newurl},'',newurl)
+    } else {
+        window.location.href = newurl
+    }
+    
+} else {
+    RANDOM.seed(seedStr)
+}
+
+
+
 
 
 
@@ -72,8 +94,10 @@ fovGrid.setEach((): FOVCell => { return {
  * @param max 
  */
 const randint = (min: number, max: number): number => {
-    return Math.floor(Math.random() * (max - min + 1)) + min
+    return Math.floor(RANDOM.next() * (max - min + 1)) + min
 }
+
+
 
 const ROOM_MAX_SIZE = 10
 const ROOM_MIN_SIZE = 10
@@ -83,6 +107,7 @@ const MAX_ROOMS = 30
 const rooms: IRect[] = []
 // MapGenerator.createRoom(tileGrid, Rect.make(1,1,20,20))
 for(let r = 0; r < MAX_ROOMS; r++){
+    
     const w = randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
     const h = randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
     const x = randint(0, MAP_WIDTH - w - 1)
