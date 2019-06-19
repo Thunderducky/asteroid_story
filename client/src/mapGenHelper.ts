@@ -1,6 +1,7 @@
 import { Grid } from './grid'
 import { Tile } from './tile'
 import { IRect, Rect } from './shapes/rect'
+import { IEllipse, Ellipse } from './shapes/ellipse'
 
 /**
  * A collection of static methods for helping to manipulate maps
@@ -45,6 +46,15 @@ class MapGenHelper {
             tile.blockMove = false
             tile.blockSight = false
         }
+    }
+
+    static carveEllipse(tileGrid: Grid<Tile>, ellipse: IEllipse): void {
+        tileGrid.forEach((tile, index, x, y): void => {
+            if(Ellipse.containsXY(ellipse, x,y)){ 
+                tile.blockMove = false
+                tile.blockSight = false
+            }
+        })
     }
 
     
