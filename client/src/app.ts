@@ -11,6 +11,7 @@ import { PUBSUB } from './pubSub/pubSub'
 import { MapGenerator } from './mapGenerator'
 import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
+import { calculateFOV, FOVCell } from './fov'
 
 // sizing
 const TILE_WIDTH = 10
@@ -59,8 +60,11 @@ tileGrid.setEach((cell: Tile, index: number, x: number, y: number): Tile => {
 
 const FOV_RADIUS = 10
 let fovRecompute = true
-const fovGrid: Grid<boolean> = new Grid<boolean>(MAP_WIDTH, MAP_HEIGHT)
-fovGrid.setEach((): boolean => false)
+const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(MAP_WIDTH, MAP_HEIGHT)
+// if we turn fov on it'll change it over to false
+fovGrid.setEach((): FOVCell => { return {
+    visible: true
+}})
 
 /**
  * Return an integer between min and max inclusive
@@ -119,15 +123,25 @@ for(let r = 0; r < MAX_ROOMS; r++){
 }
 
 //
-const renderToGrid = (tileGrid: Grid<Tile>, entities: Entity[], renderGrid: Grid<IRenderCell>): void => {
+const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>): void => {
     tileGrid.forEach((tile: Tile, index): void => {
         const renderCell = renderGrid.getI(index)
+        const fovCell = fovGrid.getI(index)
+
         renderCell.foreColor = COLORS.black
         renderCell.character = ' '
-        if(tile.blockMove){
-            renderCell.backColor = COLORS.dark_wall
+        if(!fovCell.visible){
+            if(tile.blockMove){
+                renderCell.backColor = COLORS.dark_wall
+            } else {
+                renderCell.backColor = COLORS.dark_ground
+            }
         } else {
-            renderCell.backColor = COLORS.dark_ground
+            if(tile.blockMove){
+                renderCell.backColor = COLORS.light_wall
+            } else {
+                renderCell.backColor = COLORS.light_ground
+            }
         }
         
     })
@@ -196,11 +210,13 @@ loadImage('assets/out.png').then((image: any): void => {
             }            
         })
         MoveProcessor.moves.length = 0
-
+        if(fovRecompute){
+            calculateFOV(fovGrid, tileGrid, player, FOV_RADIUS)
+        }
         // recompute fov here
 
         // we might move all of this into some offscreen 
-        renderToGrid(tileGrid, entities, renderGrid)
+        renderToGrid(tileGrid, fovGrid, entities, renderGrid)
         renderer.render(renderGrid)
 
         // ctx.drawImage(image, 0, 500)

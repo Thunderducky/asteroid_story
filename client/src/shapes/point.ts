@@ -48,13 +48,22 @@ const set = (point: IPoint, x: number, y: number): IPoint => {
 }
 
 /**
+ * Copy a point
+ * @param point Point that will be copied
+ */
+const copy = (point: IPoint): IPoint => {
+    return make(point.x, point.y)
+}
+
+/**
  * A collection of functions meant to work with things that have the IPoint interface
  */
 const Point = {
     make,
     add,
     addTo,
-    set
+    set,
+    copy
 }
 
 export {IPoint, Point}
