@@ -84,7 +84,7 @@ const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(MAP_WIDTH, MAP_HEIGHT)
 // if we turn fov on it'll change it over to false
 fovGrid.setEach((): FOVCell => { return {
     visible: false,
-    explored: true
+    explored: false
 }})
 
 
