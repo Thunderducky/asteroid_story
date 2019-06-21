@@ -34,6 +34,14 @@ const make = (x: number, y: number, width: number, height: number): IRect => {
     }
 }
 
+const set = (r: IRect, x: number, y: number, width: number, height: number): IRect => {
+    r.x = x
+    r.y = y
+    r.width = width
+    r.height = height
+    return r
+}
+
 /**
  * Return the unit value of the sides of the rectangle, left and right return x coordinates, top and bottom include y coordinates
  * @param rect rectangle used
@@ -78,6 +86,7 @@ const intersects = (a: IRect, b: IRect): boolean => {
  */
 const Rect = {
     make,
+    set,
     sides,
     corners,
     center,
