@@ -31,12 +31,19 @@ class CanvasRenderer {
         }
         // We have checked to ensure that it has been created
         const ctx = this.ctx as CanvasRenderingContext2D
+        const destRect = Rect.make(0,0,0,0)
         renderGrid.forEach((
             cell: IRenderCell, 
             index: number, 
             x: number, y: number): void => {
             const srcRect: IRect = CODE_TO_RECT_HASH[code(cell.character)]
-            drawSection(ctx, this.spritesheet, srcRect, Rect.make(x * 10, y * 10, 10, 10), cell.foreColor, cell.backColor )
+            Rect.set(destRect, x * 10, y * 10, 10, 10)
+            if(cell.character === ' '){
+                ctx.fillStyle = cell.backColor
+                ctx.fillRect(destRect.x, destRect.y, destRect.width, destRect.height)
+            } else {
+                drawSection(ctx, this.spritesheet, srcRect, destRect, cell.foreColor, cell.backColor )
+            }
         })
     }
     clear(): void {
