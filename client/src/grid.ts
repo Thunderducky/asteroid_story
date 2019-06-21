@@ -53,12 +53,14 @@ class Grid<T> implements IRect {
      * @param fn Get passed the cell, index, x and y
      */
     forEach(fn: ForEachFn<T>): void{
-        let x = 0, y = 0
-        for(let i = 0; i < this.cells.length; i++){
-            x = i % this.width
-            y = (i - x)/this.width
-            fn(this.cells[i], i, x , y)
+        let i = 0
+        for(let y = 0; y < this.height; y++){
+            for(let x = 0; x < this.width; x++){
+                fn(this.cells[i], i, x , y)
+                i++
+            }
         }
+
     }
 
     /**
