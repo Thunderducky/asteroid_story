@@ -128,7 +128,7 @@ const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: En
             if(tileGrid.inBoundsXY(worldP.x, worldP.y)){
                 const tile = tileGrid.getP(worldP)
                 const fovCell = fovGrid.getP(worldP)
-                renderCell.character = ' '
+                renderCell.character = ''
                 if(fovCell.explored){
                     if(!fovCell.visible){
                         if(tile.blockMove){
@@ -148,7 +148,7 @@ const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: En
                 
                 }
             } else {
-                renderCell.character = ' '
+                renderCell.character = ''
                 renderCell.foreColor = COLORS.black
                 renderCell.backColor = COLORS.black
             }
