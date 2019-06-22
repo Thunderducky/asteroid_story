@@ -58,29 +58,7 @@ const mapGenerator1 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
                 const lastCenter = Rect.center(lastRoom)
                 if(randint(0,1) === 1){
                     MapGenHelper.createHTunnel(tileGrid, lastCenter.x, center.x, lastCenter.y)
-                    // place one door, at 
-                    // if that distance is far at all
-                    if(Math.abs(lastCenter.x - center.x) > 1){
-                        console.log("BUILD A DOOR");
-                        // let's build a door
-                        if(lastCenter.x > center.x){
-                            // this tunnel is moving to the right, grab the right side of the last
-                            // room and combine it with the last center y, add one to that
-                            const door = tileGrid.getXY(lastRoom.x + lastRoom.width - 1, lastCenter.y)
-                            console.log(door)
-                            door.blockSight = true
-                        } else {
-                            // this tunnel is moving to the left
-                            const door = tileGrid.getXY(lastRoom.x, lastCenter.y)
-                            door.blockSight = true
-                        }
-                    }
-
-
                     MapGenHelper.createVTunnel(tileGrid, lastCenter.y, center.y, center.x)
-                    // create the h door and the v door
-                    // let's take x put it there
-
                 }
                 else {
                     MapGenHelper.createVTunnel(tileGrid, lastCenter.y, center.y, lastCenter.x)

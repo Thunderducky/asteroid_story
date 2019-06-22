@@ -12,7 +12,7 @@ import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
-import { mapGenerator1, mapGenerator2 } from './mapGeneration'
+import { mapGenerator1 } from './mapGeneration'
 import COLORS from './colors'
 //import { MapGenHelper } from './mapGenHelper'
 
@@ -273,7 +273,5 @@ loadImage('assets/out.png').then((image: any): void => {
         window.requestAnimationFrame(loop)
     }
     window.requestAnimationFrame(loop)
-    window.tileGrid = tileGrid;
-    window.player = player;
 
 }).catch((err: any): void => console.log(err)) //eslint-disable-line no-console
