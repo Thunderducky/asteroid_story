@@ -35,6 +35,8 @@ const {
     FOV_RADIUS
 } = SETTINGS
 
+const ENABLE_FOV = false
+
 
 // Let's look for query params with which to seed the generator
 // INITIALIZE OUR SEED
@@ -74,15 +76,19 @@ renderGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell
 
 const tileGrid: Grid<Tile> = new Grid<Tile>(MAP_WIDTH, MAP_HEIGHT)
 tileGrid.setEach((cell: Tile, index: number, x: number, y: number): Tile => {
-    return new Tile(x,y, true)
+    const t = new Tile(x,y, true)
+    if(!ENABLE_FOV){
+        t.explored = true
+    }
+    return t
 })
 
-let fovRecompute = true
+let fovRecompute = ENABLE_FOV
 // TODO: Translate this from world to screen?
 const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(cameraFrame.width, cameraFrame.height)
 // if we turn fov on it'll change it over to false
 fovGrid.setEach((): FOVCell => { return {
-    visible: false
+    visible: !ENABLE_FOV
 }})
 
 
@@ -157,7 +163,7 @@ loadImage('assets/out.png').then((image: any): void => {
         fovGrid.x = cameraFrame.x
         fovGrid.y = cameraFrame.y
 
-        if(fovRecompute){
+        if(fovRecompute && ENABLE_FOV){
             calculateFOV(fovGrid, tileGrid, player, FOV_RADIUS)
         }
 
