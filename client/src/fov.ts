@@ -56,6 +56,7 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoin
             screenPoint.x -= fovGrid.x
             screenPoint.y -= fovGrid.y
             const tile = tileGrid.getP(traveller)
+            // OPTIMIZE: We are probably running to many times and could do this better
             if(!fovGrid.inBoundsXY(screenPoint.x, screenPoint.y)){
                 continue
             }
