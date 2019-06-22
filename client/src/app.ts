@@ -12,19 +12,27 @@ import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
-import { mapGenerator1 } from './mapGeneration'
+import { mapGenerator1, mapGenerator2 } from './mapGeneration'
+import COLORS from './colors'
 //import { MapGenHelper } from './mapGenHelper'
 
-
+import SETTINGS from './gameSettings'
 // sizing
-const TILE_WIDTH = 10
-const TILE_HEIGHT = 10
+
 
 // THESE ARE IN TILE SIZES
-const SCREEN_WIDTH = 80
-const SCREEN_HEIGHT = 50
-const MAP_WIDTH = 80
-const MAP_HEIGHT = 45
+const {
+    TILE_WIDTH,
+    TILE_HEIGHT,
+    SCREEN_WIDTH,
+    SCREEN_HEIGHT,
+    MAP_WIDTH,
+    MAP_HEIGHT,
+    CAMERA_WIDTH,
+    CAMERA_HEIGHT,
+    FOV_RADIUS
+} = SETTINGS
+
 
 // Let's look for query params with which to seed the generator
 // INITIALIZE OUR SEED
@@ -43,14 +51,7 @@ if(!seedStr){
     RANDOM.seed(seedStr)
 }
 
-const COLORS = {
-    'outside': '#000000',
-    'black': '#000000',
-    'dark_wall': '#000064',
-    'dark_ground': '#323296',
-    'light_wall': '#826E32',
-    'light_ground': '#C8B432'
-}
+
 
 const player: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', '#FFFFFF')
 const npc: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', '#CC0000')
@@ -66,7 +67,7 @@ const mm = new MouseMonitor().attach(canvas)
 
 const renderer = new CanvasRenderer()
 
-const cameraFrame = Rect.make(0,0, 80, 45) // CAMERA IS IN WORLD CELLS, NOT ABSOLUTE UNITS
+const cameraFrame = Rect.make(0,0, CAMERA_WIDTH, CAMERA_HEIGHT) // CAMERA IS IN WORLD CELLS, NOT ABSOLUTE UNITS
 const renderGrid = new Grid<IRenderCell>(cameraFrame.width, cameraFrame.height)
 renderGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell => {
     return RenderCell.make(x,y,' ',COLORS.black,COLORS.dark_ground)
@@ -77,14 +78,12 @@ tileGrid.setEach((cell: Tile, index: number, x: number, y: number): Tile => {
     return new Tile(x,y, true)
 })
 
-const FOV_RADIUS = 10
 let fovRecompute = true
 // TODO: Translate this from world to screen?
-const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(MAP_WIDTH, MAP_HEIGHT)
+const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(cameraFrame.width, cameraFrame.height)
 // if we turn fov on it'll change it over to false
 fovGrid.setEach((): FOVCell => { return {
-    visible: false,
-    explored: false
+    visible: false
 }})
 
 
@@ -92,6 +91,7 @@ fovGrid.setEach((): FOVCell => { return {
 const rooms: IRect[] = []
 //generate the relevant terrain
 mapGenerator1(tileGrid, rooms)
+//mapGenerator2(tileGrid, rooms)
 
 // const cameraFrame = Rect.make(0, 0, 10, 10)
 
@@ -101,8 +101,15 @@ mapGenerator1(tileGrid, rooms)
     Point.set(player, pcenter.x, pcenter.y) 
     const npcenter = Rect.center(rooms[rooms.length - 1])
     Point.set(npc, npcenter.x, npcenter.y)
+
+    // center the camera and fov on the player
+    cameraFrame.x = Math.floor(player.x - cameraFrame.width/2)
+    cameraFrame.y = Math.floor(player.y - cameraFrame.height/2)
+    fovGrid.x = cameraFrame.x
+    fovGrid.y = cameraFrame.y
 }
 
+// We need to move this into it's own section, and potentially allow substituting it out
 const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>): void => {
     // renderGrid is in SCREEN coordinates, and will have it's XY ignored for our purposes
     // tileGrid, entities and fovGrid are in WORLD coordinates and will have their XY and y ignored for now
@@ -111,7 +118,7 @@ const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: En
     // I almost feel like we should tighten the coupling, but oh well, let's actually do it
     const screenP = Point.make(0,0)
     const worldP = Point.make(0,0)
-
+    const playerIsOutside = !tileGrid.getP(player).contained
     for(let relCameraY = 0; relCameraY < cameraFrame.height; relCameraY++){
         for(let relCameraX = 0; relCameraX < cameraFrame.width; relCameraX++){
             // this maps to the renderGrid and the cameras
@@ -127,19 +134,32 @@ const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: En
             const renderCell  = renderGrid.getP(screenP)
             if(tileGrid.inBoundsXY(worldP.x, worldP.y)){
                 const tile = tileGrid.getP(worldP)
-                const fovCell = fovGrid.getP(worldP)
+                const fovCell = fovGrid.getP(screenP)
                 renderCell.character = ''
-                if(fovCell.explored){
+                if(!tile.contained && playerIsOutside){
+                    // go ahead and draw everything as lit
+                    if(tile.blockMove){
+                        renderCell.backColor = COLORS.light_wall
+                    } else {
+                        renderCell.backColor = COLORS.dark_outside
+                    }
+                }
+                else if(tile.explored){
                     if(!fovCell.visible){
                         if(tile.blockMove){
                             renderCell.backColor = COLORS.dark_wall
+                        } else if(tile.blockSight){ // it's a door
+                            renderCell.backColor = COLORS.dark_door
                         } else {
                             renderCell.backColor = COLORS.dark_ground
                         }
                     } else {
                         if(tile.blockMove){
                             renderCell.backColor = COLORS.light_wall
-                        } else {
+                        } else if(tile.blockSight){ // it's a door
+                            renderCell.backColor = COLORS.light_door
+                        }
+                        else {
                             renderCell.backColor = COLORS.light_ground
                         }
                     }
@@ -161,7 +181,7 @@ const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: En
         if(cameraFrame.x <= entity.x && entity.x <= cameraFrame.x + cameraFrame.width - 1 &&
             cameraFrame.y <= entity.y && entity.y <= cameraFrame.y + cameraFrame.height - 1){
             const rCell: IRenderCell = renderGrid.getP(screenP)
-            const fovCell: FOVCell = fovGrid.getP(entity)
+            const fovCell: FOVCell = fovGrid.getP(screenP)
             if(fovCell.visible){
                 rCell.foreColor = entity.color
                 rCell.character = entity.character
@@ -240,6 +260,8 @@ loadImage('assets/out.png').then((image: any): void => {
         // determine camera position
         cameraFrame.x = Math.floor(player.x - cameraFrame.width/2)
         cameraFrame.y = Math.floor(player.y - cameraFrame.height/2)
+        fovGrid.x = cameraFrame.x
+        fovGrid.y = cameraFrame.y
 
         // we might move all of this into some offscreen 
         renderToGrid(tileGrid, fovGrid, entities, renderGrid)
@@ -251,5 +273,7 @@ loadImage('assets/out.png').then((image: any): void => {
         window.requestAnimationFrame(loop)
     }
     window.requestAnimationFrame(loop)
+    window.tileGrid = tileGrid;
+    window.player = player;
 
 }).catch((err: any): void => console.log(err)) //eslint-disable-line no-console
