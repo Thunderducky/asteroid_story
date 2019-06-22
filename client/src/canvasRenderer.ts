@@ -43,7 +43,10 @@ class CanvasRenderer {
             // todo, allow us to mark render cells as 'empty' rather than spaces, this might help speed up render time
             if(cell.character.length === 0){
                 if(cell.backColor !== background){
-                    ctx.fillStyle = cell.backColor
+                    // I actually don't know if this helps, but it seems like setting the fillStyle could involve more complications than just checking if it's the same
+                    if(ctx.fillStyle !== cell.backColor){
+                        ctx.fillStyle = cell.backColor
+                    }
                     ctx.fillRect(destRect.x, destRect.y, destRect.width, destRect.height)
                 }
             } else {
