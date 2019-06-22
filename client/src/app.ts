@@ -12,7 +12,7 @@ import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
-import { mapGenerator1 } from './mapGeneration'
+import { mapGenerator2 } from './mapGeneration'
 import COLORS from './colors'
 //import { MapGenHelper } from './mapGenHelper'
 
@@ -90,7 +90,7 @@ fovGrid.setEach((): FOVCell => { return {
 // this will also populate the rooms
 const rooms: IRect[] = []
 //generate the relevant terrain
-mapGenerator1(tileGrid, rooms)
+mapGenerator2(tileGrid, rooms)
 //mapGenerator2(tileGrid, rooms)
 
 // const cameraFrame = Rect.make(0, 0, 10, 10)
@@ -118,7 +118,6 @@ const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: En
     // I almost feel like we should tighten the coupling, but oh well, let's actually do it
     const screenP = Point.make(0,0)
     const worldP = Point.make(0,0)
-    const playerIsOutside = !tileGrid.getP(player).contained
     for(let relCameraY = 0; relCameraY < cameraFrame.height; relCameraY++){
         for(let relCameraX = 0; relCameraX < cameraFrame.width; relCameraX++){
             // this maps to the renderGrid and the cameras
@@ -136,15 +135,7 @@ const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: En
                 const tile = tileGrid.getP(worldP)
                 const fovCell = fovGrid.getP(screenP)
                 renderCell.character = ''
-                if(!tile.contained && playerIsOutside){
-                    // go ahead and draw everything as lit
-                    if(tile.blockMove){
-                        renderCell.backColor = COLORS.light_wall
-                    } else {
-                        renderCell.backColor = COLORS.dark_outside
-                    }
-                }
-                else if(tile.explored){
+                if(tile.explored){
                     if(!fovCell.visible){
                         if(tile.blockMove){
                             renderCell.backColor = COLORS.dark_wall

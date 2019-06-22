@@ -7,7 +7,7 @@ const SETTINGS = {
     CAMERA_HEIGHT: 70,
     SCREEN_WIDTH :100,
     SCREEN_HEIGHT : 70,
-    FOV_RADIUS: 20
+    FOV_RADIUS: 35
 }
 
 export default SETTINGS

@@ -37,6 +37,7 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoin
     screenStartPoint.x -= fovGrid.x
     screenStartPoint.y -= fovGrid.y
     fovGrid.getP(screenStartPoint).visible = true
+    // TODO: Determine if the FOV is in range
     for(let row = 1; row < maxDistance; row++){
         const rowSize = row + 1
         for(let column = 0; column < rowSize; column++){
@@ -44,7 +45,7 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoin
             const traveller = Point.copy(startPoint)
             traveller.x += horizontalNotVertical ? xDirection * column : xDirection * row
             traveller.y += horizontalNotVertical ? yDirection * row : yDirection * column
-
+            
             // if we are out of bounds, skip
             if(!tileGrid.inBoundsXY(traveller.x, traveller.y)){
                 continue
@@ -55,6 +56,9 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoin
             screenPoint.x -= fovGrid.x
             screenPoint.y -= fovGrid.y
             const tile = tileGrid.getP(traveller)
+            if(!fovGrid.inBoundsXY(screenPoint.x, screenPoint.y)){
+                continue
+            }
             const fovCell = fovGrid.getP(screenPoint)
 
             const start = column/rowSize
