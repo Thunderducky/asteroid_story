@@ -4,7 +4,6 @@ import { IPoint, Point } from './shapes/point'
 
 interface FOVCell  {
     visible: boolean;
-    explored: boolean;
 }
 interface ShadowRange {
     start: number;
@@ -18,14 +17,27 @@ const isBetweenInclusive = (a: number,b: number,t: number): boolean => {
         return a <= t && t <= b
     }
 }
-
+/**
+ * 
+ * @param fovGrid 
+ * @param tileGrid 
+ * @param startPoint start point is in world coordinates
+ * @param maxDistance 
+ * @param horizontalNotVertical 
+ * @param xDirection 
+ * @param yDirection 
+ */
 const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoint: IPoint, maxDistance: number,
     horizontalNotVertical: boolean, xDirection: number, yDirection: number): void => {
     
     // Our shadows we will cast
     const shadowRanges: ShadowRange[] = []
     // our starting location is always visible
-    fovGrid.getP(startPoint).visible = true
+    const screenStartPoint= Point.copy(startPoint)
+    screenStartPoint.x -= fovGrid.x
+    screenStartPoint.y -= fovGrid.y
+    fovGrid.getP(screenStartPoint).visible = true
+    // TODO: Determine if the FOV is in range
     for(let row = 1; row < maxDistance; row++){
         const rowSize = row + 1
         for(let column = 0; column < rowSize; column++){
@@ -33,14 +45,22 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoin
             const traveller = Point.copy(startPoint)
             traveller.x += horizontalNotVertical ? xDirection * column : xDirection * row
             traveller.y += horizontalNotVertical ? yDirection * row : yDirection * column
-
+            
             // if we are out of bounds, skip
             if(!tileGrid.inBoundsXY(traveller.x, traveller.y)){
                 continue
             }
 
+            // factor in our tile check when we get the world cell
+            let screenPoint = Point.copy(traveller)
+            screenPoint.x -= fovGrid.x
+            screenPoint.y -= fovGrid.y
             const tile = tileGrid.getP(traveller)
-            const fovCell = fovGrid.getP(traveller)
+            // OPTIMIZE: We are probably running to many times and could do this better
+            if(!fovGrid.inBoundsXY(screenPoint.x, screenPoint.y)){
+                continue
+            }
+            const fovCell = fovGrid.getP(screenPoint)
 
             const start = column/rowSize
             const end = (column + 1)/rowSize
@@ -74,7 +94,7 @@ const calculateOctant = (fovGrid: Grid<FOVCell>, tileGrid: Grid<Tile>, startPoin
 
             fovCell.visible = visibility
             if(fovCell.visible){
-                fovCell.explored = true
+                tile.explored = true
             }
         }
     }

@@ -15,6 +15,10 @@ class Tile {
      */
     blockSight: boolean;
 
+    explored: boolean;
+
+    contained: boolean; // models if this thing has a floor and ceiling, (or, in universe, stuff surrounding it on the z-axis)
+
     /**
      * Create a new tile
      * @param blockMove Can the player/monsters/mobile entities move through/into this tile
@@ -24,11 +28,13 @@ class Tile {
         this.x = x
         this.y = y
         this.blockMove = blockMove
+        this.explored = false
         if(blockSight === undefined){
             this.blockSight = blockMove
         } else {
             this.blockSight = blockSight
         }
+        this.contained = true
         
     }
 }

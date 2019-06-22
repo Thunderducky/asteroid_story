@@ -54,7 +54,8 @@ const mapGenerator1 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
             const center = Rect.center(newRoom)
             MapGenHelper.createRoom(tileGrid, newRoom)
             if(rooms.length > 0){
-                const lastCenter = Rect.center(rooms[rooms.length -1])
+                const lastRoom = rooms[rooms.length -1]
+                const lastCenter = Rect.center(lastRoom)
                 if(randint(0,1) === 1){
                     MapGenHelper.createHTunnel(tileGrid, lastCenter.x, center.x, lastCenter.y)
                     MapGenHelper.createVTunnel(tileGrid, lastCenter.y, center.y, center.x)
@@ -73,4 +74,44 @@ const mapGenerator1 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
     }
 }
 
-export { mapGenerator1 }
+const placeAsteroidChunk = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
+    tileGrid.forEach((tile: Tile, index: number, x: number, y: number): void => {
+        if(Ellipse.containsXY(ellipse, x,y)){ 
+            tile.blockMove = true
+            tile.blockSight = true
+            tile.contained = true
+        }
+    })
+}
+
+const mapGenerator2 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
+    const MARGINS = 10
+    const MIN_DIMENSION = Math.min(tileGrid.width, tileGrid.height)
+    const MAX_ASTEROID_SECTION_RADIUS = Math.floor((MIN_DIMENSION - MARGINS * 2)/2)
+    const MIN_ASTEROID_SECTION_RADIUS = Math.floor(MAX_ASTEROID_SECTION_RADIUS * 0.7)
+    
+    
+    const SECTION_COUNT = 10
+    // const newRoom = Rect.make(Math.floor(tileGrid.width/2 - 10),Math.floor(tileGrid.height/2 - 10),20,20)
+    // MapGenHelper.createRoom(tileGrid, newRoom)
+    // rooms.push(newRoom)
+    // first things first, lets layer some big asteroids on top of each other
+    tileGrid.forEach((t: Tile): void => {
+        t.blockMove = false
+        t.blockSight = false
+    })
+    // now let's build an asteroid within the bounds
+    for(let i = 0; i < SECTION_COUNT; i++){
+        const xRadius = randint(MIN_ASTEROID_SECTION_RADIUS, MAX_ASTEROID_SECTION_RADIUS)
+        const yRadius = randint(MIN_ASTEROID_SECTION_RADIUS, MAX_ASTEROID_SECTION_RADIUS)
+        const bigRadius = Math.max(xRadius, yRadius)
+        const x = randint(MARGINS + bigRadius, tileGrid.width - MARGINS - bigRadius)
+        const y = randint(MARGINS + bigRadius, tileGrid.height - MARGINS - bigRadius)
+        placeAsteroidChunk(tileGrid, Ellipse.make(x,y,xRadius,yRadius, RANDOM.next() * Math.PI * 2))
+    }
+    // now within this framework run the next map generator
+    mapGenerator1(tileGrid, rooms)
+    
+}
+
+export { mapGenerator1, mapGenerator2 }

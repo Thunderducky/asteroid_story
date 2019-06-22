@@ -1,11 +1,16 @@
 import { IRenderCell } from './renderCell'
 import { Grid } from './grid'
 import { CODE_TO_RECT_HASH, drawSection, code } from './renderHelpers'
-import { IRect, Rect } from './shapes/rect'
+import { Rect } from './shapes/rect'
+import SETTINGS from './gameSettings'
+import COLORS from './colors'
 /**
  * Responsible for taking a render grid and converting it to images
  * on the canvas
  */
+
+const {TILE_WIDTH, TILE_HEIGHT} = SETTINGS
+
 class CanvasRenderer {
     canvas: HTMLCanvasElement | undefined;
     ctx: CanvasRenderingContext2D | undefined;
@@ -25,13 +30,13 @@ class CanvasRenderer {
     }
     // eventually we need to pass in the dimensions we are rendering to as well
     // for now it's fine
-    render(renderGrid: Grid<IRenderCell>, background: string = '#000000'): void {
+    render(renderGrid: Grid<IRenderCell>, background: string = COLORS.black): void {
         if(this.ctx == null){
             throw new Error('Cannot render a grid with a missing context')
         }
         const ctx = this.ctx as CanvasRenderingContext2D
         ctx.fillStyle = background
-        ctx.fillRect(0,0, renderGrid.width * 10, renderGrid.height * 10)
+        ctx.fillRect(0,0, renderGrid.width * TILE_WIDTH, renderGrid.height * TILE_HEIGHT)
         // let's try setting a background color as well
         // We have checked to ensure that it has been created
         const destRect = Rect.make(0,0,0,0)
@@ -39,7 +44,7 @@ class CanvasRenderer {
             cell: IRenderCell, 
             index: number, 
             x: number, y: number): void => {
-            Rect.set(destRect, x * 10, y * 10, 10, 10)
+            Rect.set(destRect, x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT)
             // todo, allow us to mark render cells as 'empty' rather than spaces, this might help speed up render time
             if(cell.character.length === 0){
                 if(cell.backColor !== background){
