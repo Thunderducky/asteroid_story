@@ -12,7 +12,7 @@ import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
-import { mapGenerator2 } from './mapGeneration'
+import { mapGenerator1 } from './mapGeneration'
 import COLORS from './colors'
 //import { MapGenHelper } from './mapGenHelper'
 
@@ -53,8 +53,8 @@ if(!seedStr){
 
 
 
-const player: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', '#FFFFFF')
-const npc: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', '#CC0000')
+const player: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', COLORS.player)
+const npc: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', COLORS.npc)
 const entities: Entity[] = [player,npc]
 
 
@@ -90,7 +90,7 @@ fovGrid.setEach((): FOVCell => { return {
 // this will also populate the rooms
 const rooms: IRect[] = []
 //generate the relevant terrain
-mapGenerator2(tileGrid, rooms)
+mapGenerator1(tileGrid, rooms)
 //mapGenerator2(tileGrid, rooms)
 
 // const cameraFrame = Rect.make(0, 0, 10, 10)

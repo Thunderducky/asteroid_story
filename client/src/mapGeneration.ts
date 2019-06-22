@@ -13,7 +13,7 @@ const MAX_ROOMS = 30
 const MAX_ELLIPSE_RADIUS = ROOM_MAX_SIZE / 2
 const MIN_ELLIPSE_RADIUS = ROOM_MAX_SIZE / 4
 
-const CAVE_ELLIPSES = 0
+const CAVE_ELLIPSES = 10
 
 const randint = (min: number, max: number): number => {
     return Math.floor(RANDOM.next() * (max - min + 1)) + min

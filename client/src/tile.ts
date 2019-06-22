@@ -28,7 +28,7 @@ class Tile {
         this.x = x
         this.y = y
         this.blockMove = blockMove
-        this.explored = true
+        this.explored = false
         if(blockSight === undefined){
             this.blockSight = blockMove
         } else {
