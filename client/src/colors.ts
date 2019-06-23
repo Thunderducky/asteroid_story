@@ -1,9 +1,9 @@
 const COLORS = {
-    'dark_outside': '#111',
-    'light_outside': '#444444',
-    'black': '#002244',
-    'dark_wall': '#443c35',
-    'dark_ground': '#665647',
+    'dark_outside': '#002244',
+    'light_outside': '#265380',
+    'black': '#2d2824',
+    'dark_wall': '#2d2824', //'#443c35',
+    'dark_ground': '#443c35', //'#665647',
     'light_wall': '#C8B432', // #C5CC89
     'light_ground': '#C5CC89',
     'player': '#FFFFFF',

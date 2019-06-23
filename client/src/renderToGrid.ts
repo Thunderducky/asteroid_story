@@ -10,7 +10,7 @@ import { IRect } from './shapes/rect'
 export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>, cameraFrame: IRect): void => {
     // renderGrid is in SCREEN coordinates, and will have it's XY ignored for our purposes
     // tileGrid, entities and fovGrid are in WORLD coordinates and will have their XY and y ignored for now
-    
+
     // camera and renderGrid both start at the topLeft in terms of aligning the two
     // I almost feel like we should tighten the coupling, but oh well, let's actually do it
     const screenP = Point.make(0,0)
@@ -21,44 +21,58 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
             Point.set(screenP, relCameraX, relCameraY)
             // this maps to the tileGrid, fovGrid, and entities
             Point.set(worldP, screenP.x + cameraFrame.x, screenP.y + cameraFrame.y)
-            
+
             // Let's do some bounds checking
             // we know these poitns are always in cameras, so never need to check that
             // we are going to offload the case of checking if the renderGrid can fit the cameraSize for now
             // so for now just check if we are inside of the tileGrid, which currently should be the same dimensions as the fovGrid, though that is bound to change as we try and optimize things
             // soooooo, let's check if we are inside the tileGrid
             const renderCell  = renderGrid.getP(screenP)
-            if(tileGrid.inBoundsXY(worldP.x, worldP.y)){
-                const tile = tileGrid.getP(worldP)
-                const fovCell = fovGrid.getP(screenP)
-                renderCell.character = ''
-                if(tile.explored){
-                    if(!fovCell.visible){
-                        if(tile.blockMove){
-                            renderCell.backColor = COLORS.dark_wall
-                        } else if(tile.blockSight){ // it's a door
-                            renderCell.backColor = COLORS.dark_door
-                        } else {
-                            renderCell.backColor = COLORS.dark_ground
-                        }
-                    } else {
-                        if(tile.blockMove){
-                            renderCell.backColor = COLORS.light_wall
-                        } else if(tile.blockSight){ // it's a door
-                            renderCell.backColor = COLORS.light_door
-                        }
-                        else {
-                            renderCell.backColor = COLORS.light_ground
-                        }
-                    }
-                } else {
-                    renderCell.backColor = COLORS.black
-                
-                }
+            const fovCell = fovGrid.getP(screenP)
+            let isLit = fovCell.visible // it's lit fam, well, some of the time
+            let inBounds = tileGrid.inBoundsXY(worldP.x, worldP.y)
+
+            // Determined our exploration state
+            // This has better rules to be figured out
+            renderCell.character = ''
+            if(!inBounds){ // treat everything outside of the bounds as explored I suppose?
+              if(isLit){
+                renderCell.backColor = COLORS.light_outside
+              } else {
+                renderCell.backColor = COLORS.dark_outside
+              }
             } else {
-                renderCell.character = ''
-                renderCell.foreColor = COLORS.black
-                renderCell.backColor = COLORS.black
+              const tile = tileGrid.getXY(worldP.x, worldP.y)
+              if(!tile.explored){
+                renderCell.backColor = COLORS.black;
+              } else {
+                // TODO: ADD DOORS
+                const isWall = tile.blockMove && tile.blockSight
+                const isGround = !isWall && tile.contained
+                const isSpace = !isWall && !tile.contained
+
+                if(isSpace){
+                  if(isLit){
+                    renderCell.backColor = COLORS.light_outside
+                  } else {
+                    renderCell.backColor = COLORS.dark_outside
+                  }
+                } else if(isGround){
+                  if(isLit){
+                    renderCell.backColor = COLORS.light_ground
+                  } else {
+                    renderCell.backColor = COLORS.dark_ground
+                  }
+                } else if(isWall){
+                  if(isLit){
+                    renderCell.backColor = COLORS.light_wall
+                  } else {
+                    renderCell.backColor = COLORS.dark_wall
+                  }
+                } else {
+
+                }
+              }
             }
         }
     }
@@ -75,6 +89,6 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                 rCell.character = entity.character
             }
         }
-        
+
     })
 }

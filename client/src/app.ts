@@ -184,7 +184,7 @@ loadImage('assets/out.png').then((image: any): void => {
             }
             if(tileGrid.inBoundsXY(mover.x + move.x, mover.y + move.y)){
                 const tile = tileGrid.getXY(player.x + move.x, player.y + move.y)
-                if(!tile.blockMove){
+                if(!tile.blockMove || (DEBUG.ENABLE_CLIPPING && mover.id === player.id)){
                     mover.move(move.x, move.y)
                     if(mover.id === player.id){
                         fovRecompute = true

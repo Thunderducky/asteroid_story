@@ -38,6 +38,17 @@ class MapGenHelper {
         }
     }
 
+    static createHWall(tileGrid: Grid<Tile>, x1: number, x2: number, y: number): void {
+        // swap them as necessary
+        const min = Math.min(x1, x2)
+        const max = Math.max(x1, x2)
+        for(let x = min; x <= max; x++){
+            const tile = tileGrid.getXY(x,y)
+            tile.blockMove = true
+            tile.blockSight = true
+        }
+    }
+
     static createVTunnel(tileGrid: Grid<Tile>, y1: number, y2: number, x: number): void {
         const min = Math.min(y1, y2)
         const max = Math.max(y1, y2)
@@ -48,16 +59,26 @@ class MapGenHelper {
         }
     }
 
+    static createVWall(tileGrid: Grid<Tile>, y1: number, y2: number, x: number): void {
+        const min = Math.min(y1, y2)
+        const max = Math.max(y1, y2)
+        for(let y = min; y <= max; y++){
+            const tile = tileGrid.getXY(x,y)
+            tile.blockMove = true
+            tile.blockSight = true
+        }
+    }
+
     static carveEllipse(tileGrid: Grid<Tile>, ellipse: IEllipse): void {
         tileGrid.forEach((tile, index, x, y): void => {
-            if(Ellipse.containsXY(ellipse, x,y)){ 
+            if(Ellipse.containsXY(ellipse, x,y)){
                 tile.blockMove = false
                 tile.blockSight = false
             }
         })
     }
 
-    
+
 }
 
 export { MapGenHelper }
