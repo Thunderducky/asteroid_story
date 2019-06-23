@@ -6,8 +6,9 @@ import { IRenderCell } from './renderCell'
 import { Point } from './shapes/point'
 import COLORS from './colors'
 import { IRect } from './shapes/rect'
+import DEBUG from './debugSettings'
 
-export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>, cameraFrame: IRect): void => {
+export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>, cameraFrame: IRect, debugGrid: Grid<IRenderCell>): void => {
     // renderGrid is in SCREEN coordinates, and will have it's XY ignored for our purposes
     // tileGrid, entities and fovGrid are in WORLD coordinates and will have their XY and y ignored for now
 
@@ -36,43 +37,43 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
             // This has better rules to be figured out
             renderCell.character = ''
             if(!inBounds){ // treat everything outside of the bounds as explored I suppose?
-              if(isLit){
-                renderCell.backColor = COLORS.light_outside
-              } else {
-                renderCell.backColor = COLORS.dark_outside
-              }
-            } else {
-              const tile = tileGrid.getXY(worldP.x, worldP.y)
-              if(!tile.explored){
-                renderCell.backColor = COLORS.black;
-              } else {
-                // TODO: ADD DOORS
-                const isWall = tile.blockMove && tile.blockSight
-                const isGround = !isWall && tile.contained
-                const isSpace = !isWall && !tile.contained
-
-                if(isSpace){
-                  if(isLit){
+                if(isLit){
                     renderCell.backColor = COLORS.light_outside
-                  } else {
-                    renderCell.backColor = COLORS.dark_outside
-                  }
-                } else if(isGround){
-                  if(isLit){
-                    renderCell.backColor = COLORS.light_ground
-                  } else {
-                    renderCell.backColor = COLORS.dark_ground
-                  }
-                } else if(isWall){
-                  if(isLit){
-                    renderCell.backColor = COLORS.light_wall
-                  } else {
-                    renderCell.backColor = COLORS.dark_wall
-                  }
                 } else {
-
+                    renderCell.backColor = COLORS.dark_outside
                 }
-              }
+            } else {
+                const tile = tileGrid.getXY(worldP.x, worldP.y)
+                if(!tile.explored){
+                    renderCell.backColor = COLORS.black
+                } else {
+                // TODO: ADD DOORS
+                    const isWall = tile.blockMove && tile.blockSight
+                    const isGround = !isWall && tile.contained
+                    const isSpace = !isWall && !tile.contained
+
+                    if(isSpace){
+                        if(isLit){
+                            renderCell.backColor = COLORS.light_outside
+                        } else {
+                            renderCell.backColor = COLORS.dark_outside
+                        }
+                    } else if(isGround){
+                        if(isLit){
+                            renderCell.backColor = COLORS.light_ground
+                        } else {
+                            renderCell.backColor = COLORS.dark_ground
+                        }
+                    } else if(isWall){
+                        if(isLit){
+                            renderCell.backColor = COLORS.light_wall
+                        } else {
+                            renderCell.backColor = COLORS.dark_wall
+                        }
+                    } else {
+
+                    }
+                }
             }
         }
     }
@@ -91,4 +92,26 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
         }
 
     })
+
+    if(DEBUG.DEBUG_DRAW){
+        for(let relCameraY = 0; relCameraY < cameraFrame.height; relCameraY++){
+            for(let relCameraX = 0; relCameraX < cameraFrame.width; relCameraX++){
+                // this maps to the renderGrid and the cameras
+                Point.set(screenP, relCameraX, relCameraY)
+                // this maps to the tileGrid, fovGrid, and entities
+                Point.set(worldP, screenP.x + cameraFrame.x, screenP.y + cameraFrame.y)
+
+                
+                const renderCell  = renderGrid.getP(screenP)
+                if(debugGrid.inBoundsXY(worldP.x, worldP.y)){
+                    const debugCell = debugGrid.getP(worldP)
+                    if(debugCell.backColor != COLORS.black){
+                        renderCell.backColor = debugCell.backColor
+                        renderCell.character = debugCell.character
+                        renderCell.foreColor = debugCell.foreColor
+                    }
+                }
+            }
+        }
+    }
 }

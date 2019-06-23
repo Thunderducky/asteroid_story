@@ -9,7 +9,8 @@ const COLORS = {
     'player': '#FFFFFF',
     'dark_door':'#550000',
     'light_door': '#FF2222',
-    'npc': '#CC0000'
+    'npc': '#CC0000',
+    'DEBUG': '#FF3333'
 }
 
 export default COLORS

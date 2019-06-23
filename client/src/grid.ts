@@ -9,6 +9,14 @@ interface ForEachFn<T> {
     (cell: T, index: number, x: number, y: number): void;
 }
 
+interface NeighborList<T> {
+    up: T | null;
+    left: T | null;
+    right: T | null;
+    down: T | null;
+    neighbors: T[];
+}
+
 // TODO: give grids their own x and ys, that way they can implement all the point and rect stuff
 /**
  * Grid to represent 2d collections, please don't resize it after creating it
@@ -96,6 +104,34 @@ class Grid<T> implements IRect {
      */
     getI(index: number): T {
         return this.cells[index]
+    }
+
+    getNeighborsXY(x:number, y: number): NeighborList<T> {
+        const list: NeighborList<T> = {
+            up: null,
+            down: null,
+            left: null,
+            right: null,
+            neighbors:[]
+        }
+        if(this.inBoundsXY(x,y - 1)){
+            list.up = this.getXY(x, y - 1)
+            list.neighbors.push(list.up)
+        }
+        if(this.inBoundsXY(x,y + 1)){
+            list.down = this.getXY(x, y + 1)
+            list.neighbors.push(list.down)
+        }
+        if(this.inBoundsXY(x - 1,y)){
+            list.left = this.getXY(x - 1, y)
+            list.neighbors.push(list.left)
+        }
+        if(this.inBoundsXY(x + 1,y)){
+            list.right = this.getXY(x + 1, y)
+            list.neighbors.push(list.right)
+        }
+        
+        return list
     }
 }
 

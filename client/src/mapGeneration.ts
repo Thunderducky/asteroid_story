@@ -126,7 +126,8 @@ const mapGenerator3 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
     const MIN_ASTEROID_SECTION_RADIUS = Math.floor(MAX_ASTEROID_SECTION_RADIUS * 0.7)
     const SECTION_COUNT = 10
 
-    const asteroidEllipses = [];
+    // GENERATE THE ASTEROID "SHELL"
+    const asteroidEllipses = []
     for(let i = 0; i < SECTION_COUNT; i++){
         const xRadius = randint(MIN_ASTEROID_SECTION_RADIUS, MAX_ASTEROID_SECTION_RADIUS)
         const yRadius = randint(MIN_ASTEROID_SECTION_RADIUS, MAX_ASTEROID_SECTION_RADIUS)
@@ -137,20 +138,20 @@ const mapGenerator3 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
         asteroidEllipses.push(ellipse)
         placeAsteroidChunk(tileGrid, ellipse)
     }
-    // we are building a square that contains all of the ellipses
+
+    // bounds of the asteroid shell
     let leftX = Math.floor(tileGrid.width/2), rightX = Math.floor(tileGrid.width/2)
     let topY = Math.floor(tileGrid.width/2), bottomY = Math.floor(tileGrid.width/2)
 
     // we need to be able to draw this debug container
     asteroidEllipses.forEach((ellipse: IEllipse): void => {
-      const maxRadius = Math.max(ellipse.xRadius, ellipse.yRadius);
-      leftX = Math.min(leftX, ellipse.x - maxRadius)
-      topY = Math.min(topY, ellipse.y - maxRadius)
-      rightX = Math.max(rightX, ellipse.x + maxRadius - 1 )
-      bottomY = Math.max(bottomY, ellipse.y + maxRadius - 1)
+        const maxRadius = Math.max(ellipse.xRadius, ellipse.yRadius)
+        leftX = Math.min(leftX, ellipse.x - maxRadius)
+        topY = Math.min(topY, ellipse.y - maxRadius)
+        rightX = Math.max(rightX, ellipse.x + maxRadius - 1 )
+        bottomY = Math.max(bottomY, ellipse.y + maxRadius - 1)
     })
-    const boundingRect = Rect.make(leftX, topY, rightX - leftX, bottomY - topY);
-    console.log(boundingRect);
+
     // MapGenHelper.createHWall(tileGrid, leftX, rightX, topY)
     // MapGenHelper.createVWall(tileGrid, topY, bottomY, leftX)
     // MapGenHelper.createHWall(tileGrid, leftX, rightX, bottomY)
@@ -158,7 +159,6 @@ const mapGenerator3 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
     // within this, let's build rooms and stuff
 
     for(let r = 0; r < MAX_ROOMS; r++){
-
         const w = randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
         const h = randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
         const x = randint(leftX, rightX - w - 1)
@@ -192,7 +192,6 @@ const mapGenerator3 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
         }
     }
     // Now let's place some more ellipses
-
     for(let e = 0; e < CAVE_ELLIPSES; e++){
         const ellipse = randomEllipse(Math.floor(leftX + MAX_ELLIPSE_RADIUS/2), Math.floor(rightX - MAX_ELLIPSE_RADIUS/2), Math.floor(topY + MAX_ELLIPSE_RADIUS/2), Math.floor(bottomY - MAX_ELLIPSE_RADIUS/2))
         MapGenHelper.carveEllipse(tileGrid, ellipse )
@@ -200,5 +199,7 @@ const mapGenerator3 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
 
     // let's place some initial asteroid bumps
 }
+
+// TODO, add a debug rendering helper
 
 export { mapGenerator1, mapGenerator2, mapGenerator3 }

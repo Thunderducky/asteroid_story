@@ -6,7 +6,9 @@ interface Hash<T> {
 const DEBUG: Hash<boolean> = {
     DISABLE_FOV: false,          // SHOW EVERYTHING, NO HIDING STUFF BEHIND FOV, EVERYTHING ACTS LIT
     DISABLE_TRACKING: true,     // CAMERA WILL ONLY RESPOND TO DIRECT CONTROL AND WON'T TRACK CHARACTER
-    ENABLE_CLIPPING: true
+    ENABLE_CLIPPING: true,
+    DEBUG_DRAW: true,
+    STAGE_MAP_GENERATORS: true, // We will manually progress the level generator
 }
 
 export default DEBUG

@@ -52,6 +52,9 @@ const RANDOM = {
             this.seed()
         }
         return this._generator()
+    },
+    nextInt(min: number, max: number): number{
+        return Math.floor(this.next() * (max - min + 1)) + min
     }
 }
 

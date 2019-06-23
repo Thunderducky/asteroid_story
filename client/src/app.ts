@@ -19,6 +19,7 @@ import SETTINGS from './gameSettings'
 import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 import DEBUG from './debugSettings'
+import { progressiveMapGenerator } from './progressiveMapGeneration';
 
 const {
     TILE_WIDTH,
@@ -31,6 +32,7 @@ const {
     CAMERA_HEIGHT,
     FOV_RADIUS
 } = SETTINGS
+
 
 // INITIALIZE OUR SEED
 const urlParams = new URLSearchParams(window.location.search)
@@ -71,6 +73,12 @@ renderGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell
     return RenderCell.make(x,y,'', COLORS.black, COLORS.black)
 })
 
+// THESE ARE HERE BY DEFAULT, BUT WON'T BE SHOWN UNLESS ENABLED
+const debugGrid = new Grid<IRenderCell>(MAP_WIDTH, MAP_HEIGHT)
+debugGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell => {
+    return RenderCell.make(x,y,'', COLORS.black, COLORS.black)
+})
+
 let fovRecompute = !DEBUG.DISABLE_FOV
 const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(cameraFrame.width, cameraFrame.height)
 fovGrid.setEach((): FOVCell => { return {
@@ -88,7 +96,7 @@ tileGrid.setEach((cell: Tile, index: number, x: number, y: number): Tile => {
 
 // this will also populate the rooms
 const rooms: IRect[] = []
-mapGenerator3(tileGrid, rooms)
+//mapGenerator3(tileGrid, rooms)
 //mapGenerator2(tileGrid, rooms)
 
 // this is honestly just another part of genrating things, we just need to come up with some extra terminology for it/ ways to deal with it
@@ -151,12 +159,16 @@ const newKeyPress = (q: string, enableZoom: boolean = true): boolean => {
     }
 }
 
+const levelIterator = progressiveMapGenerator(tileGrid, rooms, debugGrid)
 
 loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)
+    if(!DEBUG.STAGE_MAP_GENERATORS){
+        // JUST FULLY SEQUENCE THE GENERATOR
+        while(levelIterator.next().done !== false){}
+    }
     // Loop
     const loop = (): void => {
-
         handleInput(km, player)
 
         // extra
@@ -171,6 +183,14 @@ loadImage('assets/out.png').then((image: any): void => {
         }
         if(newKeyPress('d')){
             PUBSUB.publish('camera_move', {delta: {x: 1, y: 0}})
+        }
+
+        if(DEBUG.STAGE_MAP_GENERATORS){
+            // q lets us progress through the map generator phase
+            if(newKeyPress('q')){
+                // yield the next level generating setting
+                levelIterator.next()
+            }
         }
 
         // process moves
@@ -200,7 +220,7 @@ loadImage('assets/out.png').then((image: any): void => {
         }
 
         // Convert to render format
-        renderToGrid(tileGrid, fovGrid, entities, renderGrid, cameraFrame)
+        renderToGrid(tileGrid, fovGrid, entities, renderGrid, cameraFrame, debugGrid)
         // actually render to canvas
         renderer.clear()
         renderer.render(renderGrid)
