@@ -17,7 +17,7 @@ import COLORS from './colors'
 //import { MapGenHelper } from './mapGenHelper'
 
 import SETTINGS from './gameSettings'
-import { handleInput } from './handleINput'
+import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 // sizing
 
@@ -39,7 +39,7 @@ const {
 // Let's look for query params with which to seed the generator
 // INITIALIZE OUR SEED
 const urlParams = new URLSearchParams(window.location.search)
-const seedStr = urlParams.get('seed') 
+const seedStr = urlParams.get('seed')
 if(!seedStr){
     const seed = RANDOM.seed(seedStr || undefined)
     const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?seed=' + seed
@@ -48,7 +48,7 @@ if(!seedStr){
     } else {
         window.location.href = newurl
     }
-    
+
 } else {
     RANDOM.seed(seedStr)
 }
@@ -94,7 +94,7 @@ mapGenerator1(tileGrid, rooms)
 
 {
     const pcenter = Rect.center(rooms[0])
-    Point.set(player, pcenter.x, pcenter.y) 
+    Point.set(player, pcenter.x, pcenter.y)
     const npcenter = Rect.center(rooms[rooms.length - 1])
     Point.set(npc, npcenter.x, npcenter.y)
 
@@ -114,7 +114,7 @@ const MoveProcessor = {
 
 PUBSUB.subscribe('move', (msg): void =>{
     MoveProcessor.moves.push(msg)
-}) 
+})
 
 loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)
@@ -126,7 +126,7 @@ loadImage('assets/out.png').then((image: any): void => {
         // Z lets us be in ZOOM MODE!!!!
         // we need to translate this into a "move" type action
         // we'll just do the move section
-        
+
         handleInput(km, player)
 
         // process moves
@@ -147,10 +147,10 @@ loadImage('assets/out.png').then((image: any): void => {
                     }
                     PUBSUB.publish('moved', msg) // only publish move if the entity actually completed the move
                 }
-            }            
+            }
         })
         MoveProcessor.moves.length = 0
-        
+
         // determine camera position
         cameraFrame.x = Math.floor(player.x - cameraFrame.width/2)
         cameraFrame.y = Math.floor(player.y - cameraFrame.height/2)
@@ -161,7 +161,7 @@ loadImage('assets/out.png').then((image: any): void => {
             calculateFOV(fovGrid, tileGrid, player, FOV_RADIUS)
         }
 
-        // we might move all of this into some offscreen 
+        // we might move all of this into some offscreen
         renderToGrid(tileGrid, fovGrid, entities, renderGrid, cameraFrame)
         renderer.render(renderGrid)
 
