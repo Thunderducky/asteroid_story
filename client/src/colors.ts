@@ -2,6 +2,7 @@ const COLORS = {
     'dark_outside': '#111',
     'light_outside': '#444444',
     'black': '#002244',
+    'unknown_interior': '#2D2824'
     'dark_wall': '#443c35',
     'dark_ground': '#665647',
     'light_wall': '#C8B432', // #C5CC89
