@@ -111,7 +111,7 @@ const mapGenerator2 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
     mapGenerator1(tileGrid, rooms)
 
 }
-
+// todo, allow us to watch this in real time, and even toggle next
 const mapGenerator3 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
     tileGrid.forEach((t): void => {
         t.blockMove = false
