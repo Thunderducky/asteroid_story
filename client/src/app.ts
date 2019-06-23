@@ -16,7 +16,7 @@ import { mapGenerator3 } from './mapGeneration'
 import COLORS from './colors'
 
 import SETTINGS from './gameSettings'
-import { handleInput } from './handleINput'
+import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 import DEBUG from './debugSettings'
 
@@ -34,7 +34,7 @@ const {
 
 // INITIALIZE OUR SEED
 const urlParams = new URLSearchParams(window.location.search)
-const seedStr = urlParams.get('seed') 
+const seedStr = urlParams.get('seed')
 if(!seedStr){
     const seed = RANDOM.seed(seedStr || undefined)
     const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?seed=' + seed
@@ -43,7 +43,7 @@ if(!seedStr){
     } else {
         window.location.href = newurl
     }
-    
+
 } else {
     RANDOM.seed(seedStr)
 }
@@ -95,7 +95,7 @@ mapGenerator3(tileGrid, rooms)
 {
     if(rooms.length > 0){
         const pcenter = Rect.center(rooms[0])
-        Point.set(player, pcenter.x, pcenter.y) 
+        Point.set(player, pcenter.x, pcenter.y)
         const npcenter = Rect.center(rooms[rooms.length - 1])
         Point.set(npc, npcenter.x, npcenter.y)
     }
@@ -151,11 +151,12 @@ const newKeyPress = (q: string, enableZoom: boolean = true): boolean => {
     }
 }
 
+
 loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)
     // Loop
     const loop = (): void => {
-        
+
         handleInput(km, player)
 
         // extra
@@ -190,14 +191,14 @@ loadImage('assets/out.png').then((image: any): void => {
                     }
                     PUBSUB.publish('moved', msg) // only publish move if the entity actually completed the move
                 }
-            }            
+            }
         })
         MoveProcessor.moves.length = 0
-        
+
         if(fovRecompute && !DEBUG.DISABLE_FOV){
             calculateFOV(fovGrid, tileGrid, player, FOV_RADIUS)
         }
-        
+
         // Convert to render format
         renderToGrid(tileGrid, fovGrid, entities, renderGrid, cameraFrame)
         // actually render to canvas
