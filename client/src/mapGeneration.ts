@@ -114,4 +114,12 @@ const mapGenerator2 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
     
 }
 
-export { mapGenerator1, mapGenerator2 }
+const mapGenerator3 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
+    tileGrid.forEach((t): void => {
+        t.blockMove = false
+        t.blockSight = false
+        t.contained = false
+    })
+}
+
+export { mapGenerator1, mapGenerator2, mapGenerator3 }
