@@ -5,6 +5,7 @@ const COLORS = {
     'dark_outside': '#002244',
     'light_outside': '#265380',
     'black': '#000000',
+    'white': '#FFFFFF',
     'dark_wall': '#2d2824', //'#443c35',
     'dark_ground': '#443c35', //'#665647',
     'light_wall': '#C8B432', // #C5CC89

@@ -7,6 +7,17 @@ interface IPoint {
 }
 
 /**
+ * Helpful enum for directions in a grid,
+ * Up: -y, Down: +y, Left: -x, Right: +x
+ */
+enum GridDirection {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+/**
  * Create a new Point
  * @param x 
  * @param y 
@@ -22,6 +33,28 @@ const make = (x: number, y: number): IPoint => {
  */
 const add = (a: IPoint, b: IPoint): IPoint => {
     return make(a.x + b.x, a.y + b.y)
+}
+
+/**
+ * A utitily to move in a direction, allows for variability in the direction without having to resort to modifying the x and y coorindates individually
+ * @param point Point to be moved, will be the return value
+ * @param direction, the Grid Direction you want to move in
+ * @param distance, optional defaults to 1, how far you want the point to move 
+ */
+const move = (point: IPoint, direction: GridDirection, distance: number = 1): IPoint => {
+    if(direction = GridDirection.Left){
+        point.x -= distance
+    }
+    if(direction = GridDirection.Right){
+        point.x += distance
+    }
+    if(direction = GridDirection.Up){
+        point.y -= distance
+    }
+    if(direction = GridDirection.Down){
+        point.y += distance
+    }
+    return point
 }
 
 /**
@@ -60,10 +93,11 @@ const copy = (point: IPoint): IPoint => {
  */
 const Point = {
     make,
+    move,
     add,
     addTo,
     set,
     copy
 }
 
-export {IPoint, Point}
+export {IPoint, Point, GridDirection}
