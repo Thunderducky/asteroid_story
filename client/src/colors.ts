@@ -1,7 +1,10 @@
+// TODO: Reorganize this into materials
+// We'll even include "BLANK"
+// As opposed to empty space
 const COLORS = {
     'dark_outside': '#002244',
     'light_outside': '#265380',
-    'black': '#2d2824',
+    'black': '#000000',
     'dark_wall': '#2d2824', //'#443c35',
     'dark_ground': '#443c35', //'#665647',
     'light_wall': '#C8B432', // #C5CC89
@@ -10,7 +13,20 @@ const COLORS = {
     'dark_door':'#550000',
     'light_door': '#FF2222',
     'npc': '#CC0000',
-    'DEBUG': '#FF3333'
+    'DEBUG': '#FF3333',
+    metal: {
+        darkWall: '#4A4A4A',
+        darkGround: '#616161',
+        lightWall: '#858585',
+        lightGround: '#BFBFBF'
+    }
+
 }
+
+// SOME GRAY TYPES
+// #4A4A4A
+// #616161
+// #858585
+// #BFBFBF
 
 export default COLORS

@@ -19,7 +19,7 @@ import SETTINGS from './gameSettings'
 import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 import DEBUG from './debugSettings'
-import { progressiveMapGenerator } from './progressiveMapGeneration';
+import { progressiveMapGenerator } from './progressiveMapGeneration'
 
 const {
     TILE_WIDTH,
@@ -100,28 +100,7 @@ const rooms: IRect[] = []
 //mapGenerator2(tileGrid, rooms)
 
 // this is honestly just another part of genrating things, we just need to come up with some extra terminology for it/ ways to deal with it
-{
-    if(rooms.length > 0){
-        const pcenter = Rect.center(rooms[0])
-        Point.set(player, pcenter.x, pcenter.y)
-        const npcenter = Rect.center(rooms[rooms.length - 1])
-        Point.set(npc, npcenter.x, npcenter.y)
-    }
 
-    // center the camera and fov on the player
-    if(!DEBUG.DISABLE_TRACKING){
-        cameraFrame.x = Math.floor(player.x - cameraFrame.width/2)
-        cameraFrame.y = Math.floor(player.y - cameraFrame.height/2)
-        fovGrid.x = cameraFrame.x
-        fovGrid.y = cameraFrame.y
-    } else {
-        // center everything
-        cameraFrame.x = Math.floor(tileGrid.width/2 - cameraFrame.width/2)
-        cameraFrame.y = Math.floor(tileGrid.height/2  - cameraFrame.height/2)
-        fovGrid.x = cameraFrame.x
-        fovGrid.y = cameraFrame.y
-    }
-}
 
 // clean this up
 const moves: any[] = []
@@ -160,6 +139,29 @@ const newKeyPress = (q: string, enableZoom: boolean = true): boolean => {
 }
 
 const levelIterator = progressiveMapGenerator(tileGrid, rooms, debugGrid)
+levelIterator.next()
+{
+    if(rooms.length > 0){
+        const pcenter = Rect.center(rooms[0])
+        Point.set(player, pcenter.x, pcenter.y)
+        const npcenter = Rect.center(rooms[rooms.length - 1])
+        Point.set(npc, npcenter.x, npcenter.y)
+    }
+
+    // center the camera and fov on the player
+    if(!DEBUG.DISABLE_TRACKING){
+        cameraFrame.x = Math.floor(player.x - cameraFrame.width/2)
+        cameraFrame.y = Math.floor(player.y - cameraFrame.height/2)
+        fovGrid.x = cameraFrame.x
+        fovGrid.y = cameraFrame.y
+    } else {
+        // center everything
+        cameraFrame.x = Math.floor(tileGrid.width/2 - cameraFrame.width/2)
+        cameraFrame.y = Math.floor(tileGrid.height/2  - cameraFrame.height/2)
+        fovGrid.x = cameraFrame.x
+        fovGrid.y = cameraFrame.y
+    }
+}
 
 loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)

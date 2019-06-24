@@ -106,7 +106,7 @@ class Grid<T> implements IRect {
         return this.cells[index]
     }
 
-    getNeighborsXY(x:number, y: number): NeighborList<T> {
+    getNeighborsXY(x: number, y: number): NeighborList<T> {
         const list: NeighborList<T> = {
             up: null,
             down: null,

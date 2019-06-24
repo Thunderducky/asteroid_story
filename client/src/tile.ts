@@ -3,6 +3,10 @@
 /**
  * This class represents locations on the board, eventually we will probably move this into its own ECS system
  */
+enum TileMaterial {
+    Asteroid,
+    Metal
+}
 class Tile {
     /**
      * Can the player/monsters/mobile entities move through/into this tile
@@ -19,6 +23,7 @@ class Tile {
 
     contained: boolean; // models if this thing has a floor and ceiling, (or, in universe, stuff surrounding it on the z-axis)
 
+    material: TileMaterial;
     /**
      * Create a new tile
      * @param blockMove Can the player/monsters/mobile entities move through/into this tile
@@ -35,8 +40,9 @@ class Tile {
             this.blockSight = blockSight
         }
         this.contained = true
+        this.material = TileMaterial.Asteroid
         
     }
 }
 
-export { Tile }
+export { Tile, TileMaterial }

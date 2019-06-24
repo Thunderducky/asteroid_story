@@ -1,5 +1,5 @@
 import { Grid } from './grid'
-import { Tile } from './tile'
+import { Tile, TileMaterial } from './tile'
 import { FOVCell } from './fov'
 import { Entity } from './entity'
 import { IRenderCell } from './renderCell'
@@ -52,26 +52,50 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                     const isGround = !isWall && tile.contained
                     const isSpace = !isWall && !tile.contained
 
-                    if(isSpace){
-                        if(isLit){
-                            renderCell.backColor = COLORS.light_outside
+                    if(tile.material === TileMaterial.Metal){
+                        if(isSpace){
+                            if(isLit){
+                                renderCell.backColor = COLORS.light_outside
+                            } else {
+                                renderCell.backColor = COLORS.dark_outside
+                            }
+                        } else if(isGround){
+                            if(isLit){
+                                renderCell.backColor = COLORS.metal.lightGround
+                            } else {
+                                renderCell.backColor = COLORS.metal.darkGround
+                            }
+                        } else if(isWall){
+                            if(isLit){
+                                renderCell.backColor = COLORS.metal.lightWall
+                            } else {
+                                renderCell.backColor = COLORS.metal.darkWall
+                            }
                         } else {
-                            renderCell.backColor = COLORS.dark_outside
-                        }
-                    } else if(isGround){
-                        if(isLit){
-                            renderCell.backColor = COLORS.light_ground
-                        } else {
-                            renderCell.backColor = COLORS.dark_ground
-                        }
-                    } else if(isWall){
-                        if(isLit){
-                            renderCell.backColor = COLORS.light_wall
-                        } else {
-                            renderCell.backColor = COLORS.dark_wall
+
                         }
                     } else {
+                        if(isSpace){
+                            if(isLit){
+                                renderCell.backColor = COLORS.light_outside
+                            } else {
+                                renderCell.backColor = COLORS.dark_outside
+                            }
+                        } else if(isGround){
+                            if(isLit){
+                                renderCell.backColor = COLORS.light_ground
+                            } else {
+                                renderCell.backColor = COLORS.dark_ground
+                            }
+                        } else if(isWall){
+                            if(isLit){
+                                renderCell.backColor = COLORS.light_wall
+                            } else {
+                                renderCell.backColor = COLORS.dark_wall
+                            }
+                        } else {
 
+                        }
                     }
                 }
             }

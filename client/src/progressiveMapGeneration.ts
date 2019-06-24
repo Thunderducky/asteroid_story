@@ -1,13 +1,14 @@
 import { Grid } from './grid'
-import { Tile } from './tile'
+import { Tile, TileMaterial } from './tile'
 import { IRenderCell } from './renderCell'
-import { IRect } from './shapes/rect'
+import { IRect, Rect } from './shapes/rect'
 import { IEllipse, Ellipse } from './shapes/ellipse'
-import { RANDOM } from './rngHelper';
-import COLORS from './colors';
-import DEBUG from './debugSettings';
+import { RANDOM } from './rngHelper'
+import COLORS from './colors'
+import DEBUG from './debugSettings'
+import { Point, IPoint } from './shapes/point'
 
-const log = (q:any): any => { console.log('\n', q); return q }
+const log = (q: any): any => { console.log('\n', q); return q }
 const settings = {
     SECTION_COUNT:10,
     MARGINS: 10
@@ -21,6 +22,13 @@ const placeAsteroidChunk = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
             tile.contained = true
         }
     })
+}
+
+enum GRID_DIRECTION {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
 }
 
 
@@ -40,7 +48,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
 
     //yield // give us a place to stop
 
-    log("BEGIN MAP")
+    log('BEGIN MAP')
     tileGrid.forEach((t): void => {
         t.blockMove = false
         t.blockSight = false
@@ -48,6 +56,8 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
         t.explored = true // remove later
     })
     //yield
+
+
 
     const MARGINS = settings.MARGINS
     const MIN_DIMENSION = Math.min(tileGrid.width, tileGrid.height)
@@ -72,13 +82,12 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
                 }
             })
         }
-        //yield
     }
     clearDebug()
-    log("ASTEROID SHELL COMPLETE")
+    log('ASTEROID SHELL COMPLETE')
     //yield
-    log("BEGIN ROOM PLACEMENT")
-    log("PICK A SPOT ON THE EDGE")
+    log('BEGIN ROOM PLACEMENT')
+    log('PICK A SPOT ON THE EDGE')
     // HOW DO WE FIND EDGES
     // WE LOOK FOR SPACES WITH EDGES THAT TOUCH OUTSIDE SPACE
 
@@ -90,16 +99,16 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
             outlineCells.push(tile)
         }
     })
-    if(DEBUG.DEBUG_DRAW){
-        outlineCells.forEach((oc: Tile): void => {
-            const dcell = debugGrid.getXY(oc.x,oc.y)
-            dcell.backColor = COLORS.DEBUG
-        })
-    }
+    // if(DEBUG.DEBUG_DRAW){
+    //     outlineCells.forEach((oc: Tile): void => {
+    //         const dcell = debugGrid.getXY(oc.x,oc.y)
+    //         dcell.backColor = COLORS.DEBUG
+    //     })
+    // }
     
-    log("ESTABLISH OUTLINE")
+    log('ESTABLISH OUTLINE')
     //yield
-    log("PICKING A SPOT OF THE OUTLINES TO BE OUR ENTRY POINT")
+    log('PICKING A SPOT OF THE OUTLINES TO BE OUR ENTRY POINT')
     // Little helper message here for me
     const drawDebugString = (message: string, x: number, y: number): void => {
         let currentX = x
@@ -131,14 +140,101 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
     // This is where this will start
     // ALSO, TODO: automatically accomodate for the fact that we are not 
     console.log(outlineEntryPoint)
+
+    // Let's also add this as the first room
+    // let's build us a room to help us out, we'll even overwrite previous stuff?
+    // eroded airlock by setting the block to be Random on the edges
+    console.log('Determine direction to borrow')
     
+    // move toward center of the map, in a cardinal direction
+    let directionToBurrow: GRID_DIRECTION = GRID_DIRECTION.DOWN
+    {
+        const distX = Math.floor(tileGrid.width/2 - outlineEntryPoint.x) // distance from center
+        const distY = Math.floor(tileGrid.height/2 - outlineEntryPoint.y)
+        // Let's go ahead and move it towards the center
+        if(Math.abs(distX) > Math.abs(distY)){
+            // we are further away on the xAxis from the center, let's try moving that way
+            if(distX > 0){
+                directionToBurrow = GRID_DIRECTION.RIGHT
+            } else {
+                directionToBurrow = GRID_DIRECTION.LEFT
+            }
+        } else {
+            // let's move vertically
+            if(distY > 0){
+                directionToBurrow = GRID_DIRECTION.DOWN
+            } else {
+                directionToBurrow = GRID_DIRECTION.UP
+            }
+        }
+    }
+    log('direction to burrow')
+    log(directionToBurrow)
+
+    
+    // SIMPLE MAKE ROOM
+    for(let y = 0; y < 10; y++){
+        for(let x = 0; x < 10; x++){
+            const tile = tileGrid.getXY(outlineEntryPoint.x - 5 + x, outlineEntryPoint.y - 5 + y)
+            tile.contained = true
+            tile.material = TileMaterial.Metal
+            if(x === 0 || x === 9 || y === 0 || y === 9){
+                // this is a bold outline
+                tile.blockMove = true
+                tile.blockSight = true
+            } else {
+                tile.blockMove = false
+                tile.blockSight = false
+            }
+        }
+    }
+    // // let's burrow in a fixed amount of random length into the asteroid
+    const burrowLength = RANDOM.nextInt(10, 30)
+    // const burrowWidth = 5
+    const airlock = Rect.make(outlineEntryPoint.x - 5, outlineEntryPoint.y - 5,10,10)
+    rooms.push(airlock)
+    
+    yield
+
+    const movePoint = (point: IPoint, direction: GRID_DIRECTION, distance: number = 1): void => {
+        if(direction == GRID_DIRECTION.LEFT){
+            point.x -= distance
+        }
+        else if(direction == GRID_DIRECTION.RIGHT){
+            point.x += distance
+        }
+        else if(direction == GRID_DIRECTION.UP){
+            point.y -= distance
+        }
+        else if(direction == GRID_DIRECTION.DOWN){
+            point.y += distance
+        }
+    }
+
+    const airlockCenter = Rect.center(airlock)
+    const burrowLocation = Point.copy(airlockCenter)
+    for(let i = 0; i < burrowLength; i++){
+        const tile = tileGrid.getP(burrowLocation)
+        if(DEBUG.DEBUG_DRAW){
+            const d = debugGrid.getP(burrowLocation)
+            d.backColor = COLORS.DEBUG
+        }
+        tile.blockMove = false
+        tile.blockSight = false
+        movePoint(burrowLocation, directionToBurrow)
+        
+    }
+    yield
+    clearDebug()
+    // Let's set a crawler, width and direction and starting point
+
     // build a major piece
     // build a small room around that section, this is an airlock, this is room 1
     // we could also use this process to pick multiple sections as airlocks
     // once we have that we'll try and place essential rooms into the asteroid
-    
 
-    log("DONE")
+
+    log('DONE')
 }
 
 export { progressiveMapGenerator }
