@@ -19,7 +19,7 @@ import SETTINGS from './gameSettings'
 import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 import DEBUG from './debugSettings'
-import { progressiveMapGenerator } from './progressiveMapGeneration'
+import { progressiveMapGenerator } from './progressiveMapGenerator2'
 
 const {
     TILE_WIDTH,
