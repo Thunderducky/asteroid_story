@@ -155,7 +155,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
             t.blockMove = true
             t.blockSight = true
             t.contained = true
-            t.explored = true // remove later
+            t.explored = false // remove later
         })
     }
     clear()
