@@ -1,12 +1,11 @@
 const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = {
-    mode: "development",
     entry: './client/src/app.ts',
-    devtool: "inline-source-map",
-    devServer: {
-        contentBase: './dist/public'
-    },
+    plugins: [
+      new CleanWebpackPlugin()
+    ],
     output: {
         filename: 'app.js',
         path: path.resolve(__dirname, 'client/public/dist')
