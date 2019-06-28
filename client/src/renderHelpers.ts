@@ -1,4 +1,7 @@
 import {IRect, Rect } from './shapes/rect'
+import { Grid } from './grid'
+import { IRenderCell } from './renderCell'
+import COLORS from './colors'
 
 interface HashStr<T> {
     [key: string]: T;
@@ -74,4 +77,24 @@ function drawSection(ctx: CanvasRenderingContext2D, tilesheet: any, srcRect: IRe
     ctx.globalCompositeOperation = 'source-over'
 }
 
-export  { CODE_TO_RECT_HASH, CHARACTER_HELPER, code, drawSection }
+const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y: number): void => {
+    let currentX = x
+    let currentY = y
+    for(let i = 0; i < message.length; i++){
+        const letter = message[i]
+        if(grid.inBoundsXY(currentX, currentY) && letter != '\n'){
+            const target = grid.getXY(currentX,currentY)
+            target.character = letter
+            target.backColor = COLORS.white
+            target.foreColor = COLORS.black
+        }
+        if(letter !== '\n'){
+            currentX++
+        } else {
+            currentY++
+            currentX = x
+        }
+    }
+}
+
+export  { CODE_TO_RECT_HASH, CHARACTER_HELPER, code, drawSection, drawStringToGrid }

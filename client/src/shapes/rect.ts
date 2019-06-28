@@ -81,6 +81,10 @@ const intersects = (a: IRect, b: IRect): boolean => {
         
 }
 
+const containsXY = (rect: IRect, x: number, y: number): boolean => {
+    return rect.x <= x && x < rect.x + rect.width && rect.y <= y && y < rect.y + rect.height
+}
+
 /**
  * An object used to create and manipulate rectangles
  */
@@ -90,7 +94,8 @@ const Rect = {
     sides,
     corners,
     center,
-    intersects
+    intersects,
+    containsXY
 }
 
 export {IRect, Rect}
