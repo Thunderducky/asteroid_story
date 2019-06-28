@@ -82,7 +82,7 @@ debugGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell 
 let fovRecompute = !DEBUG.DISABLE_FOV
 const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(cameraFrame.width, cameraFrame.height)
 fovGrid.setEach((): FOVCell => { return {
-    visible: DEBUG.DISABLE_FOV
+    visible: false // I don't necessarily want visibility turned on by default
 }})
 
 const tileGrid: Grid<Tile> = new Grid<Tile>(MAP_WIDTH, MAP_HEIGHT)

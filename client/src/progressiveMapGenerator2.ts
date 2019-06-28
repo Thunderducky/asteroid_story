@@ -10,7 +10,7 @@ import { Point, IPoint, GridDirection } from './shapes/point'
 
 const MAX_LEAF_SIZE = 100
 const MIN_LEAF_SIZE = 10
-class Leaf {
+class Leaf implements IRect {
     x: number;
     y: number;
     width: number;
@@ -160,13 +160,32 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
     }
     clear()
 
+    // const outlineRect = (rect: IRect): void => {
+    //     for(let y = rect.y; y < rect.y + rect.height; y++){
+    //         for(let x = rect.x; x < rect.x + rect.width; x++){
+    //             if(y === rect.y || x === rect.x || x === rect.x + rect.width - 1 || y === rect.y + rect.height - 1){
+    //                 const t = tileGrid.getXY(x,y)
+    //                 t.blockMove = false
+    //                 t.blockSight = false
+    //             }
+    //         }
+    //     }
+    // }
+    // const outlineLeaves = (): void => {
+    //     leafs.forEach((l): void => {
+    //         outlineRect(l)
+    //     })
+    // }
     // TODO: Disable entities or placement, essentially stop us before we place all of that stuff
     // Let's make one big leaf at the beginning
     const root = new Leaf(0,0, tileGrid.width - 1, tileGrid.height - 1)
     leafs.push(root)
     let hadSplit = true
+    
     while(hadSplit){
         hadSplit = false
+        // outlineLeaves()
+        // yield
         leafs.forEach((l: Leaf): void => {
             if(!l.hasSplit()){
                 if(l.width > MAX_LEAF_SIZE || l.height > MAX_LEAF_SIZE || RANDOM.next() > 0.25){
@@ -179,8 +198,12 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
             }
         })
     }
+    // 
+    clear()
     root.createRooms()
-    leafs.forEach((l: Leaf): void => {
+    for(let i = leafs.length - 1; i >=0; i--){
+        const l = leafs[i]
+        // leafs.forEach((l: Leaf): void => {
         // draw each of the edges
         if(l.room != null){
             const room = l.room as IRect
@@ -205,7 +228,8 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
             })
             //console.log(halls)
         }
-    })
+        // })
+    }
     //yield
 
 
