@@ -149,7 +149,7 @@ tileGrid.forEach((t: Tile): void => {
     const MIN_DIMENSION = Math.min(tileGrid.width, tileGrid.height)
     const MAX_ASTEROID_SECTION_RADIUS = Math.floor((MIN_DIMENSION - MARGINS * 2)/2)
     const MIN_ASTEROID_SECTION_RADIUS = Math.floor(MAX_ASTEROID_SECTION_RADIUS * 0.3)
-    const SECTION_COUNT = 10
+    const SECTION_COUNT = 50
     // In this block we will generate teh asteroid chunk part
     const placeAsteroidChunk = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
         tileGrid.forEach((tile: Tile, index: number, x: number, y: number): void => {
@@ -173,7 +173,7 @@ tileGrid.forEach((t: Tile): void => {
 }
 
 // Let's go ahead and try and build those ellipses instead before moving them into the generator
-const INTERIOR_MARGINS = 16
+const INTERIOR_MARGINS = 18
 const interior = tileGrid.getSubgrid(Rect.make(INTERIOR_MARGINS,INTERIOR_MARGINS,tileGrid.width - 2 * INTERIOR_MARGINS, tileGrid.height - 2 * INTERIOR_MARGINS))
 interior.forEach((t: Tile): void => {
     t.blockMove = true
