@@ -141,6 +141,7 @@ tileGrid.forEach((t: Tile): void => {
     t.contained = false
     t.blockMove = false
     t.blockSight = false
+    t.explored = true
 })
 {
     // SECTION 1: PLACE ASTEROID CHUNKS TOGETHER
@@ -156,6 +157,7 @@ tileGrid.forEach((t: Tile): void => {
                 tile.blockMove = true
                 tile.blockSight = true
                 tile.contained = true
+                tile.explored = false
             }
         })
     }
@@ -177,6 +179,7 @@ interior.forEach((t: Tile): void => {
     t.blockMove = true
     t.blockSight = true
     t.contained = true
+    t.explored = false
 })
 const levelIterator = progressiveMapGenerator(interior, rooms)
 levelIterator.next()
