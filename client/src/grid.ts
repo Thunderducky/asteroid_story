@@ -47,11 +47,12 @@ class Grid<T> implements IRect {
      * @param fn this function takes the cell itself as the first property and 
      */
     setEach(fn: SetEachFn<T>): Grid<T>{
-        let x = 0, y = 0
-        for(let i = 0; i < this.cells.length; i++){
-            x = i % this.width
-            y = (i - x)/this.width
-            this.cells[i] = fn(this.cells[i], i, x , y)
+        let i = 0
+        for(let y = 0; y < this.height; y++){
+            for(let x = 0; x < this.width; x++){
+                this.cells[i] = fn(this.cells[i], i, x , y)
+                i++
+            }
         }
         return this
     }
@@ -104,6 +105,19 @@ class Grid<T> implements IRect {
      */
     getI(index: number): T {
         return this.cells[index]
+    }
+
+    /**
+     * A quick and easy way to get a subsection of a grid, especially for map generators
+     * @param bounds Bounds are RELATIVE to the parent graph
+     */
+    getSubgrid(bounds: IRect): Grid<T> {    // TODO: Write some tests around this
+        // TODO: validate that we are inside of the grid
+        const subGrid = new Grid<T>(bounds.width - 1, bounds.height - 1, bounds.x + this.x, bounds.y + this.y)
+        subGrid.setEach((cell, i, x, y): T => {
+            return this.getXY(x + subGrid.x ,y + subGrid.y)
+        })
+        return subGrid
     }
 
     getNeighborsXY(x: number, y: number): NeighborList<T> {

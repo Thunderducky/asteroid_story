@@ -8,10 +8,11 @@ import { RANDOM } from '../rngHelper'
 import { Point } from '../shapes/point'
 import { MapGenHelper } from './mapGenHelper'
 
-const MAX_LEAF_SIZE = 20
+const MAX_LEAF_SIZE = 15
 const MIN_LEAF_SIZE = 10
-const MIN_ELLIPSE_RADIUS = 5
-const MAX_ELLIPSE_RADIUS = 10
+const MIN_ELLIPSE_RADIUS = 3
+const MAX_ELLIPSE_RADIUS = 8
+const INTERNAL_CAVES = 10
 class Leaf implements IRect {
     x: number;
     y: number;
@@ -192,6 +193,9 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
                 }
             }
             // Add it to our global list
+            // adjust it for the global list
+            room.x += tileGrid.x
+            room.y += tileGrid.y
             rooms.push(room)
         }
         if(l.halls != null){
@@ -210,7 +214,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
     }
     // TODO: Generate the outside, and always draw the outside, or at least mark it as explored, we'll also probably want to add an airlock to the outside
     // Now let's throw some ellipses at it
-    for(let i = 0; i < 20; i++){
+    for(let i = 0; i < INTERNAL_CAVES; i++){
         MapGenHelper.carveEllipse(tileGrid, randomEllipse(10, tileGrid.width - 10, 10, tileGrid.height - 10))
     }
 
