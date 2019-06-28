@@ -6,7 +6,7 @@ import { IRect, Rect } from '../shapes/rect'
 import { IEllipse, Ellipse } from '../shapes/ellipse'
 import { RANDOM } from '../rngHelper'
 import COLORS from '../colors'
-import DEBUG from '../debugSettings'
+import DEBUG from '../_settings/debugSettings'
 import { Point, IPoint, GridDirection } from '../shapes/point'
 
 const settings = {
@@ -59,7 +59,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
     })
 
     const outlineEntryPoint = outlineCells[RANDOM.nextInt(0, outlineCells.length - 1)]
-    
+
     // move toward center of the map, in a cardinal direction
     // let directionToBurrow: GridDirection = GridDirection.Down
     // {
@@ -103,7 +103,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
     // made a rectangle to push out to the rest of it
     const airlock = Rect.make(outlineEntryPoint.x - 5, outlineEntryPoint.y - 5,10,10)
     rooms.push(airlock)
-    
+
 
     const airlockCenter = Rect.center(airlock)
     class Burrower {
