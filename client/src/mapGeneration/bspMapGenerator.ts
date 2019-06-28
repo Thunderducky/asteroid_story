@@ -159,6 +159,21 @@ const randomEllipse = (minX: number, maxX: number, minY: number, maxY: number): 
 
 function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
     // Clear out all the tiles
+<<<<<<< HEAD:client/src/mapGeneration/bspMapGenerator.ts
+=======
+    const clear = (): void => {
+        tileGrid.forEach((t): void => {
+            t.blockMove = true
+            t.blockSight = true
+            t.contained = true
+            t.explored = false // remove later
+        })
+    }
+    clear()
+
+    // TODO: Disable entities or placement, essentially stop us before we place all of that stuff
+    // Let's make one big leaf at the beginning
+>>>>>>> 0729402753126b9acb78b53bd05132b0121e10f4:client/src/progressiveMapGenerator2.ts
     const root = new Leaf(0,0, tileGrid.width - 1, tileGrid.height - 1)
     leafs.push(root)
     let hadSplit = true
