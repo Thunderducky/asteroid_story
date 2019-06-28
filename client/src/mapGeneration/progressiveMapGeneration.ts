@@ -1,12 +1,13 @@
-import { Grid } from './grid'
-import { Tile, TileMaterial } from './tile'
-import { IRenderCell } from './renderCell'
-import { IRect, Rect } from './shapes/rect'
-import { IEllipse, Ellipse } from './shapes/ellipse'
-import { RANDOM } from './rngHelper'
-import COLORS from './colors'
-import DEBUG from './debugSettings'
-import { Point, IPoint, GridDirection } from './shapes/point'
+// THIS FILE IS VERY WIP
+import { Grid } from '../grid'
+import { Tile, TileMaterial } from '../tile'
+import { IRenderCell } from '../renderCell'
+import { IRect, Rect } from '../shapes/rect'
+import { IEllipse, Ellipse } from '../shapes/ellipse'
+import { RANDOM } from '../rngHelper'
+import COLORS from '../colors'
+import DEBUG from '../debugSettings'
+import { Point, IPoint, GridDirection } from '../shapes/point'
 
 const settings = {
     SECTION_COUNT:10,
@@ -24,21 +25,12 @@ const placeAsteroidChunk = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
 }
 
 function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGrid: Grid<IRenderCell>): any{
-
-    const clearDebug = (): void => {
-        if(DEBUG.DEBUG_DRAW){ // prevent this operation if we are not drawing
-            debugGrid.forEach((dgc): void => {
-                dgc.backColor = COLORS.black
-            })
-        }
-    }
     tileGrid.forEach((t): void => {
         t.blockMove = false
         t.blockSight = false
         t.contained = false
         t.explored = true // remove later
     })
-    //yield
 
     // We'll move this into a 'generate asteroid' section
     const MARGINS = settings.MARGINS
@@ -55,15 +47,6 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
         const ellipse = Ellipse.make(x,y,xRadius,yRadius, RANDOM.next() * Math.PI * 2)
         asteroidEllipses.push(ellipse)
         placeAsteroidChunk(tileGrid, ellipse)
-        if(DEBUG.DEBUG_DRAW){
-            clearDebug()
-            // TODO: optimize this steup
-            debugGrid.forEach((cell: IRenderCell, index: number, x: number, y: number): void => {
-                if(Ellipse.containsXY(ellipse, x,y)){
-                    cell.backColor = COLORS.DEBUG
-                }
-            })
-        }
     }
 
     const outlineCells: Tile[] = []
@@ -78,27 +61,27 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
     const outlineEntryPoint = outlineCells[RANDOM.nextInt(0, outlineCells.length - 1)]
     
     // move toward center of the map, in a cardinal direction
-    let directionToBurrow: GridDirection = GridDirection.Down
-    {
-        const distX = Math.floor(tileGrid.width/2 - outlineEntryPoint.x) // distance from center
-        const distY = Math.floor(tileGrid.height/2 - outlineEntryPoint.y)
-        // Let's go ahead and move it towards the center
-        if(Math.abs(distX) > Math.abs(distY)){
-            // we are further away on the xAxis from the center, let's try moving that way
-            if(distX > 0){
-                directionToBurrow = GridDirection.Right
-            } else {
-                directionToBurrow = GridDirection.Left
-            }
-        } else {
-            // let's move vertically
-            if(distY > 0){
-                directionToBurrow = GridDirection.Down
-            } else {
-                directionToBurrow = GridDirection.Up
-            }
-        }
-    }
+    // let directionToBurrow: GridDirection = GridDirection.Down
+    // {
+    //     const distX = Math.floor(tileGrid.width/2 - outlineEntryPoint.x) // distance from center
+    //     const distY = Math.floor(tileGrid.height/2 - outlineEntryPoint.y)
+    //     // Let's go ahead and move it towards the center
+    //     if(Math.abs(distX) > Math.abs(distY)){
+    //         // we are further away on the xAxis from the center, let's try moving that way
+    //         if(distX > 0){
+    //             directionToBurrow = GridDirection.Right
+    //         } else {
+    //             directionToBurrow = GridDirection.Left
+    //         }
+    //     } else {
+    //         // let's move vertically
+    //         if(distY > 0){
+    //             directionToBurrow = GridDirection.Down
+    //         } else {
+    //             directionToBurrow = GridDirection.Up
+    //         }
+    //     }
+    // }
 
     // TODO: Methodize this better
     for(let y = 0; y < 10; y++){

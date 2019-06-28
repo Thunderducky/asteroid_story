@@ -1,7 +1,7 @@
-import { Grid } from './grid'
-import { Tile } from './tile'
-import { IRect, Rect } from './shapes/rect'
-import { IEllipse, Ellipse } from './shapes/ellipse'
+import { Grid } from '../grid'
+import { Tile } from '../tile'
+import { IRect, Rect } from '../shapes/rect'
+import { IEllipse, Ellipse } from '../shapes/ellipse'
 
 /**
  * A collection of static methods for helping to manipulate maps

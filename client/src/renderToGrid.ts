@@ -45,7 +45,7 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
             } else {
                 const tile = tileGrid.getXY(worldP.x, worldP.y)
                 if(!tile.explored){
-                    renderCell.backColor = COLORS.black
+                    renderCell.backColor = COLORS.dark_outside
                 } else {
                 // TODO: ADD DOORS
                     const isWall = tile.blockMove && tile.blockSight

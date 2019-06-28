@@ -1,10 +1,10 @@
-import { Grid } from './grid'
-import { Tile } from './tile'
+import { Grid } from '../grid'
+import { Tile } from '../tile'
 
-import { IRect, Rect } from './shapes/rect'
-import { RANDOM } from './rngHelper'
+import { IRect, Rect } from '../shapes/rect'
+import { RANDOM } from '../rngHelper'
 import { MapGenHelper } from './mapGenHelper'
-import { IEllipse, Ellipse } from './shapes/ellipse'
+import { IEllipse, Ellipse } from '../shapes/ellipse'
 
 
 const ROOM_MAX_SIZE = 16
@@ -113,7 +113,7 @@ const mapGenerator2 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
 }
 // todo, allow us to watch this in real time, and even toggle next
 const mapGenerator3 = (tileGrid: Grid<Tile>, rooms: IRect[]): void => {
-    tileGrid.forEach((t): void => {
+    tileGrid.forEach((t: Tile): void => {
         t.blockMove = false
         t.blockSight = false
         t.contained = false

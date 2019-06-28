@@ -12,24 +12,20 @@ import { Rect, IRect } from './shapes/rect'
 import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
-import { mapGenerator3 } from './mapGeneration'
 import COLORS from './colors'
 
 import SETTINGS from './gameSettings'
 import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 import DEBUG from './debugSettings'
-import { progressiveMapGenerator } from './progressiveMapGenerator2'
+import { progressiveMapGenerator } from './mapGeneration/bspMapGenerator'
+//import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
 
 const {
-    TILE_WIDTH,
-    TILE_HEIGHT,
-    SCREEN_WIDTH,
-    SCREEN_HEIGHT,
-    MAP_WIDTH,
-    MAP_HEIGHT,
-    CAMERA_WIDTH,
-    CAMERA_HEIGHT,
+    TILE_WIDTH, TILE_HEIGHT,
+    SCREEN_WIDTH, SCREEN_HEIGHT,
+    MAP_WIDTH, MAP_HEIGHT,
+    CAMERA_WIDTH, CAMERA_HEIGHT,
     FOV_RADIUS
 } = SETTINGS
 
@@ -50,6 +46,8 @@ if(!seedStr){
     RANDOM.seed(seedStr)
 }
 
+
+// Set up Entities
 const player: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', COLORS.player)
 const npc: Entity = new Entity(ID_MANAGER.next(), 3,4, '@', COLORS.npc)
 const entities: Entity[] = [player,npc]
@@ -79,12 +77,14 @@ debugGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell 
     return RenderCell.make(x,y,'', COLORS.black, COLORS.black)
 })
 
+// FOV
 let fovRecompute = !DEBUG.DISABLE_FOV
 const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(cameraFrame.width, cameraFrame.height)
 fovGrid.setEach((): FOVCell => { return {
     visible: false // I don't necessarily want visibility turned on by default
 }})
 
+// Tile Grid
 const tileGrid: Grid<Tile> = new Grid<Tile>(MAP_WIDTH, MAP_HEIGHT)
 tileGrid.setEach((cell: Tile, index: number, x: number, y: number): Tile => {
     const t = new Tile(x,y, true)
@@ -96,11 +96,6 @@ tileGrid.setEach((cell: Tile, index: number, x: number, y: number): Tile => {
 
 // this will also populate the rooms
 const rooms: IRect[] = []
-//mapGenerator3(tileGrid, rooms)
-//mapGenerator2(tileGrid, rooms)
-
-// this is honestly just another part of genrating things, we just need to come up with some extra terminology for it/ ways to deal with it
-
 
 // clean this up
 const moves: any[] = []
@@ -138,7 +133,7 @@ const newKeyPress = (q: string, enableZoom: boolean = true): boolean => {
     }
 }
 
-const levelIterator = progressiveMapGenerator(tileGrid, rooms, debugGrid)
+const levelIterator = progressiveMapGenerator(tileGrid, rooms)
 levelIterator.next()
 {
     if(rooms.length > 0){
@@ -167,7 +162,7 @@ loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)
     if(!DEBUG.STAGE_MAP_GENERATORS){
         // JUST FULLY SEQUENCE THE GENERATOR
-        while(levelIterator.next().done !== false){}
+        //while(levelIterator.next().done !== false){}
     }
     // Loop
     const loop = (): void => {
@@ -223,6 +218,7 @@ loadImage('assets/out.png').then((image: any): void => {
 
         // Convert to render format
         renderToGrid(tileGrid, fovGrid, entities, renderGrid, cameraFrame, debugGrid)
+        
         // actually render to canvas
         renderer.clear()
         renderer.render(renderGrid)

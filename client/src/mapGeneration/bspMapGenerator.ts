@@ -1,15 +1,17 @@
-import { Grid } from './grid'
-import { Tile, TileMaterial } from './tile'
-import { IRenderCell } from './renderCell'
-import { IRect, Rect } from './shapes/rect'
-import { IEllipse, Ellipse } from './shapes/ellipse'
-import { RANDOM } from './rngHelper'
-import COLORS from './colors'
-import DEBUG from './debugSettings'
-import { Point, IPoint, GridDirection } from './shapes/point'
+// using this for reference: https://gamedevelopment.tutsplus.com/tutorials/how-to-use-bsp-trees-to-generate-game-maps--gamedev-12268
+import { Grid } from '../grid'
+import { Tile } from '../tile'
+import { IRect, Rect } from '../shapes/rect'
 
-const MAX_LEAF_SIZE = 100
+import { IEllipse, Ellipse } from '../shapes/ellipse'
+import { RANDOM } from '../rngHelper'
+import { Point } from '../shapes/point'
+import { MapGenHelper } from './mapGenHelper'
+
+const MAX_LEAF_SIZE = 20
 const MIN_LEAF_SIZE = 10
+const MIN_ELLIPSE_RADIUS = 5
+const MAX_ELLIPSE_RADIUS = 10
 class Leaf implements IRect {
     x: number;
     y: number;
@@ -142,50 +144,28 @@ class Leaf implements IRect {
             this.halls.push(Rect.make(start.x, topY, 1, bottomY - topY))
             this.halls.push(Rect.make(leftX, endP.y, rightX - leftX, 1))
         }
-        console.log(start, end, this.halls)
     }
 }
-const rooms = []
 const leafs: Leaf[] = []
+const randomEllipse = (minX: number, maxX: number, minY: number, maxY: number): IEllipse => {
+    return Ellipse.make(
+        RANDOM.nextInt(minX, maxX),
+        RANDOM.nextInt(minY, maxY),
+        RANDOM.nextInt(MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS),
+        RANDOM.nextInt(MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS),
+        RANDOM.next() * Math.PI * 2
+    )
+}
 
-function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGrid: Grid<IRenderCell>): any{
+function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
     // Clear out all the tiles
-    const clear = (): void => {
-        tileGrid.forEach((t): void => {
-            t.blockMove = true
-            t.blockSight = true
-            t.contained = true
-            t.explored = true // remove later
-        })
-    }
-    clear()
-
-    // const outlineRect = (rect: IRect): void => {
-    //     for(let y = rect.y; y < rect.y + rect.height; y++){
-    //         for(let x = rect.x; x < rect.x + rect.width; x++){
-    //             if(y === rect.y || x === rect.x || x === rect.x + rect.width - 1 || y === rect.y + rect.height - 1){
-    //                 const t = tileGrid.getXY(x,y)
-    //                 t.blockMove = false
-    //                 t.blockSight = false
-    //             }
-    //         }
-    //     }
-    // }
-    // const outlineLeaves = (): void => {
-    //     leafs.forEach((l): void => {
-    //         outlineRect(l)
-    //     })
-    // }
-    // TODO: Disable entities or placement, essentially stop us before we place all of that stuff
-    // Let's make one big leaf at the beginning
     const root = new Leaf(0,0, tileGrid.width - 1, tileGrid.height - 1)
     leafs.push(root)
     let hadSplit = true
     
+    // Split up the rooms as much as possible // TODO: Change this so we can stop early if we marked it that way
     while(hadSplit){
         hadSplit = false
-        // outlineLeaves()
-        // yield
         leafs.forEach((l: Leaf): void => {
             if(!l.hasSplit()){
                 if(l.width > MAX_LEAF_SIZE || l.height > MAX_LEAF_SIZE || RANDOM.next() > 0.25){
@@ -198,13 +178,10 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
             }
         })
     }
-    // 
-    clear()
+    // Create all the rooms 
     root.createRooms()
     for(let i = leafs.length - 1; i >=0; i--){
         const l = leafs[i]
-        // leafs.forEach((l: Leaf): void => {
-        // draw each of the edges
         if(l.room != null){
             const room = l.room as IRect
             for(let y = room.y; y < room.y + room.height - 1; y++){
@@ -214,6 +191,8 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
                     t.blockSight = false
                 }
             }
+            // Add it to our global list
+            rooms.push(room)
         }
         if(l.halls != null){
             const halls = l.halls as IRect[]
@@ -226,16 +205,16 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[], debugGr
                     }
                 }
             })
-            //console.log(halls)
         }
-        // })
+
     }
-    //yield
+    // TODO: Generate the outside, and always draw the outside, or at least mark it as explored, we'll also probably want to add an airlock to the outside
+    // Now let's throw some ellipses at it
+    for(let i = 0; i < 20; i++){
+        MapGenHelper.carveEllipse(tileGrid, randomEllipse(10, tileGrid.width - 10, 10, tileGrid.height - 10))
+    }
 
-
-
-    // Next partition the space
-    // using this for reference: https://gamedevelopment.tutsplus.com/tutorials/how-to-use-bsp-trees-to-generate-game-maps--gamedev-12268
+   
 }
 
 export { progressiveMapGenerator }
