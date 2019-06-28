@@ -6,7 +6,7 @@ import { IRenderCell } from './renderCell'
 import { Point } from './shapes/point'
 import COLORS from './colors'
 import { IRect } from './shapes/rect'
-import DEBUG from './debugSettings'
+import DEBUG from './_settings/debugSettings'
 
 export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>, cameraFrame: IRect, debugGrid: Grid<IRenderCell>): void => {
     // renderGrid is in SCREEN coordinates, and will have it's XY ignored for our purposes
@@ -125,7 +125,7 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                 // this maps to the tileGrid, fovGrid, and entities
                 Point.set(worldP, screenP.x + cameraFrame.x, screenP.y + cameraFrame.y)
 
-                
+
                 const renderCell  = renderGrid.getP(screenP)
                 if(debugGrid.inBoundsXY(worldP.x, worldP.y)){
                     const debugCell = debugGrid.getP(worldP)

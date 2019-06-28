@@ -14,10 +14,10 @@ import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
 import COLORS from './colors'
 
-import SETTINGS from './gameSettings'
+import SETTINGS from './_settings/gameSettings'
 import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
-import DEBUG from './debugSettings'
+import DEBUG from './_settings/debugSettings'
 import { progressiveMapGenerator } from './mapGeneration/bspMapGenerator'
 //import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
 
@@ -218,7 +218,7 @@ loadImage('assets/out.png').then((image: any): void => {
 
         // Convert to render format
         renderToGrid(tileGrid, fovGrid, entities, renderGrid, cameraFrame, debugGrid)
-        
+
         // actually render to canvas
         renderer.clear()
         renderer.render(renderGrid)

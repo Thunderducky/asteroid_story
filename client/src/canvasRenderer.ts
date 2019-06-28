@@ -2,7 +2,7 @@ import { IRenderCell } from './renderCell'
 import { Grid } from './grid'
 import { CODE_TO_RECT_HASH, drawSection, code } from './renderHelpers'
 import { Rect } from './shapes/rect'
-import SETTINGS from './gameSettings'
+import SETTINGS from './_settings/gameSettings'
 import COLORS from './colors'
 /**
  * Responsible for taking a render grid and converting it to images
@@ -41,8 +41,8 @@ class CanvasRenderer {
         // We have checked to ensure that it has been created
         const destRect = Rect.make(0,0,0,0)
         renderGrid.forEach((
-            cell: IRenderCell, 
-            index: number, 
+            cell: IRenderCell,
+            index: number,
             x: number, y: number): void => {
             Rect.set(destRect, x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT)
             // todo, allow us to mark render cells as 'empty' rather than spaces, this might help speed up render time
@@ -69,7 +69,7 @@ class CanvasRenderer {
         const canvas = this.canvas as HTMLCanvasElement
         ctx.clearRect(0,0, canvas.width, canvas.height)
     }
-    
+
 }
 
 export { CanvasRenderer }
