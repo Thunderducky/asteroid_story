@@ -8,7 +8,9 @@ const DEBUG: Hash<boolean> = {
     DISABLE_TRACKING: false,     // CAMERA WILL ONLY RESPOND TO DIRECT CONTROL AND WON'T TRACK CHARACTER
     ENABLE_CLIPPING: false,
     DEBUG_DRAW: false,
-    STAGE_MAP_GENERATORS: false, // We will manually progress the level generator
+    STAGE_MAP_GENERATORS: false, // We will manually progress the level generator,
+    ALWAYS_SHOW_ENTITIES: false,
+    SHOW_UNEXPLORED: false
 }
 
 export default DEBUG

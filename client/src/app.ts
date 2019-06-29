@@ -18,7 +18,8 @@ import SETTINGS from './_settings/gameSettings'
 import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 import DEBUG from './_settings/debugSettings'
-import { progressiveMapGenerator } from './mapGeneration/bspMapGenerator'
+import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
+import { Ellipse, IEllipse } from './shapes/ellipse'
 //import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
 
 const {
@@ -133,8 +134,49 @@ const newKeyPress = (q: string, enableZoom: boolean = true): boolean => {
     }
 }
 
+// the rooms won't be quite right since we are passing back the room in a small area, or maybe we just need to keep track of that inside of the generator
+// when we hand it back since the grid offers it's x and y coordinates
+// build the asteroid before we pass it off to the level generator, then we'll find the closest room and connect it to that one
+tileGrid.forEach((t: Tile): void => {
+    t.contained = false
+    t.blockMove = false
+    t.blockSight = false
+    t.explored = true
+})
+{
+    // SECTION 1: PLACE ASTEROID CHUNKS TOGETHER
+    const MARGINS = 1
+    const MIN_DIMENSION = Math.min(tileGrid.width, tileGrid.height)
+    const MAX_ASTEROID_SECTION_RADIUS = Math.floor((MIN_DIMENSION - MARGINS * 2)/2)
+    const MIN_ASTEROID_SECTION_RADIUS = Math.floor(MAX_ASTEROID_SECTION_RADIUS * 0.3)
+    const SECTION_COUNT = 50
+    // In this block we will generate teh asteroid chunk part
+    const placeAsteroidChunk = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
+        tileGrid.forEach((tile: Tile, index: number, x: number, y: number): void => {
+            if(Ellipse.containsXY(ellipse, x,y)){
+                tile.blockMove = true
+                tile.blockSight = true
+                tile.contained = true
+                tile.explored = false
+            }
+        })
+    }
+
+    for(let i = 0; i < SECTION_COUNT; i++){
+        const xRadius = RANDOM.nextInt(MIN_ASTEROID_SECTION_RADIUS, MAX_ASTEROID_SECTION_RADIUS)
+        const yRadius = RANDOM.nextInt(MIN_ASTEROID_SECTION_RADIUS, MAX_ASTEROID_SECTION_RADIUS)
+        const bigRadius = Math.max(xRadius, yRadius)
+        const x = RANDOM.nextInt(MARGINS + bigRadius, tileGrid.width - MARGINS - bigRadius)
+        const y = RANDOM.nextInt(MARGINS + bigRadius, tileGrid.height - MARGINS - bigRadius)
+        placeAsteroidChunk(tileGrid, Ellipse.make(x,y,xRadius,yRadius, RANDOM.next() * Math.PI * 2))
+    }
+}
+
+// Let's go ahead and try and build those ellipses instead before moving them into the generator
 const levelIterator = progressiveMapGenerator(tileGrid, rooms)
 levelIterator.next()
+// Some placement sections
+// should put this logic somewhere else
 {
     if(rooms.length > 0){
         const pcenter = Rect.center(rooms[0])
@@ -157,7 +199,9 @@ levelIterator.next()
         fovGrid.y = cameraFrame.y
     }
 }
-
+// Load our one asset right now
+// Heck, we might put map gen in another thread and we can just have it working whenever the player is doing anything
+// if web workers are supported that is
 loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)
     if(!DEBUG.STAGE_MAP_GENERATORS){

@@ -44,8 +44,8 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                 }
             } else {
                 const tile = tileGrid.getXY(worldP.x, worldP.y)
-                if(!tile.explored){
-                    renderCell.backColor = COLORS.dark_outside
+                if(!tile.explored && !DEBUG.SHOW_UNEXPLORED){
+                    renderCell.backColor = COLORS.black
                 } else {
                 // TODO: ADD DOORS
                     const isWall = tile.blockMove && tile.blockSight
@@ -109,7 +109,7 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
             cameraFrame.y <= entity.y && entity.y <= cameraFrame.y + cameraFrame.height - 1){
             const rCell: IRenderCell = renderGrid.getP(screenP)
             const fovCell: FOVCell = fovGrid.getP(screenP)
-            if(fovCell.visible){
+            if(fovCell.visible || DEBUG.ALWAYS_SHOW_ENTITIES){
                 rCell.foreColor = entity.color
                 rCell.character = entity.character
             }

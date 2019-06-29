@@ -1,17 +1,16 @@
-// using this for reference: https://gamedevelopment.tutsplus.com/tutorials/how-to-use-bsp-trees-to-generate-game-maps--gamedev-12268
-import { Grid } from '../grid'
-import { Tile } from '../tile'
-import { IRect, Rect } from '../shapes/rect'
+import { RANDOM } from '../../rngHelper'
+import { Point } from '../../shapes/point'
+import { IRect, Rect } from '../../shapes/rect'
+import BSP_SETTINGS from '../../_settings/bspMapGeneratorSettings'
 
-import { IEllipse, Ellipse } from '../shapes/ellipse'
-import { RANDOM } from '../rngHelper'
-import { Point } from '../shapes/point'
-import { MapGenHelper } from './mapGenHelper'
 
-const MAX_LEAF_SIZE = 20
-const MIN_LEAF_SIZE = 10
-const MIN_ELLIPSE_RADIUS = 5
-const MAX_ELLIPSE_RADIUS = 10
+// TODO SHOULD PASS THESE VALUES IN TO THE ROOT, AND HAVE IT PROPOGATE?
+const { MIN_LEAF_SIZE } = BSP_SETTINGS
+
+/**
+ * The Leaf class is for helping to split space into smaller
+ * components semi arbitrarily
+ */
 class Leaf implements IRect {
     x: number;
     y: number;
@@ -146,75 +145,5 @@ class Leaf implements IRect {
         }
     }
 }
-const leafs: Leaf[] = []
-const randomEllipse = (minX: number, maxX: number, minY: number, maxY: number): IEllipse => {
-    return Ellipse.make(
-        RANDOM.nextInt(minX, maxX),
-        RANDOM.nextInt(minY, maxY),
-        RANDOM.nextInt(MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS),
-        RANDOM.nextInt(MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS),
-        RANDOM.next() * Math.PI * 2
-    )
-}
 
-function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
-    // Clear out all the tiles
-    const root = new Leaf(0,0, tileGrid.width - 1, tileGrid.height - 1)
-    leafs.push(root)
-    let hadSplit = true
-    
-    // Split up the rooms as much as possible // TODO: Change this so we can stop early if we marked it that way
-    while(hadSplit){
-        hadSplit = false
-        leafs.forEach((l: Leaf): void => {
-            if(!l.hasSplit()){
-                if(l.width > MAX_LEAF_SIZE || l.height > MAX_LEAF_SIZE || RANDOM.next() > 0.25){
-                    if(l.split()){
-                        leafs.push(l.left as Leaf)
-                        leafs.push(l.right as Leaf)
-                        hadSplit = true
-                    }
-                }
-            }
-        })
-    }
-    // Create all the rooms 
-    root.createRooms()
-    for(let i = leafs.length - 1; i >=0; i--){
-        const l = leafs[i]
-        if(l.room != null){
-            const room = l.room as IRect
-            for(let y = room.y; y < room.y + room.height - 1; y++){
-                for(let x = room.x; x < room.x + room.width - 1; x++){
-                    const t = tileGrid.getXY(x,y)
-                    t.blockMove = false
-                    t.blockSight = false
-                }
-            }
-            // Add it to our global list
-            rooms.push(room)
-        }
-        if(l.halls != null){
-            const halls = l.halls as IRect[]
-            halls.forEach((room: IRect): void => {
-                for(let y = room.y; y < room.y + room.height; y++){
-                    for(let x = room.x; x < room.x + room.width; x++){
-                        const t = tileGrid.getXY(x,y)
-                        t.blockMove = false
-                        t.blockSight = false
-                    }
-                }
-            })
-        }
-
-    }
-    // TODO: Generate the outside, and always draw the outside, or at least mark it as explored, we'll also probably want to add an airlock to the outside
-    // Now let's throw some ellipses at it
-    for(let i = 0; i < 20; i++){
-        MapGenHelper.carveEllipse(tileGrid, randomEllipse(10, tileGrid.width - 10, 10, tileGrid.height - 10))
-    }
-
-   
-}
-
-export { progressiveMapGenerator }
+export { Leaf }

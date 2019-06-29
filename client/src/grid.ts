@@ -9,14 +9,6 @@ interface ForEachFn<T> {
     (cell: T, index: number, x: number, y: number): void;
 }
 
-interface NeighborList<T> {
-    up: T | null;
-    left: T | null;
-    right: T | null;
-    down: T | null;
-    neighbors: T[];
-}
-
 // TODO: give grids their own x and ys, that way they can implement all the point and rect stuff
 /**
  * Grid to represent 2d collections, please don't resize it after creating it
@@ -47,11 +39,12 @@ class Grid<T> implements IRect {
      * @param fn this function takes the cell itself as the first property and 
      */
     setEach(fn: SetEachFn<T>): Grid<T>{
-        let x = 0, y = 0
-        for(let i = 0; i < this.cells.length; i++){
-            x = i % this.width
-            y = (i - x)/this.width
-            this.cells[i] = fn(this.cells[i], i, x , y)
+        let i = 0
+        for(let y = 0; y < this.height; y++){
+            for(let x = 0; x < this.width; x++){
+                this.cells[i] = fn(this.cells[i], i, x , y)
+                i++
+            }
         }
         return this
     }
@@ -73,8 +66,8 @@ class Grid<T> implements IRect {
 
     /**
      * The grid starts at the top left, x increase to the right and y increases down, silently fails if out of bounds and just returns undefined
-     * @param x x coordinate of the grid
-     * @param y y coordinate of the grid
+     * @param x x coordinate of the grid, (does not include the grid offset)
+     * @param y y coordinate of the grid (does not include the grid offset)
      */
     getXY(x: number, y: number): T  {
         if(!this.inBoundsXY(x,y)){
@@ -82,6 +75,7 @@ class Grid<T> implements IRect {
         }
         return this.cells[x + y * this.width]
     }
+
     /**
      * Convenience method for getXY. The grid starts at the top left, x increase to the right and y increases down, silently fails if out of bounds and just returns undefined
      * @param point contains the x and y coordinates of the cell you want to get
@@ -106,32 +100,29 @@ class Grid<T> implements IRect {
         return this.cells[index]
     }
 
-    getNeighborsXY(x: number, y: number): NeighborList<T> {
-        const list: NeighborList<T> = {
-            up: null,
-            down: null,
-            left: null,
-            right: null,
-            neighbors:[]
+    /**
+     * A quick and easy way to get a subsection of a grid, especially for map generators
+     * @param bounds Bounds are RELATIVE to the parent graph
+     */
+    getSubgrid(bounds: IRect): Grid<T> {    // TODO: Write some tests around this
+        // TODO: validate that we are inside of the grid
+        const subGrid = new Grid<T>(bounds.width - 1, bounds.height - 1, bounds.x + this.x, bounds.y + this.y)
+        subGrid.setEach((cell, i, x, y): T => {
+            return this.getXY(x + subGrid.x ,y + subGrid.y)
+        })
+        return subGrid
+    }
+
+    getNeighborsXY(cellX: number, cellY: number, radius = 1): T[] {
+        const neighbors: T[] = []
+        for(let y = cellY - radius; y <= cellY + radius; y++){
+            for(let x = cellX - radius; x <= cellX + radius; x++){
+                if(this.inBoundsXY(x,y)){
+                    neighbors.push(this.getXY(x,y))
+                }
+            }
         }
-        if(this.inBoundsXY(x,y - 1)){
-            list.up = this.getXY(x, y - 1)
-            list.neighbors.push(list.up)
-        }
-        if(this.inBoundsXY(x,y + 1)){
-            list.down = this.getXY(x, y + 1)
-            list.neighbors.push(list.down)
-        }
-        if(this.inBoundsXY(x - 1,y)){
-            list.left = this.getXY(x - 1, y)
-            list.neighbors.push(list.left)
-        }
-        if(this.inBoundsXY(x + 1,y)){
-            list.right = this.getXY(x + 1, y)
-            list.neighbors.push(list.right)
-        }
-        
-        return list
+        return neighbors
     }
 }
 
