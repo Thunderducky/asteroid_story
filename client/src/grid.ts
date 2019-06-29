@@ -9,14 +9,6 @@ interface ForEachFn<T> {
     (cell: T, index: number, x: number, y: number): void;
 }
 
-interface NeighborList<T> {
-    up: T | null;
-    left: T | null;
-    right: T | null;
-    down: T | null;
-    neighbors: T[];
-}
-
 // TODO: give grids their own x and ys, that way they can implement all the point and rect stuff
 /**
  * Grid to represent 2d collections, please don't resize it after creating it
@@ -74,8 +66,8 @@ class Grid<T> implements IRect {
 
     /**
      * The grid starts at the top left, x increase to the right and y increases down, silently fails if out of bounds and just returns undefined
-     * @param x x coordinate of the grid
-     * @param y y coordinate of the grid
+     * @param x x coordinate of the grid, (does not include the grid offset)
+     * @param y y coordinate of the grid (does not include the grid offset)
      */
     getXY(x: number, y: number): T  {
         if(!this.inBoundsXY(x,y)){
@@ -83,6 +75,7 @@ class Grid<T> implements IRect {
         }
         return this.cells[x + y * this.width]
     }
+
     /**
      * Convenience method for getXY. The grid starts at the top left, x increase to the right and y increases down, silently fails if out of bounds and just returns undefined
      * @param point contains the x and y coordinates of the cell you want to get
@@ -120,32 +113,16 @@ class Grid<T> implements IRect {
         return subGrid
     }
 
-    getNeighborsXY(x: number, y: number): NeighborList<T> {
-        const list: NeighborList<T> = {
-            up: null,
-            down: null,
-            left: null,
-            right: null,
-            neighbors:[]
+    getNeighborsXY(cellX: number, cellY: number, radius = 1): T[] {
+        const neighbors: T[] = []
+        for(let y = cellY - radius; y <= cellY + radius; y++){
+            for(let x = cellX - radius; x <= cellX + radius; x++){
+                if(this.inBoundsXY(x,y)){
+                    neighbors.push(this.getXY(x,y))
+                }
+            }
         }
-        if(this.inBoundsXY(x,y - 1)){
-            list.up = this.getXY(x, y - 1)
-            list.neighbors.push(list.up)
-        }
-        if(this.inBoundsXY(x,y + 1)){
-            list.down = this.getXY(x, y + 1)
-            list.neighbors.push(list.down)
-        }
-        if(this.inBoundsXY(x - 1,y)){
-            list.left = this.getXY(x - 1, y)
-            list.neighbors.push(list.left)
-        }
-        if(this.inBoundsXY(x + 1,y)){
-            list.right = this.getXY(x + 1, y)
-            list.neighbors.push(list.right)
-        }
-        
-        return list
+        return neighbors
     }
 }
 

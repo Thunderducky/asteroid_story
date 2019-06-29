@@ -18,7 +18,7 @@ import SETTINGS from './_settings/gameSettings'
 import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 import DEBUG from './_settings/debugSettings'
-import { progressiveMapGenerator } from './mapGeneration/bspMapGenerator'
+import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
 import { Ellipse, IEllipse } from './shapes/ellipse'
 //import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
 
@@ -173,16 +173,10 @@ tileGrid.forEach((t: Tile): void => {
 }
 
 // Let's go ahead and try and build those ellipses instead before moving them into the generator
-const INTERIOR_MARGINS = 18
-const interior = tileGrid.getSubgrid(Rect.make(INTERIOR_MARGINS,INTERIOR_MARGINS,tileGrid.width - 2 * INTERIOR_MARGINS, tileGrid.height - 2 * INTERIOR_MARGINS))
-interior.forEach((t: Tile): void => {
-    t.blockMove = true
-    t.blockSight = true
-    t.contained = true
-    t.explored = false
-})
-const levelIterator = progressiveMapGenerator(interior, rooms)
+const levelIterator = progressiveMapGenerator(tileGrid, rooms)
 levelIterator.next()
+// Some placement sections
+// should put this logic somewhere else
 {
     if(rooms.length > 0){
         const pcenter = Rect.center(rooms[0])
@@ -205,7 +199,9 @@ levelIterator.next()
         fovGrid.y = cameraFrame.y
     }
 }
-
+// Load our one asset right now
+// Heck, we might put map gen in another thread and we can just have it working whenever the player is doing anything
+// if web workers are supported that is
 loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)
     if(!DEBUG.STAGE_MAP_GENERATORS){
