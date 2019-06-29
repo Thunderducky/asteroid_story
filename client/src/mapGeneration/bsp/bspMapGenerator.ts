@@ -14,7 +14,9 @@ const { MAX_LEAF_SIZE, MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS, MAP_MARGINS } = B
 
 const leafs: Leaf[] = []
 
-const placeInteriorExceptEdge = (tileGrid: Grid<Tile>, x: number, y: number): boolean => {
+const PERCENT_CHANCE_WINDOW = 0.3
+
+const placeInteriorExceptEdge = (tileGrid: Grid<Tile>, x: number, y: number, placeWindow = false): boolean => {
     const tile = tileGrid.getXY(x,y)
     const tiles = tileGrid.getNeighborsXY(x,y)
     // if our neighbors touch the outside or are outside, do not touch them
@@ -23,6 +25,7 @@ const placeInteriorExceptEdge = (tileGrid: Grid<Tile>, x: number, y: number): bo
         tile.blockSight = false
         return true
     } else {
+        tile.blockSight = tile.contained && !placeWindow
         return false
     }
 }
@@ -76,9 +79,10 @@ const buildAsteroidShell = (tileGrid: Grid<Tile>, sections: number, margin: numb
 }
 
 const carveEllipse = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
+    let hasWindow = RANDOM.next() <= PERCENT_CHANCE_WINDOW
     tileGrid.forEach((tile, index, x, y): void => {
         if(Ellipse.containsXY(ellipse, x,y)){
-            placeInteriorExceptEdge(tileGrid, x,y)
+            placeInteriorExceptEdge(tileGrid, x,y, hasWindow)
         }
     })
 }
@@ -86,7 +90,7 @@ const carveEllipse = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
 // We are going to generate two types of things
 // Exterior rooms and interior rooms
 // if no exterior rooms exist, we'll force one, but one probably will
-
+const exteriorRooms: IRect[] = []
 function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
     // Section 1: Build the shell
     // TODO: move these somewhere else
@@ -125,9 +129,10 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
         if(l.room != null){
             const room = l.room as IRect
             let allInterior = true
+            let hasWindow = RANDOM.next() <= PERCENT_CHANCE_WINDOW
             for(let y = room.y; y < room.y + room.height - 1; y++){
                 for(let x = room.x; x < room.x + room.width - 1; x++){
-                    const interior = placeInteriorExceptEdge(tileGrid, x, y)
+                    const interior = placeInteriorExceptEdge(tileGrid, x, y, hasWindow)
                     allInterior = allInterior && interior
                 }
             }
@@ -142,14 +147,17 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
                 // if the airlock is disconnected then we will turn it
                 // into a broken/disused airlock
                 // maybe see if we can build a broken hallway
+            } else {
+                exteriorRooms.push(room)
             }
         }
         if(l.halls != null){
             const halls = l.halls as IRect[]
             halls.forEach((room: IRect): void => {
+                let hasWindow = RANDOM.next() <= PERCENT_CHANCE_WINDOW
                 for(let y = room.y; y < room.y + room.height; y++){
                     for(let x = room.x; x < room.x + room.width; x++){
-                        placeInteriorExceptEdge(tileGrid, x, y)
+                        placeInteriorExceptEdge(tileGrid, x, y, hasWindow)
                     }
                 }
             })
@@ -164,7 +172,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
 
     // on each room go ahead an add a door on each of the exterior portions
     // that already have movement set up
-    rooms.forEach((room: IRect): void => {
+    (rooms.concat(exteriorRooms)).forEach((room: IRect): void => {
         const offset = Point.make(room.x, room.y)
         // This code is kinda wonky, we should probably fix it
         for(let y = -1; y < room.height; y++){

@@ -47,8 +47,8 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                 if(!tile.explored && !DEBUG.SHOW_UNEXPLORED){
                     renderCell.backColor = COLORS.black
                 } else {
-                // TODO: ADD DOORS
                     const isDoor = !tile.blockMove && tile.blockSight
+                    const isWindow = tile.blockMove && !tile.blockSight
                     const isWall = tile.blockMove && tile.blockSight
                     const isGround = !isWall && tile.contained
                     const isSpace = !isWall && !tile.contained
@@ -67,6 +67,16 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                                 renderCell.foreColor = COLORS.black
                             } else {
                                 renderCell.backColor = COLORS.metal.darkWall
+                                renderCell.foreColor = COLORS.white
+                            }
+                        }
+                        else if(isWindow){
+                            renderCell.character = 'W'
+                            if(isLit){
+                                renderCell.backColor = COLORS.metal.lightGround
+                                renderCell.foreColor = COLORS.black
+                            } else {
+                                renderCell.backColor = COLORS.metal.darkGround
                                 renderCell.foreColor = COLORS.white
                             }
                         }
@@ -99,6 +109,15 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                                 renderCell.foreColor = COLORS.black
                             } else {
                                 renderCell.backColor = COLORS.dark_wall
+                                renderCell.foreColor = COLORS.white
+                            }
+                        } else if(isWindow){
+                            renderCell.character = 'W'
+                            if(isLit){
+                                renderCell.backColor = COLORS.light_ground
+                                renderCell.foreColor = COLORS.black
+                            } else {
+                                renderCell.backColor = COLORS.dark_ground
                                 renderCell.foreColor = COLORS.white
                             }
                         }else if(isGround){

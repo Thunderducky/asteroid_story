@@ -5,5 +5,5 @@ export default  {
     MAX_ELLIPSE_RADIUS: 12,
     MIN_INTERNAL_CAVES: 1,
     MAX_INTERNAL_CAVES: 10,
-    MAP_MARGINS: 1
+    MAP_MARGINS: 2
 }

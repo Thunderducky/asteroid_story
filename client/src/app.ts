@@ -202,25 +202,6 @@ levelIterator.next()
     }
 }
 
-// {
-//     // let me build a specific scenario for doors
-//     const offset = Point.make(10,10)
-//     const roomWidth = 10
-//     const roomHeight = 10
-//     for(let y = 0; y < roomHeight; y++){
-//         for(let x = 0; x < roomWidth; x++){
-//             const t = tileGrid.getXY(offset.x + x, offset.y + y)
-//             if(x === Math.floor(roomWidth/2) && y === 0){
-//                 t.blockMove = false
-//                 t.blockSight = true
-//             } else if(x === 0 || y == 0 || x === roomWidth- 1 || y === roomHeight - 1){
-//                 t.blockMove = true
-//                 t.blockSight = true
-    
-//             }
-//         }
-//     }
-// }
 
 // Door is an entity with a MoveInteract component
 // Right now we just want to draw it as a door, we can keep
