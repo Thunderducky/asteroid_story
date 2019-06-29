@@ -8,6 +8,7 @@ import { RANDOM } from '../../rngHelper'
 
 import BSP_SETTINGS from '../../_settings/bspMapGeneratorSettings'
 import { Leaf } from './bspLeaf'
+import { Point } from '../../shapes/point'
 
 const { MAX_LEAF_SIZE, MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS, MAP_MARGINS } = BSP_SETTINGS
 
@@ -24,7 +25,6 @@ const placeInteriorExceptEdge = (tileGrid: Grid<Tile>, x: number, y: number): bo
     } else {
         return false
     }
-
 }
 
 // This is a utility for just this section, maybe genericize it, but no need to export it
@@ -160,7 +160,43 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
     const internalCaves = RANDOM.nextInt(BSP_SETTINGS.MIN_INTERNAL_CAVES, BSP_SETTINGS.MAX_INTERNAL_CAVES)
     for(let i = 0; i < internalCaves; i++){
         carveEllipse(tileGrid, randomEllipse(10, tileGrid.width - 10, 10, tileGrid.height - 10))
-    }   
+    }
+
+    // on each room go ahead an add a door on each of the exterior portions
+    // that already have movement set up
+    rooms.forEach((room: IRect): void => {
+        const offset = Point.make(room.x, room.y)
+        // This code is kinda wonky, we should probably fix it
+        for(let y = -1; y < room.height; y++){
+            for(let x = -1; x < room.width; x++){
+                if(x === -1 || x === room.width - 1 || y === -1 || y === room.height - 1){
+                    const t = tileGrid.getXY(offset.x + x, offset.y + y)
+                    // make all the outlines part of the doors
+                    
+                    // if(t.blockMove !== true){
+                    //     t.blockSight = true
+                    // }
+                    // if at least two neighbors are blockers then we will try
+                    // placing a door
+                    const up = tileGrid.getXY(t.x, t.y - 1)
+                    const down = tileGrid.getXY(t.x, t.y + 1)
+                    const left = tileGrid.getXY(t.x - 1, t.y)
+                    const right = tileGrid.getXY(t.x + 1, t.y)
+                    let makeDoor = false
+                    if(!up.blockMove && !down.blockMove){
+                        makeDoor = left.blockMove && right.blockMove
+                    } else if(!left.blockMove && !right.blockMove){
+                        makeDoor = up.blockMove && down.blockMove
+                    }
+
+                    if(makeDoor ){
+                        t.blockSight = true
+                    }
+
+                }
+            }
+        }
+    })
 }
 
 export { progressiveMapGenerator }

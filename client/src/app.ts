@@ -18,9 +18,9 @@ import SETTINGS from './_settings/gameSettings'
 import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 import DEBUG from './_settings/debugSettings'
-//import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
+import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
 import { Ellipse, IEllipse } from './shapes/ellipse'
-import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
+//import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
 
 // task one, how do we make a door, let's make it a tile feature I suppose
 
@@ -202,26 +202,25 @@ levelIterator.next()
     }
 }
 
-{
-    // let me build a specific scenario for doors
-    const offset = Point.make(10,10)
-    const roomWidth = 10
-    const roomHeight = 10
-    for(let y = 0; y < roomHeight; y++){
-        for(let x = 0; x < roomWidth; x++){
-            const t = tileGrid.getXY(offset.x + x, offset.y + y)
-            if(x === Math.floor(roomWidth/2) && y === 0){
-                t.isDoor = true
-                t.blockMove = false
-                t.blockSight = true
-            } else if(x === 0 || y == 0 || x === roomWidth- 1 || y === roomHeight - 1){
-                t.blockMove = true
-                t.blockSight = true
+// {
+//     // let me build a specific scenario for doors
+//     const offset = Point.make(10,10)
+//     const roomWidth = 10
+//     const roomHeight = 10
+//     for(let y = 0; y < roomHeight; y++){
+//         for(let x = 0; x < roomWidth; x++){
+//             const t = tileGrid.getXY(offset.x + x, offset.y + y)
+//             if(x === Math.floor(roomWidth/2) && y === 0){
+//                 t.blockMove = false
+//                 t.blockSight = true
+//             } else if(x === 0 || y == 0 || x === roomWidth- 1 || y === roomHeight - 1){
+//                 t.blockMove = true
+//                 t.blockSight = true
     
-            }
-        }
-    }
-}
+//             }
+//         }
+//     }
+// }
 
 // Door is an entity with a MoveInteract component
 // Right now we just want to draw it as a door, we can keep
