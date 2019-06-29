@@ -23,6 +23,8 @@ class Tile {
 
     contained: boolean; // models if this thing has a floor and ceiling, (or, in universe, stuff surrounding it on the z-axis)
 
+    // if the player is in a door, the door is open, otherwise it is closed
+
     material: TileMaterial;
     /**
      * Create a new tile
@@ -40,8 +42,7 @@ class Tile {
             this.blockSight = blockSight
         }
         this.contained = true
-        this.material = TileMaterial.Asteroid
-        
+        this.material = TileMaterial.Asteroid        
     }
 }
 
