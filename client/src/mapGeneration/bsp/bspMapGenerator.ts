@@ -1,6 +1,6 @@
 // using this for reference: https://gamedevelopment.tutsplus.com/tutorials/how-to-use-bsp-trees-to-generate-game-maps--gamedev-12268
 import { Grid } from '../../grid'
-import { Tile } from '../../tile'
+import { Tile, TileMaterial } from '../../tile'
 import { IRect, Rect } from '../../shapes/rect'
 
 import { IEllipse, Ellipse } from '../../shapes/ellipse'
@@ -170,9 +170,84 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
         carveEllipse(tileGrid, randomEllipse(10, tileGrid.width - 10, 10, tileGrid.height - 10))
     }
 
+    // Let's take each exterior room and see if it's contained at least a little inside the asteroid
+    // THen we'll make a face and place it on the asteroid, with a chance that we'll have more
+    // we'll pull out them from the list of exterior rooms and put them in the airlocks portion
+    
+
+    // Let's write a piece of code to determine if we should add something
+    // from the exterior rooms to edge rooms or airlocks
+    const airlocks: IRect[] = []
+    const edgeRooms: IRect[] = []
+    {
+        // Categorize into edge rooms and potential airlocks
+        let roomIndex = 0
+        exteriorRooms.forEach((exterior: IRect): void => {
+            // Check if it can be a potential airlock
+            let canBeAirlock = false
+
+            // Test #1 enough cells are already interior
+            let interiorCount = 0
+            let totalCount = 0
+            Rect.forEach(exterior, (x: number, y: number): void => {
+                if(tileGrid.getXY(x,y).contained){
+                    interiorCount++
+                }
+                totalCount++
+            })
+            console.log(roomIndex++, interiorCount, totalCount, exterior)
+
+            if(interiorCount > 5 && ((totalCount - interiorCount) > 5) && RANDOM.next() > 0.5){
+                airlocks.push(exterior)
+            } else {
+                edgeRooms.push(exterior)
+            }
+        })
+        
+        // lets treat them all like airlocks to start out with
+        airlocks.forEach((airlock): void => {
+            const outerEdges: Tile[] = []
+            Rect.forEach(airlock, (x: number, y: number, isEdge: boolean): void => {
+                const t = tileGrid.getXY(x,y)
+                t.material = TileMaterial.Metal
+                let isOuterEdge = false
+                const neighbors = tileGrid.getNeighborsXY(t.x, t.y)
+                // if neighbors aren't contained
+                
+                if(!t.contained){
+                    if(isEdge){
+                        t.blockSight = true
+                        t.contained = true
+                        t.blockMove = true
+                        outerEdges.push(t)
+                    } else {
+                        t.blockMove = false
+                        t.blockSight = false
+                    }
+                } else {
+                    if(!isEdge){
+                        t.blockMove = false
+                        t.blockSight = false
+                    }
+                }
+                t.contained = true
+            })
+            // Turn some of the outer edges into doors
+            // pick a few to be windows and one to be a door
+            for(let i = 0; i < 5; i++){
+                const t = outerEdges[RANDOM.nextInt(0, outerEdges.length - 1)]
+                t.blockMove = true
+                t.blockSight = false
+            }
+            const t = outerEdges[RANDOM.nextInt(0, outerEdges.length)]
+            t.blockMove = false
+            t.blockSight = true
+        })
+    }
+
     // on each room go ahead an add a door on each of the exterior portions
     // that already have movement set up
-    (rooms.concat(exteriorRooms)).forEach((room: IRect): void => {
+    rooms.concat(edgeRooms).forEach((room: IRect): void => {
         const offset = Point.make(room.x, room.y)
         // This code is kinda wonky, we should probably fix it
         for(let y = -1; y < room.height; y++){
