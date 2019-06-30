@@ -23,7 +23,7 @@ const SETTINGS = {
     FOV_RADIUS: 25
 }
 
-// SURVEY SETTINGS
+//SURVEY SETTINGS
 // const SETTINGS = {
 //     TILE_WIDTH: 5,     // pixels
 //     TILE_HEIGHT: 5,    // pixels

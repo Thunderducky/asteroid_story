@@ -10,12 +10,17 @@ import BSP_SETTINGS from '../../_settings/bspMapGeneratorSettings'
 import { Leaf } from './bspLeaf'
 import { Point } from '../../shapes/point'
 
-const { MAX_LEAF_SIZE, MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS, MAP_MARGINS } = BSP_SETTINGS
+const { MAX_LEAF_SIZE, MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS, MAP_MARGINS, PERCENT_CHANCE_WINDOW, MAX_AIRLOCK_WINDOWS } = BSP_SETTINGS
 
 const leafs: Leaf[] = []
 
-const PERCENT_CHANCE_WINDOW = 0.3
-
+/**
+ * This is a method to helpfully know whether to place walls, floor, or windows, depending on the surrounding area
+ * @param tileGrid 
+ * @param x 
+ * @param y 
+ * @param placeWindow 
+ */
 const placeInteriorExceptEdge = (tileGrid: Grid<Tile>, x: number, y: number, placeWindow = false): boolean => {
     const tile = tileGrid.getXY(x,y)
     const tiles = tileGrid.getNeighborsXY(x,y)
@@ -30,7 +35,13 @@ const placeInteriorExceptEdge = (tileGrid: Grid<Tile>, x: number, y: number, pla
     }
 }
 
-// This is a utility for just this section, maybe genericize it, but no need to export it
+/**
+ * Generate a random ellipse within bounds
+ * @param minX 
+ * @param maxX 
+ * @param minY 
+ * @param maxY 
+ */
 const randomEllipse = (minX: number, maxX: number, minY: number, maxY: number): IEllipse => {
     return Ellipse.make(
         RANDOM.nextInt(minX, maxX),
@@ -90,8 +101,8 @@ const carveEllipse = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
 // We are going to generate two types of things
 // Exterior rooms and interior rooms
 // if no exterior rooms exist, we'll force one, but one probably will
-const exteriorRooms: IRect[] = []
-function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
+
+function * progressiveMapGenerator(tileGrid: Grid<Tile>, finalRooms: IRect[]): any{
     // Section 1: Build the shell
     // TODO: move these somewhere else
     const SECTION_COUNT = 50
@@ -122,8 +133,10 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
     }
 
     
-    // Create all the rooms 
+    // Section 2: Create all the rooms 
     root.createRooms()
+    const interiorRooms = []
+    const exteriorRooms: IRect[] = []
     for(let i = leafs.length - 1; i >=0; i--){
         const l = leafs[i]
         if(l.room != null){
@@ -138,16 +151,12 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
             }
             // Don't put us in rooms that are not inside of the boundary
             if(allInterior){
-                // only allow rooms that are entirely in the interior
-                // for now, we might use them later and
-                // mark them out as candidates for airlocks
                 room.x += tileGrid.x
                 room.y += tileGrid.y
-                rooms.push(room)
-                // if the airlock is disconnected then we will turn it
-                // into a broken/disused airlock
-                // maybe see if we can build a broken hallway
+                interiorRooms.push(room)
             } else {
+                room.x += tileGrid.x
+                room.y += tileGrid.y
                 exteriorRooms.push(room)
             }
         }
@@ -164,29 +173,23 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
         } 
 
     }
-    // Place Caves
+
+    // Section 3: Place Caves - Just something simple to throw off the regularity of the BSP and provide a different feel for some areas
     const internalCaves = RANDOM.nextInt(BSP_SETTINGS.MIN_INTERNAL_CAVES, BSP_SETTINGS.MAX_INTERNAL_CAVES)
     for(let i = 0; i < internalCaves; i++){
         carveEllipse(tileGrid, randomEllipse(10, tileGrid.width - 10, 10, tileGrid.height - 10))
     }
 
-    // Let's take each exterior room and see if it's contained at least a little inside the asteroid
-    // THen we'll make a face and place it on the asteroid, with a chance that we'll have more
-    // we'll pull out them from the list of exterior rooms and put them in the airlocks portion
-    
+    // Section 4: Select rooms to be airlocks
 
-    // Let's write a piece of code to determine if we should add something
-    // from the exterior rooms to edge rooms or airlocks
+    // Criteria for an airlock: 
+    // Must have some pieces touching the outside, and some pieces touching the outside, and be lucky
+    // sort each of our exterior rooms into airlocks and edgeRooms
     const airlocks: IRect[] = []
     const edgeRooms: IRect[] = []
     {
         // Categorize into edge rooms and potential airlocks
-        let roomIndex = 0
         exteriorRooms.forEach((exterior: IRect): void => {
-            // Check if it can be a potential airlock
-            let canBeAirlock = false
-
-            // Test #1 enough cells are already interior
             let interiorCount = 0
             let totalCount = 0
             Rect.forEach(exterior, (x: number, y: number): void => {
@@ -195,23 +198,25 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
                 }
                 totalCount++
             })
-            console.log(roomIndex++, interiorCount, totalCount, exterior)
 
+            // Airlock criteria
+            // TODO: Set this up better
             if(interiorCount > 5 && ((totalCount - interiorCount) > 5) && RANDOM.next() > 0.5){
                 airlocks.push(exterior)
             } else {
                 edgeRooms.push(exterior)
             }
         })
-        
-        // lets treat them all like airlocks to start out with
+    }
+
+    // Section 5: Convert rooms into Airlocks
+    // Process each of these rooms like airlocks
+    {
         airlocks.forEach((airlock): void => {
             const outerEdges: Tile[] = []
-            Rect.forEach(airlock, (x: number, y: number, isEdge: boolean, isCorner): void => {
+            Rect.forEach(airlock, (x: number, y: number, isEdge: boolean, isCorner: boolean): void => {
                 const t = tileGrid.getXY(x,y)
                 t.material = TileMaterial.Metal
-                let isOuterEdge = false
-                const neighbors = tileGrid.getNeighborsXY(t.x, t.y)
                 // if neighbors aren't contained
                 t.explored = false
                 if(!t.contained){
@@ -219,8 +224,6 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
                         t.blockSight = true
                         t.contained = true
                         t.blockMove = true
-                        // should make sure it's not a corner though
-                        // has orthogonal exit
                         const orthoNeighbors = []
                         const up = tileGrid.getXY(t.x, t.y - 1)
                         const down = tileGrid.getXY(t.x, t.y + 1)
@@ -230,7 +233,12 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
                         orthoNeighbors.push(down)
                         orthoNeighbors.push(left)
                         orthoNeighbors.push(right)
-                        if(!isCorner && orthoNeighbors.some(o => !o.contained && !Rect.containsXY(airlock, o.x, o.y))){
+                        // This condition is a little complicated, but oh well
+                        if(!isCorner && orthoNeighbors.some(
+                            (o: Tile): boolean =>                       // Check for neighbors that are outside
+                                !o.contained &&                         // and not part of our existing airlock
+                                !Rect.containsXY(airlock, o.x, o.y))    // Note: at this point we haven't yet marked 
+                        ){                                              // ourselves as being interior
                             outerEdges.push(t)
                         }
                     } else {
@@ -247,7 +255,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
             })
             // Turn some of the outer edges into doors
             // pick a few to be windows and one to be a door
-            for(let i = 0; i < 5; i++){
+            for(let i = 0; i < MAX_AIRLOCK_WINDOWS; i++){
                 const t = outerEdges[RANDOM.nextInt(0, outerEdges.length - 1)]
                 t.blockMove = true
                 t.blockSight = false
@@ -259,38 +267,47 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
         })
     }
 
+    // Section 6: Place internal doors
+
     // on each room go ahead an add a door on each of the exterior portions
     // that already have movement set up
     // Making doors out of the edges
-    rooms.concat(edgeRooms).forEach((room: IRect): void => {
-        const offset = Point.make(room.x, room.y)
-        // This code is kinda wonky, we should probably fix it
-        for(let y = -1; y < room.height; y++){
-            for(let x = -1; x < room.width; x++){
-                if(x === -1 || x === room.width - 1 || y === -1 || y === room.height - 1){
-                    const t = tileGrid.getXY(offset.x + x, offset.y + y)
+    {
+        // Process everything that's not an airlock
+        interiorRooms.concat(edgeRooms).forEach((room: IRect): void => {
+            const offset = Point.make(room.x, room.y)
+            // This code is kinda wonky, we should probably fix it
+            for(let y = -1; y < room.height; y++){
+                for(let x = -1; x < room.width; x++){
+                    if(x === -1 || x === room.width - 1 || y === -1 || y === room.height - 1){
+                        const t = tileGrid.getXY(offset.x + x, offset.y + y)
 
-                    const up = tileGrid.getXY(t.x, t.y - 1)
-                    const down = tileGrid.getXY(t.x, t.y + 1)
-                    const left = tileGrid.getXY(t.x - 1, t.y)
-                    const right = tileGrid.getXY(t.x + 1, t.y)
-                    let makeDoor = false
-                    if(!up.blockMove && !down.blockMove){
-                        makeDoor = left.blockMove && right.blockMove
-                    } else if(!left.blockMove && !right.blockMove){
-                        makeDoor = up.blockMove && down.blockMove
+                        const up = tileGrid.getXY(t.x, t.y - 1)
+                        const down = tileGrid.getXY(t.x, t.y + 1)
+                        const left = tileGrid.getXY(t.x - 1, t.y)
+                        const right = tileGrid.getXY(t.x + 1, t.y)
+                        let makeDoor = false
+                        if(!up.blockMove && !down.blockMove){
+                            makeDoor = left.blockMove && right.blockMove
+                        } else if(!left.blockMove && !right.blockMove){
+                            makeDoor = up.blockMove && down.blockMove
+                        }
+
+                        if(makeDoor ){
+                            t.blockSight = true
+                        }
+
                     }
-
-                    if(makeDoor ){
-                        t.blockSight = true
-                    }
-
                 }
             }
-        }
+        })
+    }
+
+    // Section 7: export all rooms out of the generator
+    // Combine all our rooms before passing them off
+    airlocks.concat(edgeRooms, interiorRooms).forEach((room: IRect): void => {
+        finalRooms.push(room)
     })
-    // TODO: There's probably a better way to do this, but oh well
-    airlocks.reverse().forEach(a => rooms.unshift(a))
 }
 
 export { progressiveMapGenerator }
