@@ -84,6 +84,23 @@ const intersects = (a: IRect, b: IRect): boolean => {
 const containsXY = (rect: IRect, x: number, y: number): boolean => {
     return rect.x <= x && x < rect.x + rect.width && rect.y <= y && y < rect.y + rect.height
 }
+/**
+ * Traverses through each of the indexes contained within the rectangle
+ * being offset by the rects own x and y
+ * @param rect 
+ * @param fn 
+ */
+const forEach = (rect: IRect, fn: Function): void => {
+    const yEnd = rect.y + rect.height
+    const xEnd = rect.x + rect.width
+    for(let y = rect.y; y <= yEnd; y++){
+        for(let x = rect.x; x <= xEnd; x++){
+            const isEdge = x === rect.x || x === xEnd || y === rect.y || y === yEnd
+            const isCorner = (x === rect.x || x === xEnd ) && (y === rect.y || y === yEnd)
+            fn(x,y, isEdge, isCorner)
+        }
+    }
+}
 
 /**
  * An object used to create and manipulate rectangles
@@ -95,7 +112,8 @@ const Rect = {
     corners,
     center,
     intersects,
-    containsXY
+    containsXY,
+    forEach
 }
 
 export {IRect, Rect}
