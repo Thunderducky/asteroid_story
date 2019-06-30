@@ -207,19 +207,32 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
         // lets treat them all like airlocks to start out with
         airlocks.forEach((airlock): void => {
             const outerEdges: Tile[] = []
-            Rect.forEach(airlock, (x: number, y: number, isEdge: boolean): void => {
+            Rect.forEach(airlock, (x: number, y: number, isEdge: boolean, isCorner): void => {
                 const t = tileGrid.getXY(x,y)
                 t.material = TileMaterial.Metal
                 let isOuterEdge = false
                 const neighbors = tileGrid.getNeighborsXY(t.x, t.y)
                 // if neighbors aren't contained
-                
+                t.explored = false
                 if(!t.contained){
                     if(isEdge){
                         t.blockSight = true
                         t.contained = true
                         t.blockMove = true
-                        outerEdges.push(t)
+                        // should make sure it's not a corner though
+                        // has orthogonal exit
+                        const orthoNeighbors = []
+                        const up = tileGrid.getXY(t.x, t.y - 1)
+                        const down = tileGrid.getXY(t.x, t.y + 1)
+                        const left = tileGrid.getXY(t.x - 1, t.y)
+                        const right = tileGrid.getXY(t.x + 1, t.y)
+                        orthoNeighbors.push(up)
+                        orthoNeighbors.push(down)
+                        orthoNeighbors.push(left)
+                        orthoNeighbors.push(right)
+                        if(!isCorner && orthoNeighbors.some(o => !o.contained && !Rect.containsXY(airlock, o.x, o.y))){
+                            outerEdges.push(t)
+                        }
                     } else {
                         t.blockMove = false
                         t.blockSight = false
@@ -239,14 +252,16 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
                 t.blockMove = true
                 t.blockSight = false
             }
-            const t = outerEdges[RANDOM.nextInt(0, outerEdges.length)]
+            const t = outerEdges[RANDOM.nextInt(0, outerEdges.length - 1)]
             t.blockMove = false
             t.blockSight = true
+            
         })
     }
 
     // on each room go ahead an add a door on each of the exterior portions
     // that already have movement set up
+    // Making doors out of the edges
     rooms.concat(edgeRooms).forEach((room: IRect): void => {
         const offset = Point.make(room.x, room.y)
         // This code is kinda wonky, we should probably fix it
@@ -254,13 +269,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
             for(let x = -1; x < room.width; x++){
                 if(x === -1 || x === room.width - 1 || y === -1 || y === room.height - 1){
                     const t = tileGrid.getXY(offset.x + x, offset.y + y)
-                    // make all the outlines part of the doors
-                    
-                    // if(t.blockMove !== true){
-                    //     t.blockSight = true
-                    // }
-                    // if at least two neighbors are blockers then we will try
-                    // placing a door
+
                     const up = tileGrid.getXY(t.x, t.y - 1)
                     const down = tileGrid.getXY(t.x, t.y + 1)
                     const left = tileGrid.getXY(t.x - 1, t.y)
@@ -280,6 +289,8 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any{
             }
         }
     })
+    // TODO: There's probably a better way to do this, but oh well
+    airlocks.reverse().forEach(a => rooms.unshift(a))
 }
 
 export { progressiveMapGenerator }

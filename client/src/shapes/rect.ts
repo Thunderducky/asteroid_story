@@ -96,7 +96,8 @@ const forEach = (rect: IRect, fn: Function): void => {
     for(let y = rect.y; y <= yEnd; y++){
         for(let x = rect.x; x <= xEnd; x++){
             const isEdge = x === rect.x || x === xEnd || y === rect.y || y === yEnd
-            fn(x,y, isEdge)
+            const isCorner = (x === rect.x || x === xEnd ) && (y === rect.y || y === yEnd)
+            fn(x,y, isEdge, isCorner)
         }
     }
 }
