@@ -13,12 +13,13 @@ import { ID_MANAGER } from './idManager'
 import { calculateFOV, FOVCell } from './fov'
 import { RANDOM } from './rngHelper'
 import COLORS from './colors'
-
+import GAME_TEXT from './_data/gameText'
 import SETTINGS from './_settings/gameSettings'
 import { handleInput } from './handleInput'
 import { renderToGrid } from './renderToGrid'
 import DEBUG from './_settings/debugSettings'
 import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
+import { drawBoxOnGrid, drawStringToGrid, CHARACTER_HELPER } from './renderHelpers'
 //import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
 
 const {
@@ -64,13 +65,14 @@ const mm = new MouseMonitor().attach(canvas)
 // Initialize our canvas renderer
 const renderer = new CanvasRenderer()
 const cameraFrame = Rect.make(0,0, CAMERA_WIDTH, CAMERA_HEIGHT) // CAMERA IS IN WORLD CELLS, NOT ABSOLUTE UNITS
-
+const messageLogFrame = Rect.make(CAMERA_WIDTH, 0, SCREEN_WIDTH - CAMERA_WIDTH, CAMERA_HEIGHT)
 // Initialize our Grids
-const renderGrid = new Grid<IRenderCell>(cameraFrame.width, cameraFrame.height)
+const renderGrid = new Grid<IRenderCell>(SCREEN_WIDTH, SCREEN_HEIGHT)
 renderGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell => {
     return RenderCell.make(x,y,'', COLORS.black, COLORS.black)
 })
-
+const cameraRenderGrid = renderGrid.getSubgrid(cameraFrame)
+const messageLogRenderGrid = renderGrid.getSubgrid(messageLogFrame)
 // THESE ARE HERE BY DEFAULT, BUT WON'T BE SHOWN UNLESS ENABLED
 const debugGrid = new Grid<IRenderCell>(MAP_WIDTH, MAP_HEIGHT)
 debugGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell => {
@@ -170,6 +172,95 @@ levelIterator.next()
         fovGrid.y = cameraFrame.y
     }
 }
+// Narrative subscriber to moved
+let foundCivilian = false
+let exited = false
+PUBSUB.subscribe('moved', (msg): void => {
+    if(msg.id === player.id){
+        // Did we just leave the airlock
+        const currentTile = tileGrid.getP(player)
+        const lastTile = tileGrid.getP(Point.subtract(player, msg.delta))
+        
+        if(currentTile.contained && !lastTile.contained){
+            PUBSUB.publish('messagelog', GAME_TEXT.SPACE_RETURN_AIRLOCK)
+        }
+        
+        if(npc.x === currentTile.x && npc.y === currentTile.y){
+            foundCivilian = true
+            PUBSUB.publish('messagelog', GAME_TEXT.DEAD_CIVILIAN)
+        }
+
+        if(!currentTile.contained && foundCivilian && !exited){
+            exited = true
+            PUBSUB.publish('messagelog', GAME_TEXT.LEAVE_DEAD_CIVILIAN)
+            // Game end at this point
+        } else if(lastTile.contained && !currentTile.contained){
+            PUBSUB.publish('messagelog', GAME_TEXT.AIRLOCK_TO_SPACE)
+        }
+
+    }
+})
+
+class MessageLog {
+    messages: string[];
+    // for now just display the messages that you can
+    constructor(){
+        this.messages = []
+    }
+    addMessage(message: string): MessageLog{
+        this.messages.push(message)
+        return this
+    }
+    renderToGrid(renderGrid: Grid<IRenderCell>): void{
+        const letterHeight = TILE_HEIGHT
+        // the lazy way to do it, do it right later
+        const finalLines: string[] = []
+        // Temporary
+        {
+            const MAX_LINE_LENGTH = 25
+            // first lines
+           const firstLines = []
+           this.messages.forEach(m => {
+               m.split('\n').forEach(l => firstLines.push(l))
+           });
+
+           const secondLines = []
+           firstLines.forEach(fl => {
+                const words = fl.split(' ');
+                // split ourselves up by spaces
+                // let's go ahead and split up big words
+                let newLine = ''
+                words.forEach(w => {
+                   // TODO: We currently don't handle EXTREMELY long words
+                   // just handle spacing
+                    if(newLine.length + 1 + w.length <= MAX_LINE_LENGTH){
+                        newLine += ' ' + w
+                    } else {
+                        if(newLine.length > 0){
+                            secondLines.push(newLine.trim())
+                        }
+                        newLine = w
+                    }
+                })
+                if(newLine.length > 0){
+                    secondLines.push(newLine.trim())
+                }
+                secondLines.push('\n')
+           })
+           secondLines.forEach(sl => finalLines.push(sl))
+        }
+        drawStringToGrid(renderGrid, finalLines.join('\n'), 1, 1)
+    }
+}
+const messageLog = new MessageLog()
+
+PUBSUB.subscribe('messagelog', (msg): void => {
+    console.log(msg.text)
+    messageLog.addMessage(msg.text)
+})
+
+PUBSUB.publish('messagelog', {text: "THIS IS A RELATIVELY LONG STRING WITHOUT MUCH TROUBLE"})
+PUBSUB.publish('messagelog', {text: "SHORT STRING" })
 
 
 // Door is an entity with a MoveInteract component
@@ -237,9 +328,15 @@ loadImage('assets/out.png').then((image: any): void => {
         }
 
         // Convert to render format
-        renderToGrid(tileGrid, fovGrid, entities, renderGrid, cameraFrame, debugGrid)
-
+        
+        renderToGrid(tileGrid, fovGrid, entities, cameraRenderGrid, cameraFrame, debugGrid)
+        const relativeBox = Rect.copy(messageLogFrame)
+        relativeBox.x = 0
+        relativeBox.y = 0
         // actually render to canvas
+        drawBoxOnGrid(messageLogRenderGrid, relativeBox)
+        messageLog.renderToGrid(messageLogRenderGrid)
+
         renderer.clear()
         renderer.render(renderGrid)
 

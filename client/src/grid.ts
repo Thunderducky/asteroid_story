@@ -106,7 +106,7 @@ class Grid<T> implements IRect {
      */
     getSubgrid(bounds: IRect): Grid<T> {    // TODO: Write some tests around this
         // TODO: validate that we are inside of the grid
-        const subGrid = new Grid<T>(bounds.width - 1, bounds.height - 1, bounds.x + this.x, bounds.y + this.y)
+        const subGrid = new Grid<T>(bounds.width, bounds.height, bounds.x + this.x, bounds.y + this.y)
         subGrid.setEach((cell, i, x, y): T => {
             return this.getXY(x + subGrid.x ,y + subGrid.y)
         })

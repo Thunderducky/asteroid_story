@@ -21,8 +21,19 @@ const CHARACTER_HELPER: HashStr<string> = {
     T_DOWN: '┬',
     TOP_RIGHT: '└',
     BOTTOM_RIGHT: '┌',
-    BOTTOL_LEFT: '┐',
-    TOP_LEFT: '┘'
+    BOTTOM_LEFT: '┐',
+    TOP_LEFT: '┘',
+
+    LIGHT_DOTS: '░',
+    MEDIUM_DOTS: '▒',
+    HEAVY_DOTS: '▓',
+
+    EMPTY_BOX: '☐',
+    CHECK_BOX: '☑',
+
+    OPEN_RADIO: '◯',
+    CHECKED_RADIO: '◉'
+
 }
 
 const TILE_WIDTH = 10, TILE_HEIGHT = 10
@@ -35,9 +46,8 @@ const zCode =       code('z')
 const ACode =       code('A')
 const ZCode =       code('Z')
 
-
-const ctrhHelper = (code: number, x: number, y: number): void => {
-    CODE_TO_RECT_HASH[code] = Rect.make(x,y, TILE_WIDTH, TILE_HEIGHT)
+const ctrhHelper = (code: number, x: number, y: number, width: number = TILE_WIDTH, height: number = TILE_HEIGHT): void => {
+    CODE_TO_RECT_HASH[code] = Rect.make(x,y, width, height)
 }
 
 // We will fill in the other characters as necessary
@@ -60,8 +70,21 @@ ctrhHelper(code(CH.T_RIGHT), 190,10)
 ctrhHelper(code(CH.T_DOWN), 200,10)
 ctrhHelper(code(CH.TOP_RIGHT), 210,10)
 ctrhHelper(code(CH.BOTTOM_RIGHT), 220,10)
-ctrhHelper(code(CH.BOTTOL_LEFT), 230,10)
+ctrhHelper(code(CH.BOTTOM_LEFT), 230,10)
 ctrhHelper(code(CH.TOP_LEFT), 240,10)
+
+// SOME PUNCTUATION HELPOERS
+ctrhHelper(code('.'), 140,0)
+ctrhHelper(code(','), 120,0)
+ctrhHelper(code('!'), 10,0)
+ctrhHelper(code('"'), 20,0)
+ctrhHelper(code('#'), 30,0)
+
+// SOME PUNCTUATION
+ctrhHelper(code(CH.EMPTY_BOX),101, 20, 9)
+ctrhHelper(code(CH.CHECK_BOX),110, 20)
+ctrhHelper(code(CH.OPEN_RADIO),120, 20)
+ctrhHelper(code(CH.CHECKED_RADIO),130, 20)
 
 
 function drawSection(ctx: CanvasRenderingContext2D, tilesheet: any, srcRect: IRect, destRect: IRect, foreColor: string, backColor: string): void{
@@ -77,7 +100,7 @@ function drawSection(ctx: CanvasRenderingContext2D, tilesheet: any, srcRect: IRe
     ctx.globalCompositeOperation = 'source-over'
 }
 
-const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y: number): void => {
+const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y: number, foreColor: string = COLORS.white, backColor: string = COLORS.black): void => {
     let currentX = x
     let currentY = y
     for(let i = 0; i < message.length; i++){
@@ -85,8 +108,8 @@ const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y
         if(grid.inBoundsXY(currentX, currentY) && letter != '\n'){
             const target = grid.getXY(currentX,currentY)
             target.character = letter
-            target.backColor = COLORS.white
-            target.foreColor = COLORS.black
+            target.backColor = backColor
+            target.foreColor = foreColor
         }
         if(letter !== '\n'){
             currentX++
@@ -97,4 +120,52 @@ const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y
     }
 }
 
-export  { CODE_TO_RECT_HASH, CHARACTER_HELPER, code, drawSection, drawStringToGrid }
+/**
+ * Place a box on a render grid
+ * @param grid 
+ * @param box 
+ * @param boxFill If we draw in the interior or not, defaults to true
+ */
+const drawBoxOnGrid = (grid: Grid<IRenderCell>, box: IRect, boxFill: boolean = true): void => {
+    Rect.forEachIndex(box, (x,y, isEdge, isCorner): void => {
+        const cell = grid.getXY(x,y)
+        if(isCorner){
+            // let's determine which corner
+            if(x === box.x){
+                // Leftside
+                if(y === box.y){
+                    // TOP
+                    cell.character = CHARACTER_HELPER.BOTTOM_RIGHT
+                } else {
+                    // BOTTOM
+                    cell.character = CHARACTER_HELPER.TOP_RIGHT
+                }
+            } else {
+                // Right Side
+                if(y === box.y){
+                    // TOP
+                    cell.character = CHARACTER_HELPER.BOTTOM_LEFT
+                } else {
+                    // BOTTOM
+                    cell.character = CHARACTER_HELPER.TOP_LEFT
+                }
+            }
+            cell.foreColor = COLORS.white
+            cell.backColor = COLORS.black
+        } else if(isEdge){
+            if(y === box.y || y === box.y + box.height - 1){
+                // TOP
+                cell.character = CHARACTER_HELPER.HORIZONTAL_LINE
+            } else {
+                // BOTTOM
+                cell.character = CHARACTER_HELPER.VERTICAL_LINE
+            }
+        } else if(boxFill){
+            cell.character = ''
+        }
+        cell.backColor = COLORS.black
+        cell.foreColor = COLORS.white
+    })
+}
+
+export  { CODE_TO_RECT_HASH, CHARACTER_HELPER, code, drawSection, drawStringToGrid, drawBoxOnGrid }
