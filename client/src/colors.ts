@@ -1,4 +1,4 @@
-// TODO: Reorganize this into materials
+// TODO: Reorganize this into materials, also change the names to match the proper naming scheme and move this into the _data folder
 // We'll even include "BLANK"
 // As opposed to empty space
 const COLORS = {

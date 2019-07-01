@@ -61,5 +61,4 @@ class KeyboardMonitor {
     }
 }
 
-
-export { KeyboardMonitor }
+export { KeyboardMonitor}

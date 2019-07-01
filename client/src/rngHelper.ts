@@ -1,4 +1,4 @@
-// WARNING: HERE THERE BE DRAGONS, (or in this case, a lot of code I don'tunderstand)
+// WARNING: HERE THERE BE DRAGONS, (or in this case, a lot of code I don't understand)
 
 // WE ONLY WANT ONE RNG GENERATOR BECAUSE WE ALWAYS WANT A SEED FOR IT
 // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript

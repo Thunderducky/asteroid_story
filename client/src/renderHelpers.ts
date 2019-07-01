@@ -86,6 +86,11 @@ ctrhHelper(code(CH.CHECK_BOX),110, 20)
 ctrhHelper(code(CH.OPEN_RADIO),120, 20)
 ctrhHelper(code(CH.CHECKED_RADIO),130, 20)
 
+// Some Dot Fields
+ctrhHelper(code(CH.LIGHT_DOTS),110, 10) // Untested
+ctrhHelper(code(CH.MEDIUM_DOTS),120, 10)
+ctrhHelper(code(CH.HEAVY_DOTS),130, 10)
+
 
 function drawSection(ctx: CanvasRenderingContext2D, tilesheet: any, srcRect: IRect, destRect: IRect, foreColor: string, backColor: string): void{
     ctx.clearRect(destRect.x, destRect.y, destRect.width, destRect.height)

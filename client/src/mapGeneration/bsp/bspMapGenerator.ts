@@ -10,7 +10,7 @@ import BSP_SETTINGS from '../../_settings/bspMapGeneratorSettings'
 import { Leaf } from './bspLeaf'
 import { Point } from '../../shapes/point'
 
-const { MAX_LEAF_SIZE, MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS, MAP_MARGINS, PERCENT_CHANCE_WINDOW, MAX_AIRLOCK_WINDOWS } = BSP_SETTINGS
+const { ASTEROID_SECTION_COUNT, ASTEROID_MAP_MARGINS, MAX_LEAF_SIZE, MIN_ELLIPSE_RADIUS, MAX_ELLIPSE_RADIUS, MAP_MARGINS, PERCENT_CHANCE_WINDOW, MAX_AIRLOCK_WINDOWS } = BSP_SETTINGS
 
 const leafs: Leaf[] = []
 
@@ -74,7 +74,6 @@ const placeAsteroidChunk = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
  * @param margin how much to push in from the edges
  */
 const buildAsteroidShell = (tileGrid: Grid<Tile>, sections: number, margin: number): void => {
-    // TODO: Decapitalize this
     const minDimension = Math.min(tileGrid.width, tileGrid.height)
     const maxAsteroidSectionRadius = Math.floor((minDimension - margin * 2)/2)
     const minAsteroidSectionRadius = Math.floor(maxAsteroidSectionRadius * 0.3)
@@ -104,9 +103,8 @@ const carveEllipse = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
 
 function * progressiveMapGenerator(tileGrid: Grid<Tile>, finalRooms: IRect[]): any{
     // Section 1: Build the shell
-    // TODO: move these somewhere else
-    const SECTION_COUNT = 50
-    const MARGINS = 1
+    const SECTION_COUNT = ASTEROID_SECTION_COUNT
+    const MARGINS = ASTEROID_MAP_MARGINS
     // I want to be able to export this and get a bounding rect out of it in the future
     buildAsteroidShell(tileGrid, SECTION_COUNT, MARGINS)
     // this is the space bound by the asteroid shell

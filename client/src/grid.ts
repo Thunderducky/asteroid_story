@@ -9,7 +9,6 @@ interface ForEachFn<T> {
     (cell: T, index: number, x: number, y: number): void;
 }
 
-// TODO: give grids their own x and ys, that way they can implement all the point and rect stuff
 /**
  * Grid to represent 2d collections, please don't resize it after creating it
  */

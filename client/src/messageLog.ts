@@ -18,4 +18,30 @@ class MessageLog {
     }
 }
 
-export default MessageLog
+const wrapText = (input: string, maxWidth: number = 25): string => {
+    // let's split everything up by existing lines already
+    const firstLines = input.split('\n')
+    const secondLines: string[] = []
+    firstLines.forEach((fl: string): void => {
+        const words = fl.split(' ')
+        let newLine = ''
+        words.forEach((w: string): void => {
+            if(newLine.length + 1 + w.length <= maxWidth){
+                newLine += ' ' + w
+            } else {
+                if(newLine.trim().length > 0){
+                    secondLines.push(newLine.trim())
+                }
+                newLine = w
+            }
+        })
+        if(newLine.trim().length > 0){
+            secondLines.push(newLine.trim())
+        }
+        secondLines.push('\n')
+        // we don't account for really big words currently
+    })
+    return secondLines.join('\n')
+}
+
+export { MessageLog, wrapText }
