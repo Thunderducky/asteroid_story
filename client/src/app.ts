@@ -20,6 +20,7 @@ import { renderToGrid } from './renderToGrid'
 import DEBUG from './_settings/debugSettings'
 import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
 import { drawBoxOnGrid, drawStringToGrid, CHARACTER_HELPER } from './renderHelpers'
+import MessageLog from './messageLog'
 //import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
 
 const {
@@ -201,62 +202,40 @@ PUBSUB.subscribe('moved', (msg): void => {
     }
 })
 
-class MessageLog {
-    messages: string[];
-    // for now just display the messages that you can
-    constructor(){
-        this.messages = []
-    }
-    addMessage(message: string): MessageLog{
-        this.messages.push(message)
-        return this
-    }
-    renderToGrid(renderGrid: Grid<IRenderCell>): void{
-        const letterHeight = TILE_HEIGHT
-        // the lazy way to do it, do it right later
-        const finalLines: string[] = []
-        // Temporary
-        {
-            const MAX_LINE_LENGTH = 25
-            // first lines
-           const firstLines = []
-           this.messages.forEach(m => {
-               m.split('\n').forEach(l => firstLines.push(l))
-           });
-
-           const secondLines = []
-           firstLines.forEach(fl => {
-                const words = fl.split(' ');
-                // split ourselves up by spaces
-                // let's go ahead and split up big words
-                let newLine = ''
-                words.forEach(w => {
-                   // TODO: We currently don't handle EXTREMELY long words
-                   // just handle spacing
-                    if(newLine.length + 1 + w.length <= MAX_LINE_LENGTH){
-                        newLine += ' ' + w
-                    } else {
-                        if(newLine.length > 0){
-                            secondLines.push(newLine.trim())
-                        }
-                        newLine = w
-                    }
-                })
-                if(newLine.length > 0){
+// Going to output a string in a \n
+const wrapText = (input: string, maxWidth: number = 25): string => {
+    // let's split everything up by existing lines already
+    const firstLines = input.split('\n')
+    const secondLines: string[] = []
+    firstLines.forEach((fl: string): void => {
+        const words = fl.split(' ')
+        let newLine = ''
+        words.forEach((w: string): void => {
+            if(newLine.length + 1 + w.length <= maxWidth){
+                newLine += ' ' + w
+            } else {
+                if(newLine.trim().length > 0){
                     secondLines.push(newLine.trim())
                 }
-                secondLines.push('\n')
-           })
-           secondLines.forEach(sl => finalLines.push(sl))
+                newLine = w
+            }
+        })
+        if(newLine.trim().length > 0){
+            secondLines.push(newLine.trim())
         }
-        drawStringToGrid(renderGrid, finalLines.join('\n'), 1, 1)
-    }
+        secondLines.push('\n')
+        // we don't account for really big words currently
+    })
+    return secondLines.join('\n')
 }
+
+
 const messageLog = new MessageLog()
 
 PUBSUB.subscribe('messagelog', (msg): void => {
     console.log(msg.text)
-    messageLog.addMessage(msg.text)
+    // process the msg.text into a line
+    messageLog.addMessage(wrapText(msg.text))
 })
 
 PUBSUB.publish('messagelog', {text: "THIS IS A RELATIVELY LONG STRING WITHOUT MUCH TROUBLE"})
@@ -336,6 +315,7 @@ loadImage('assets/out.png').then((image: any): void => {
         // actually render to canvas
         drawBoxOnGrid(messageLogRenderGrid, relativeBox)
         messageLog.renderToGrid(messageLogRenderGrid)
+        drawStringToGrid(messageLogRenderGrid, 'message log', 2, 0, COLORS.white, COLORS.black)
 
         renderer.clear()
         renderer.render(renderGrid)
