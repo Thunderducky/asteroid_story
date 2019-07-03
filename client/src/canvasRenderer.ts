@@ -4,13 +4,13 @@ import { CODE_TO_RECT_HASH, drawSection, code } from './renderHelpers'
 import { Rect } from './shapes/rect'
 import SETTINGS from './_settings/gameSettings'
 import COLORS from './colors'
+
+const {TILE_WIDTH, TILE_HEIGHT} = SETTINGS
+
 /**
  * Responsible for taking a render grid and converting it to images
  * on the canvas
  */
-
-const {TILE_WIDTH, TILE_HEIGHT} = SETTINGS
-
 class CanvasRenderer {
     canvas: HTMLCanvasElement | undefined;
     ctx: CanvasRenderingContext2D | undefined;
@@ -45,7 +45,6 @@ class CanvasRenderer {
             index: number,
             x: number, y: number): void => {
             Rect.set(destRect, x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT)
-            // todo, allow us to mark render cells as 'empty' rather than spaces, this might help speed up render time
             if(cell.character.length === 0){
                 if(cell.backColor !== background){
                     // I actually don't know if this helps, but it seems like setting the fillStyle could involve more complications than just checking if it's the same

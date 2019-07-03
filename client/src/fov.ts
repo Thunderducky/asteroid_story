@@ -18,7 +18,7 @@ const isBetweenInclusive = (a: number,b: number,t: number): boolean => {
     }
 }
 /**
- * 
+ * Caluclate our particular octant
  * @param fovGrid 
  * @param tileGrid 
  * @param startPoint start point is in world coordinates

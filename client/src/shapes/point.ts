@@ -34,6 +34,9 @@ const make = (x: number, y: number): IPoint => {
 const add = (a: IPoint, b: IPoint): IPoint => {
     return make(a.x + b.x, a.y + b.y)
 }
+const subtract = (a: IPoint, b: IPoint): IPoint => {
+    return make(a.x - b.x, a.y - b.y)
+}
 
 /**
  * A utitily to move in a direction, allows for variability in the direction without having to resort to modifying the x and y coorindates individually
@@ -95,6 +98,7 @@ const Point = {
     make,
     move,
     add,
+    subtract,
     addTo,
     set,
     copy

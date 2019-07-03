@@ -8,12 +8,20 @@ import COLORS from './colors'
 import { IRect } from './shapes/rect'
 import DEBUG from './_settings/debugSettings'
 
+/**
+ * This is the heart of the render system, everything else is just a 'platform' layer to adapt to a particular output
+ * @param tileGrid 
+ * @param fovGrid 
+ * @param entities 
+ * @param renderGrid 
+ * @param cameraFrame 
+ * @param debugGrid 
+ */
 export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>, cameraFrame: IRect, debugGrid: Grid<IRenderCell>): void => {
     // renderGrid is in SCREEN coordinates, and will have it's XY ignored for our purposes
-    // tileGrid, entities and fovGrid are in WORLD coordinates and will have their XY and y ignored for now
+    // tileGrid, entities and fovGrid are in WORLD coordinates and will have their XY ignored for now
 
     // camera and renderGrid both start at the topLeft in terms of aligning the two
-    // I almost feel like we should tighten the coupling, but oh well, let's actually do it
     const screenP = Point.make(0,0)
     const worldP = Point.make(0,0)
     for(let relCameraY = 0; relCameraY < cameraFrame.height; relCameraY++){
@@ -36,7 +44,7 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
             // Determined our exploration state
             // This has better rules to be figured out
             renderCell.character = ''
-            if(!inBounds){ // treat everything outside of the bounds as explored I suppose?
+            if(!inBounds){ // treat everything outside of the bounds as explored
                 if(isLit){
                     renderCell.backColor = COLORS.light_outside
                 } else {
@@ -53,6 +61,7 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                     const isGround = !isWall && tile.contained
                     const isSpace = !isWall && !tile.contained
 
+                    // TODO: Refactor Into Materials
                     if(tile.material === TileMaterial.Metal){
                         if(isSpace){
                             if(isLit){

@@ -23,3 +23,12 @@ export const handleInput = (km: KeyboardMonitor, player: Entity): void => {
         window.location.href = newurl
     }
 }
+
+export const newKeyPress = (km: KeyboardMonitor, q: string, enableZoom: boolean = true): boolean => {
+    const state = km.getKeyState(q)
+    if(!enableZoom){
+        return state.isDown && state.halfSteps > 0
+    } else {
+        return state.isDown && (state.halfSteps > 0 || km.getKeyState('z').isDown)
+    }
+}
