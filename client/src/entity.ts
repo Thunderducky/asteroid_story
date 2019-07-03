@@ -6,14 +6,18 @@ class Entity {
     id: number;
     x: number;
     y: number;
+    name: string;
     character: string;
     color: string;
-    constructor(id: number, x: number,y: number, character: string, color: string){
+    blocksMove: boolean;
+    constructor(id: number, name: string, x: number,y: number, character: string, color: string, blocksMove = true){
         this.id = id
+        this.name = name
         this.x = x
         this.y = y
         this.character = character
         this.color = color
+        this.blocksMove = blocksMove
     }
 
     /**
@@ -24,6 +28,16 @@ class Entity {
     move(dx: number, dy: number): void{
         this.x += dx
         this.y += dy
+    }
+
+    // Place this somewhere better in the future
+    static getBlockingEntityAtLocation(entities: Entity[], x: number, y: number): Entity | null {
+        for(let i = 0; i < entities.length; i++){
+            if(entities[i].blocksMove && entities[i].x === x && entities[i].y === y){
+                return entities[i]
+            }
+        }
+        return null
     }
 }
 

@@ -20,7 +20,8 @@ const SETTINGS = {
     CAMERA_HEIGHT: 50,
     SCREEN_WIDTH : 80,
     SCREEN_HEIGHT : 50,
-    FOV_RADIUS: 25
+    FOV_RADIUS: 25,
+    ALLOW_DIAGONAL_MOVEMENT: false
 }
 
 //SURVEY SETTINGS
@@ -31,7 +32,7 @@ const SETTINGS = {
 //     MAP_HEIGHT: 120,
 //     CAMERA_WIDTH: 120,
 //     CAMERA_HEIGHT: 120,
-//     SCREEN_WIDTH : 120,
+//     SCREEN_WIDTH : 150,
 //     SCREEN_HEIGHT : 120,
 //     FOV_RADIUS: 25
 // }

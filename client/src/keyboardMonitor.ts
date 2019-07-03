@@ -15,7 +15,7 @@ const makeKeyState = (key: string, isDown: boolean = false, halfSteps: number = 
         halfSteps
     }
 }
-
+const preventDefaultList: string[] = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
 class KeyboardMonitor {
     keyHash: Hash<KeyState>;
     constructor(){
@@ -25,6 +25,9 @@ class KeyboardMonitor {
     attach(element: any): KeyboardMonitor {
         element.addEventListener('keydown', (event: any): void => {
             const {key} = event
+            if(preventDefaultList.indexOf(key) > -1){
+                event.preventDefault()
+            }
             if(!this.keyHash[key]){
                 this.keyHash[key] = makeKeyState(key, true)
             }
