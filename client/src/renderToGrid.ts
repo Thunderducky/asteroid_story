@@ -4,7 +4,7 @@ import { FOVCell } from './fov'
 import { Entity } from './entity'
 import { IRenderCell } from './renderCell'
 import { Point } from './shapes/point'
-import COLORS from './colors'
+import COLORS from './_settings/colors'
 import { IRect } from './shapes/rect'
 import DEBUG from './_settings/debugSettings'
 

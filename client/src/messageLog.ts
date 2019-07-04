@@ -1,21 +1,22 @@
 import { IRenderCell } from './renderCell'
 import { Grid } from './grid'
 import { drawStringToGrid } from './renderHelpers'
+import { IRect, Rect } from './shapes/rect'
+import { Point } from './shapes/point'
 
-class MessageLog {
-    messages: string[];
-    // for now just display the messages that you can
-    constructor(){
-        this.messages = []
-    }
-    addMessage(message: string): MessageLog{
-        this.messages.push(message)
-        return this
-    }
-    renderToGrid(renderGrid: Grid<IRenderCell>, offsetX: number = 1, offsetY: number = 1): void{
-        // TODO: Fix this so we know where to put it
-        drawStringToGrid(renderGrid, this.messages.join('\n'), offsetX, offsetY)
-    }
+const measureText = (input: string): IRect => {
+    // this rect is in tile units
+    const container = Rect.make(0,0,0,0)
+    const lines = input.split('\n')
+    let maxWidth = 0
+    container.height = lines.length
+    lines.forEach((l): void => {
+        if(l.length > maxWidth){
+            maxWidth = l.length
+        }
+    })
+    container.width = maxWidth
+    return container
 }
 
 const wrapText = (input: string, maxWidth: number = 25): string => {
@@ -43,5 +44,36 @@ const wrapText = (input: string, maxWidth: number = 25): string => {
     })
     return secondLines.join('\n')
 }
+
+
+// we might turn this into a linked list so we can just page through it easier?
+class MessageLog {
+    messages: string[];
+    pageSize: number;
+    currentIndex: number;
+    // for now just display the messages that you can
+    constructor(){
+        this.messages = []
+        this.pageSize = 10
+        this.currentIndex = 0
+    }
+    addMessage(message: string): MessageLog{
+        this.messages.push(message)
+        return this
+    }
+    renderToGrid(renderGrid: Grid<IRenderCell>, offsetX: number = 1, offsetY: number = 1): void{
+        // TODO: 
+        const lineOffset = Point.make(offsetX,offsetY)
+        const messages = this.messages.map((m): any => m).reverse()
+        messages.forEach((message, index: number): void => {
+            const size = measureText(message)
+            // TODO: Use actual specified colors
+            drawStringToGrid(renderGrid, message, lineOffset.x, lineOffset.y, (index === 0) ? '#FFFFFF' : '#666666')
+            lineOffset.y += size.height
+        })
+        
+    }
+}
+
 
 export { MessageLog, wrapText }

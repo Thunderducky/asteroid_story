@@ -1,7 +1,7 @@
 import {IRect, Rect } from './shapes/rect'
 import { Grid } from './grid'
 import { IRenderCell } from './renderCell'
-import COLORS from './colors'
+import COLORS from './_settings/colors'
 
 interface HashStr<T> {
     [key: string]: T;

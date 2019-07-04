@@ -135,16 +135,19 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, finalRooms: IRect[]): a
     root.createRooms()
     const interiorRooms = []
     const exteriorRooms: IRect[] = []
+    const outsideRooms: IRect[] = []
     for(let i = leafs.length - 1; i >=0; i--){
         const l = leafs[i]
         if(l.room != null){
             const room = l.room as IRect
             let allInterior = true
+            let noneInterior = true
             let hasWindow = RANDOM.next() <= PERCENT_CHANCE_WINDOW
             for(let y = room.y; y < room.y + room.height - 1; y++){
                 for(let x = room.x; x < room.x + room.width - 1; x++){
                     const interior = placeInteriorExceptEdge(tileGrid, x, y, hasWindow)
                     allInterior = allInterior && interior
+                    noneInterior = noneInterior && !interior
                 }
             }
             // Don't put us in rooms that are not inside of the boundary
@@ -152,7 +155,11 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, finalRooms: IRect[]): a
                 room.x += tileGrid.x
                 room.y += tileGrid.y
                 interiorRooms.push(room)
-            } else {
+            } 
+            else if(noneInterior) {
+                outsideRooms.push(room)
+            }
+            else {
                 room.x += tileGrid.x
                 room.y += tileGrid.y
                 exteriorRooms.push(room)
