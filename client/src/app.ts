@@ -12,7 +12,7 @@ import { handleInput, newKeyPress } from './handleInput'
 import { IRenderCell, RenderCell } from './renderCell'
 import { CanvasRenderer } from './canvasRenderer'
 import { renderToGrid } from './renderToGrid'
-import { drawBoxOnGrid, drawStringToGrid, CHARACTER_HELPER } from './renderHelpers'
+import { drawBoxOnGrid, drawStringToGrid } from './renderHelpers'
 
 // FOV
 import { calculateFOV, FOVCell } from './fov'
@@ -30,7 +30,7 @@ import { ID_MANAGER } from './idManager'
 // Settings & data
 import SETTINGS from './_settings/gameSettings'
 import DEBUG from './_settings/debugSettings'
-import COLORS from './colors'
+import COLORS from './_settings/colors'
 import GAME_TEXT from './_data/gameText'
 
 // Map Generator
@@ -169,12 +169,12 @@ tileGrid.forEach((t: Tile): void => {
 // Let's go ahead and try and build those ellipses instead before moving them into the generator
 const levelIterator = progressiveMapGenerator(tileGrid, rooms)
 levelIterator.next()
-console.log(rooms.length);
+
 for(let i = 1; i < (rooms.length - 2); i++){
     if(RANDOM.next() < 0.3){
         const placedEntities: Entity[] = []
         placeEntitiesInRoom(rooms[i],placedEntities)
-        placedEntities.forEach(e => entities.push(e))
+        placedEntities.forEach((e: Entity): void => {entities.push(e)})
     }
 }
 
@@ -242,7 +242,6 @@ PUBSUB.subscribe('messagelog', (msg): void => {
 // translate the last thing the player did into what the user is TRYING to do
 // This is part of the intention to game action translation layer I suppose
 PUBSUB.subscribe('player_wants_to_move', (msg): void => {
-    console.log("player move");
     PUBSUB.publish('move', msg)
     gameState = GameStates.ENEMY_TURN
 })
