@@ -4,7 +4,7 @@ import { Tile, TileMaterial } from '../../tile'
 import { IRect, Rect } from '../../shapes/rect'
 
 import { IEllipse, Ellipse } from '../../shapes/ellipse'
-import { RANDOM } from '../../rngHelper'
+import { RANDOM } from '../../utils/rngHelper'
 
 import BSP_SETTINGS from '../../_settings/bspMapGeneratorSettings'
 import { Leaf } from './bspLeaf'
@@ -266,6 +266,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, finalRooms: IRect[]): a
                 t.blockMove = true
                 t.blockSight = false
             }
+            // Find a spot for a door
             const t = outerEdges[RANDOM.nextInt(0, outerEdges.length - 1)]
             t.blockMove = false
             t.blockSight = true

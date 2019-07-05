@@ -1,16 +1,16 @@
-import DEBUG from './_settings/debugSettings'
-import { PUBSUB } from './pubSub/pubSub'
-import { IRenderCell } from './renderCell'
-import { Grid } from './grid'
-import COLORS from './_settings/colors'
-import { TOPICS } from './pubSub/pubsubTopicList';
+import DEBUG from '../_settings/debugSettings'
+import { PUBSUB } from '../pubSub/pubSub'
+import { IRenderCell } from '../rendering/renderCell'
+import { Grid } from '../grid'
+import COLORS from '../_settings/colors'
+import { TOPICS } from '../pubSub/pubsubTopicList'
 
 
 // DEBUG HELPERS
-const clearDebug = () => {
+const clearDebug = (): void => {
     if(DEBUG.DEBUG_DRAW){
         const clear = (debugGrid: Grid<IRenderCell>): void => {
-            debugGrid.forEach(dc => {
+            debugGrid.forEach((dc): void => {
                 dc.transparent = true
                 dc.character = ''
             })
@@ -18,12 +18,12 @@ const clearDebug = () => {
         PUBSUB.publish('debug_draw_fn', { fn: clear })
     }
 }
-const drawCell = (x: number,y: number) => {
+const drawCell = (x: number,y: number): void => {
     if(DEBUG.DEBUG_DRAW){
         PUBSUB.publish(TOPICS.DEBUG_DRAW_CELL, {x, y, transparent: false, backColor: COLORS.DEBUG, character: '!'})
     }
 }
-const drawVisited = (floodGrid: Grid<any>) => {
+const drawVisited = (floodGrid: Grid<any>): void => {
     // not efficient, but whatevs
     if(!DEBUG.DEBUG_DRAW){
         return
@@ -42,10 +42,10 @@ const drawVisited = (floodGrid: Grid<any>) => {
 }
 
 // change this into a proper queue
-function * processNetwork(grid: Grid<any>, evalFn:Function, startX: number, startY: number){
+function * processNetwork(grid: Grid<any>, evalFn: Function, startX: number, startY: number): any{
     
-    const floodGrid = new Grid<any>(grid.width, grid.height);
-    floodGrid.setEach((fgCell, index, x, y) => {
+    const floodGrid = new Grid<any>(grid.width, grid.height)
+    floodGrid.setEach((fgCell, index, x, y): any => {
         const tgCell = grid.getXY(x,y)
         return { cell: tgCell, visited: false, generation: Infinity }
     })
@@ -66,15 +66,14 @@ function * processNetwork(grid: Grid<any>, evalFn:Function, startX: number, star
         node.visited = true
         
         drawCell(node.cell.x, node.cell.y)
-        const neighbors = floodGrid.getNeighborsXY(node.cell.x, node.cell.y);
-        neighbors.forEach(n => {
+        const neighbors = floodGrid.getNeighborsXY(node.cell.x, node.cell.y)
+        neighbors.forEach((n): void => {
             n.generation = Math.min(node.generation + 1, n.generation)
             if(!n.visited && evalFn(n.cell)){
                 n.visited = true
                 nodes.push(n)
             }
         })
-        console.log(nodes.length)
         yield
     }
 }

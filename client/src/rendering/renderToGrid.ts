@@ -1,12 +1,12 @@
-import { Grid } from './grid'
-import { Tile, TileMaterial } from './tile'
-import { FOVCell } from './fov'
-import { Entity } from './entity'
+import { Grid } from '../grid'
+import { Tile, TileMaterial } from '../tile'
+import { FOVCell } from '../fov'
+import { Entity } from '../entity'
 import { IRenderCell } from './renderCell'
-import { Point } from './shapes/point'
-import COLORS from './_settings/colors'
-import { IRect } from './shapes/rect'
-import DEBUG from './_settings/debugSettings'
+import { Point } from '../shapes/point'
+import COLORS from '../_settings/colors'
+import { IRect } from '../shapes/rect'
+import DEBUG from '../_settings/debugSettings'
 
 /**
  * This is the heart of the render system, everything else is just a 'platform' layer to adapt to a particular output

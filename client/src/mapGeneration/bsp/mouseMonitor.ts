@@ -1,6 +1,6 @@
 // Let's go ahead and create the Point interface here, we'll export it for use later in the project
 
-import {IPoint, Point} from './shapes/point'
+import {IPoint, Point} from '../../shapes/point'
 
 /**
  * Class to help monitor things that have happened to the mouse since last time that we looked

@@ -1,11 +1,5 @@
 // DEBUG
-import { ColorBar } from './_debugTools/colorBar'
 import DEBUG from './_settings/debugSettings'
-
-if(DEBUG.SHOW_COLOR_BAR)
-{
-    ColorBar.activate()
-}
 
 // Shapes
 import { Point } from './shapes/point'
@@ -13,15 +7,15 @@ import { Rect, IRect } from './shapes/rect'
 import { Grid } from './grid'
 
 // Inputs
-import { KeyboardMonitor } from './keyboardMonitor'
-import { MouseMonitor } from './mouseMonitor'
-import { handleInput, newKeyPress } from './handleInput'
+import { KeyboardMonitor } from './gameInput/keyboardMonitor'
+import { MouseMonitor } from './mapGeneration/bsp/mouseMonitor'
+import { handleInput, newKeyPress } from './gameInput/handleInput'
 
 // Renderer
-import { IRenderCell, RenderCell } from './renderCell'
-import { CanvasRenderer } from './canvasRenderer'
-import { renderToGrid } from './renderToGrid'
-import { drawBoxOnGrid, drawStringToGrid } from './renderHelpers'
+import { IRenderCell, RenderCell } from './rendering/renderCell'
+import { CanvasRenderer } from './rendering/canvasRenderer'
+import { renderToGrid } from './rendering/renderToGrid'
+import { drawBoxOnGrid, drawStringToGrid } from './rendering/renderHelpers'
 
 // FOV
 import { calculateFOV, FOVCell } from './fov'
@@ -32,9 +26,9 @@ import { Entity } from './entity'
 import { loadImage } from './assetHelper'
 
 // Game Utilities
-import { RANDOM } from './rngHelper'
+import { RANDOM } from './utils/rngHelper'
 import { PUBSUB } from './pubSub/pubSub'
-import { ID_MANAGER } from './idManager'
+import { ID_MANAGER } from './utils/idManager'
 
 // Settings & data
 import SETTINGS from './_settings/gameSettings'
@@ -51,26 +45,19 @@ import { placeEntitiesInRoom } from './entityPlacer'
 // UI
 import { MessageLog, wrapText} from './messageLog'
 import GameStates from './gameStates'
-import { debug } from 'webpack';
-import { processNetwork } from './floodFiller';
-import { TOPICS } from './pubSub/pubsubTopicList';
+import { processNetwork } from './utils/floodFiller'
+import { TOPICS } from './pubSub/pubsubTopicList'
 
-
+import { ColorBar } from './_debugTools/colorBar'
 
 // INITIALIZE OUR SEED -> Should probably move this into it's own section, but whatever
-const urlParams = new URLSearchParams(window.location.search)
-const seedStr = urlParams.get('seed')
-if(!seedStr){
-    const seed = RANDOM.seed(seedStr || undefined)
-    const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?seed=' + seed
-    if (history.pushState) {
-        window.history.pushState({path:newurl},'',newurl)
-    } else {
-        window.location.href = newurl
-    }
+RANDOM.initializeSystem()
 
-} else {
-    RANDOM.seed(seedStr)
+// World Data includes everything that really involves a grid, like 
+
+if(DEBUG.SHOW_COLOR_BAR)
+{
+    ColorBar.activate()
 }
 
 // DE-STRUCTURE SOME SETTINGS (Might restructure these back togehter)
@@ -130,6 +117,9 @@ if(DEBUG.DEBUG_DRAW){
         msg.fn(debugGrid)
     })
 }
+
+// Pull a lot of this into a simple game data object, systems then initiate a callback with those systems, which are then processed in
+// any particular order
 
 // FOV
 let fovRecompute = !DEBUG.DISABLE_FOV
@@ -286,10 +276,7 @@ PUBSUB.subscribe('player_wants_to_move', (msg): void => {
 
 loadImage('assets/out.png').then((image: any): void => {
     renderer.init(canvas, image)
-    if(!DEBUG.STAGE_MAP_GENERATORS){
-        // JUST FULLY SEQUENCE THE GENERATOR
-        //while(levelIterator.next().done !== false){} // this is broken for some reason
-    }
+
     // Loop
     const loop = (): void => {
 
@@ -368,5 +355,3 @@ loadImage('assets/out.png').then((image: any): void => {
     window.requestAnimationFrame(loop)
 
 }).catch((err: any): void => console.log(err)) //eslint-disable-line no-console
-
-//window.PUBSUB = PUBSUB

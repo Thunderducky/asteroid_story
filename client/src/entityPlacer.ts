@@ -1,7 +1,7 @@
 import { IRect } from './shapes/rect'
 import { Entity } from './entity'
-import { ID_MANAGER } from './idManager'
-import { RANDOM } from './rngHelper'
+import { ID_MANAGER } from './utils/idManager'
+import { RANDOM } from './utils/rngHelper'
 import COLORS from './_settings/colors'
 
 const MAX_ENTITIES = 5

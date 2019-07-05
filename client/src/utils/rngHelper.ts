@@ -55,6 +55,22 @@ const RANDOM = {
     },
     nextInt(min: number, max: number): number{
         return Math.floor(this.next() * (max - min + 1)) + min
+    },
+    initializeSystem(): void{
+        const urlParams = new URLSearchParams(window.location.search)
+        const seedStr = urlParams.get('seed')
+        if(!seedStr){
+            const seed = RANDOM.seed(seedStr || undefined)
+            const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?seed=' + seed
+            if (history.pushState) {
+                window.history.pushState({path:newurl},'',newurl)
+            } else {
+                window.location.href = newurl
+            }
+
+        } else {
+            RANDOM.seed(seedStr)
+        }
     }
 }
 

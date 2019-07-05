@@ -1,6 +1,6 @@
-import { IRenderCell } from './renderCell'
+import { IRenderCell } from './rendering/renderCell'
 import { Grid } from './grid'
-import { drawStringToGrid } from './renderHelpers'
+import { drawStringToGrid } from './rendering/renderHelpers'
 import { IRect, Rect } from './shapes/rect'
 import { Point } from './shapes/point'
 import COLORS from './_settings/colors'
