@@ -30,7 +30,7 @@ class CanvasRenderer {
     }
     // eventually we need to pass in the dimensions we are rendering to as well
     // for now it's fine
-    render(renderGrid: Grid<IRenderCell>, background: string = COLORS.black): void {
+    render(renderGrid: Grid<IRenderCell>, background: string = COLORS.palette.black): void {
         if(this.ctx == null){
             throw new Error('Cannot render a grid with a missing context')
         }

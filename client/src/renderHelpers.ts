@@ -105,7 +105,7 @@ function drawSection(ctx: CanvasRenderingContext2D, tilesheet: any, srcRect: IRe
     ctx.globalCompositeOperation = 'source-over'
 }
 
-const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y: number, foreColor: string = COLORS.white, backColor: string = COLORS.black): void => {
+const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y: number, foreColor: string = COLORS.palette.white, backColor: string = COLORS.palette.black): void => {
     let currentX = x
     let currentY = y
     for(let i = 0; i < message.length; i++){
@@ -155,8 +155,8 @@ const drawBoxOnGrid = (grid: Grid<IRenderCell>, box: IRect, boxFill: boolean = t
                     cell.character = CHARACTER_HELPER.TOP_LEFT
                 }
             }
-            cell.foreColor = COLORS.white
-            cell.backColor = COLORS.black
+            cell.foreColor = COLORS.palette.white
+            cell.backColor = COLORS.palette.black
         } else if(isEdge){
             if(y === box.y || y === box.y + box.height - 1){
                 // TOP
@@ -168,8 +168,8 @@ const drawBoxOnGrid = (grid: Grid<IRenderCell>, box: IRect, boxFill: boolean = t
         } else if(boxFill){
             cell.character = ''
         }
-        cell.backColor = COLORS.black
-        cell.foreColor = COLORS.white
+        cell.backColor = COLORS.palette.black
+        cell.foreColor = COLORS.palette.white
     })
 }
 

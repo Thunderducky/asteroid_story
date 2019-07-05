@@ -12,7 +12,8 @@ const DEBUG: Hash<boolean> = {
     DEBUG_DRAW: false,
     STAGE_MAP_GENERATORS: false, // We will manually progress the level generator,
     ALWAYS_SHOW_ENTITIES: false,
-    SHOW_UNEXPLORED: false
+    SHOW_UNEXPLORED: false,
+    SHOW_COLOR_BAR: false
 }
 
 //DEBUG SETTINGS

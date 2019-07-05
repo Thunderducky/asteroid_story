@@ -5,7 +5,8 @@
  */
 enum TileMaterial {
     Asteroid,
-    Metal
+    Metal,
+    Space
 }
 class Tile {
     /**
@@ -42,7 +43,7 @@ class Tile {
             this.blockSight = blockSight
         }
         this.contained = true
-        this.material = TileMaterial.Asteroid        
+        this.material = TileMaterial.Space        
     }
 }
 

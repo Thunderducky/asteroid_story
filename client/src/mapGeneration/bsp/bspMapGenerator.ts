@@ -64,6 +64,7 @@ const placeAsteroidChunk = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
             tile.blockSight = true
             tile.contained = true
             tile.explored = false
+            tile.material = TileMaterial.Asteroid
         }
     })
 }

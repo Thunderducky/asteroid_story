@@ -3,6 +3,7 @@ import { Grid } from './grid'
 import { drawStringToGrid } from './renderHelpers'
 import { IRect, Rect } from './shapes/rect'
 import { Point } from './shapes/point'
+import COLORS from './_settings/colors'
 
 const measureText = (input: string): IRect => {
     // this rect is in tile units
@@ -68,7 +69,7 @@ class MessageLog {
         messages.forEach((message, index: number): void => {
             const size = measureText(message)
             // TODO: Use actual specified colors
-            drawStringToGrid(renderGrid, message, lineOffset.x, lineOffset.y, (index === 0) ? '#FFFFFF' : '#666666')
+            drawStringToGrid(renderGrid, message, lineOffset.x, lineOffset.y, (index === 0) ? COLORS.palette.white : COLORS.palette.devilsGray)
             lineOffset.y += size.height
         })
         
