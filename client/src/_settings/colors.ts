@@ -5,12 +5,12 @@ const COLORS = {
     DEBUG: '#FF3333',
     palette: {
         black: '#000000',
-        devilsGray: "#666666",
+        devilsGray: '#666666',
         white: '#FFFFFF',
     },
     text: {
-      dark: '#333333',
-      light: '#CCCCCC'
+        dark: '#333333',
+        light: '#CCCCCC'
     },
 
     player: '#FFFFFF',

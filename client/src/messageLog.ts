@@ -3,7 +3,7 @@ import { Grid } from './grid'
 import { drawStringToGrid } from './renderHelpers'
 import { IRect, Rect } from './shapes/rect'
 import { Point } from './shapes/point'
-import COLORS from './_settings/colors';
+import COLORS from './_settings/colors'
 
 const measureText = (input: string): IRect => {
     // this rect is in tile units

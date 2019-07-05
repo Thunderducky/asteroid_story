@@ -1,5 +1,4 @@
 // DEBUG
-import { ColorSquare } from './_debugTools/colorSquare'
 import { ColorBar } from './_debugTools/colorBar'
 import DEBUG from './_settings/debugSettings'
 

@@ -59,14 +59,13 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                     const isWindow = tile.blockMove && !tile.blockSight
                     const isWall = tile.blockMove && tile.blockSight
                     const isGround = !isWall && tile.contained
-                    const isSpace = !isWall && !tile.contained
 
                     // Let's condense this by type
-                    let materialColorObj = COLORS.outside;
+                    let materialColorObj = COLORS.outside
                     if(tile.material === TileMaterial.Space){
                         materialColorObj = COLORS.outside
                     } else {
-                        let mat; // = COLORS.asteroid
+                        let mat // = COLORS.asteroid
                         if(tile.material === TileMaterial.Metal){
                             mat = COLORS.metal
                         } else {

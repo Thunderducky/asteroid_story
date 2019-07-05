@@ -6,7 +6,7 @@ class ColorSquare {
     keyName: string;
     colorsRoot: object
     element: HTMLDivElement;
-    constructor(left: number = 0){
+    constructor(){
         this.colorsRoot = COLORS
         this.parent = {} // eventually we will set this with some of the other things
         this.keyName = ''
@@ -18,7 +18,7 @@ class ColorSquare {
 
 
     activateMonitor(): void{
-        this.element.style.backgroundColor = this.parent[this.keyName] as string;
+        this.element.style.backgroundColor = this.parent[this.keyName] as string
         setInterval((): void => {
             this.parent[this.keyName] = this.element.style.backgroundColor
         }, 1)
