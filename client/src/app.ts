@@ -1,3 +1,27 @@
+// DEBUG
+import { ColorSquare } from './_debugTools/colorSquare'
+import { ColorBar } from './_debugTools/colorBar'
+{
+    // const a = new ColorSquare();
+    // a.parent = a.colorsRoot.asteroid.wall;
+    // a.keyName = 'dark'
+    // a.activateMonitor()
+    // const b = new ColorSquare(1);
+    // b.parent = b.colorsRoot.asteroid.wall;
+    // b.keyName = 'light'
+    // b.activateMonitor()
+    // const c = new ColorSquare(1);
+    // c.parent = c.colorsRoot.asteroid.ground;
+    // c.keyName = 'dark'
+    // c.activateMonitor()
+    // const c = new ColorSquare(1);
+    // c.parent = c.colorsRoot.asteroid.ground;
+    // c.keyName = 'dark'
+    // c.activateMonitor()
+    // Lets dynamically build this whole list based off of color, along with labels the whole way through
+    ColorBar.activate()
+}
+
 // Shapes
 import { Point } from './shapes/point'
 import { Rect, IRect } from './shapes/rect'
@@ -6,7 +30,7 @@ import { Grid } from './grid'
 // Inputs
 import { KeyboardMonitor } from './keyboardMonitor'
 import { MouseMonitor } from './mouseMonitor'
-import { handleInput, newKeyPress } from './handleInput'
+import { handleInput } from './handleInput'
 
 // Renderer
 import { IRenderCell, RenderCell } from './renderCell'
@@ -41,14 +65,6 @@ import { placeEntitiesInRoom } from './entityPlacer'
 import { MessageLog, wrapText} from './messageLog'
 import GameStates from './gameStates'
 
-// DE-STRUCTURE SOME SETTINGS (Might restructure these back togehter)
-const {
-    TILE_WIDTH, TILE_HEIGHT,
-    SCREEN_WIDTH, SCREEN_HEIGHT,
-    MAP_WIDTH, MAP_HEIGHT,
-    CAMERA_WIDTH, CAMERA_HEIGHT,
-    FOV_RADIUS
-} = SETTINGS
 
 
 // INITIALIZE OUR SEED -> Should probably move this into it's own section, but whatever
@@ -67,13 +83,18 @@ if(!seedStr){
     RANDOM.seed(seedStr)
 }
 
+// DE-STRUCTURE SOME SETTINGS (Might restructure these back togehter)
+const {
+    TILE_WIDTH, TILE_HEIGHT,
+    SCREEN_WIDTH, SCREEN_HEIGHT,
+    MAP_WIDTH, MAP_HEIGHT,
+    CAMERA_WIDTH, CAMERA_HEIGHT,
+    FOV_RADIUS
+} = SETTINGS
+
 // keep track of the current game state
 let gameState = GameStates.PLAYERS_TURN
 
-// Set up Entities
-const player: Entity = new Entity(ID_MANAGER.next(), 'player',  3,4, '@', COLORS.player) // TODO: Move this name into gameText
-const npc: Entity = new Entity(ID_MANAGER.next(), 'npc', 3,5, '@', COLORS.npc, false) // TODO: Move this name into gameText
-const entities: Entity[] = [player,npc]
 
 // Find our canvas and adjust it to our settings
 const canvas = document.querySelector('canvas') as HTMLCanvasElement
@@ -120,7 +141,10 @@ tileGrid.setEach((cell: Tile, index: number, x: number, y: number): Tile => {
     }
     return t
 })
-
+// Set up Entities
+const player: Entity = new Entity(ID_MANAGER.next(), 'player',  3,4, '@', COLORS.player) // TODO: Move this name into gameText
+const npc: Entity = new Entity(ID_MANAGER.next(), 'npc', 3,5, '@', COLORS.npc, false) // TODO: Move this name into gameText
+const entities: Entity[] = [player,npc]
 // this will also populate the rooms
 const rooms: IRect[] = []
 
@@ -205,6 +229,7 @@ for(let i = 1; i < (rooms.length - 2); i++){
 // Narrative subscriber to moved
 let foundCivilian = false
 let exited = false
+// Narrativeizer
 PUBSUB.subscribe('moved', (msg): void => {
     if(msg.id === player.id){
         // Did we just leave the airlock
@@ -234,13 +259,11 @@ PUBSUB.subscribe('moved', (msg): void => {
 
 const messageLog = new MessageLog()
 
+// Formatter
 PUBSUB.subscribe('messagelog', (msg): void => {
     messageLog.addMessage(wrapText(msg.text))
 })
-// TODO: Look at entering an input system
-// This is published to by handle input, which should only return one thing
-// translate the last thing the player did into what the user is TRYING to do
-// This is part of the intention to game action translation layer I suppose
+
 PUBSUB.subscribe('player_wants_to_move', (msg): void => {
     PUBSUB.publish('move', msg)
     gameState = GameStates.ENEMY_TURN
@@ -254,9 +277,7 @@ loadImage('assets/out.png').then((image: any): void => {
     }
     // Loop
     const loop = (): void => {
-        // Hell, we can just handle the input if it's the user turn, otherwise dont
-        // Ask the user when stuff happens
-        // this is where the user will get to do anything, currently
+
         if(gameState === GameStates.PLAYERS_TURN){
             handleInput(km, player)
         } else {
@@ -265,70 +286,48 @@ loadImage('assets/out.png').then((image: any): void => {
             gameState = GameStates.PLAYERS_TURN
         }
         
-
-        // extra
-        // if(newKeyPress(km, 'w')){
-        //     PUBSUB.publish('camera_move', {delta: {x: 0, y: -1}})
-        // }
-        // if(newKeyPress(km, 'a')){
-        //     PUBSUB.publish('camera_move', {delta: {x: -1, y: 0}})
-        // }
-        // if(newKeyPress(km, 's')){
-        //     PUBSUB.publish('camera_move', {delta: {x: 0, y: 1}})
-        // }
-        // if(newKeyPress(km, 'd')){
-        //     PUBSUB.publish('camera_move', {delta: {x: 1, y: 0}})
-        // }
-
-        if(DEBUG.STAGE_MAP_GENERATORS){
-            // q lets us progress through the map generator phase
-            if(newKeyPress(km, 'q')){
-                // yield the next level generating setting
-                levelIterator.next()
-            }
-        }
-
         // process moves
         // eventually we'll componentize this better
-        MoveProcessor.moves.forEach((msg: any): void => {
-            const move = msg.delta
-            const id = msg.id
+        {
+            MoveProcessor.moves.forEach((msg: any): void => {
+                const move = msg.delta
+                const id = msg.id
 
-            const mover = entities.find((e): boolean => e.id == id)
-            if(!mover){
-                return
-            }
-            // TODO: maybe split this into two moves?
-            const destinationX = mover.x + move.x
-            const destinationY = mover.y + move.y
-            if(tileGrid.inBoundsXY(destinationX, destinationY)){
-                const tile = tileGrid.getXY(destinationX, destinationY)
-                if(!tile.blockMove || (DEBUG.ENABLE_CLIPPING && mover.id === player.id)){
-                    // Now we need to handle attacking in here as well, as well as mitigate the debug settings
-                    // check for blocking objects
-                    const target = Entity.getBlockingEntityAtLocation(entities, destinationX, destinationY)
-
-                    if(target !== null){
-                        PUBSUB.publish('messagelog', {text: 'You kick the ' + target.name + ' in the shins, annoying it greatly' })
-                    } else {
-                        mover.move(move.x, move.y)
-                        if(mover.id === player.id){
-                            fovRecompute = true
-                        }
-                        PUBSUB.publish('moved', msg) // only publish move if the entity actually completed the move
-                    }
-
-                    
+                const mover = entities.find((e): boolean => e.id == id)
+                if(!mover){
+                    return
                 }
-            }
-        })
-        MoveProcessor.moves.length = 0
+                // TODO: maybe split this into two moves?
+                const destinationX = mover.x + move.x
+                const destinationY = mover.y + move.y
+                if(tileGrid.inBoundsXY(destinationX, destinationY)){
+                    const tile = tileGrid.getXY(destinationX, destinationY)
+                    if(!tile.blockMove || (DEBUG.ENABLE_CLIPPING && mover.id === player.id)){
+                        // Now we need to handle attacking in here as well, as well as mitigate the debug settings
+                        // check for blocking objects
+                        const target = Entity.getBlockingEntityAtLocation(entities, destinationX, destinationY)
+
+                        if(target !== null){
+                            // Republish this as an act
+                            PUBSUB.publish('messagelog', {text: 'You kick the ' + target.name + ' in the shins, annoying it greatly' })
+                        } else {
+                            mover.move(move.x, move.y)
+                            if(mover.id === player.id){
+                                fovRecompute = true
+                            }
+                            PUBSUB.publish('moved', msg) // only publish move if the entity actually completed the move
+                        }
+
+                        
+                    }
+                }
+            })
+            MoveProcessor.moves.length = 0
+        }
 
         if(fovRecompute && !DEBUG.DISABLE_FOV){
             calculateFOV(fovGrid, tileGrid, player, FOV_RADIUS)
         }
-        //gameState = GameStates.PLAYERS_TURN
-
         // Convert to render format
         
         renderToGrid(tileGrid, fovGrid, entities, cameraRenderGrid, cameraFrame, debugGrid)

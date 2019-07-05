@@ -2,24 +2,39 @@
 // We'll even include "BLANK"
 // As opposed to empty space
 const COLORS = {
-    'dark_outside': '#002244',
-    'light_outside': '#265380',
-    'black': '#000000',
-    'white': '#FFFFFF',
-    'dark_wall': '#2d2824', //'#443c35',
-    'dark_ground': '#443c35', //'#665647',
-    'light_wall': '#C8B432', // #C5CC89
-    'light_ground': '#C5CC89',
-    'player': '#FFFFFF',
-    'dark_door':'#550000',
-    'light_door': '#FF2222',
-    'npc': '#CC0000',
-    'DEBUG': '#FF3333',
+    DEBUG: '#FF3333',
+    black: '#000000',
+    white: '#FFFFFF',
+
+    player: '#FFFFFF',
+    npc: '#CC0000',
+    
+    // 'dark_door':'#550000',
+    // 'light_door': '#FF2222',
+    
+    outside: {
+        dark: '#001429', // '#002244',
+        light: '#002b47' //'#265380'
+    } ,
+    asteroid: {
+        wall: {
+            dark:'#2d2824',
+            light: '#6e6359' // '#C8B432'
+        },
+        ground: {
+            dark: '#443c35',
+            light: '#5e554a' //'#C5CC89'
+        }
+    },
     metal: {
-        darkWall: '#4A4A4A',
-        darkGround: '#616161',
-        lightWall: '#858585',
-        lightGround: '#BFBFBF'
+        wall: {
+            dark:  '#363636', // '#4A4A4A',
+            light: '#858585'
+        },
+        ground: {
+            dark: '#616161',
+            light: '#BFBFBF'
+        }
     }
 
 }
