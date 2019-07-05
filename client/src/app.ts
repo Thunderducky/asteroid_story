@@ -43,14 +43,17 @@ import COLORS from './_settings/colors'
 import GAME_TEXT from './_data/gameText'
 
 // Map Generator
-//import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
-import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
+import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
+//import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
 
 
 import { placeEntitiesInRoom } from './entityPlacer'
 // UI
 import { MessageLog, wrapText} from './messageLog'
 import GameStates from './gameStates'
+import { debug } from 'webpack';
+import { processNetwork } from './floodFiller';
+import { TOPICS } from './pubSub/pubsubTopicList';
 
 
 
@@ -113,13 +116,18 @@ debugGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell 
 })
 
 if(DEBUG.DEBUG_DRAW){
-    PUBSUB.subscribe('debug_draw', (msg: any): void => {
+    PUBSUB.subscribe(TOPICS.DEBUG_DRAW_CELL , (msg: any): void => {
         // this is in screen coordinates
         const cell = debugGrid.getXY(msg.x, msg.y)
         cell.backColor = msg.backColor || cell.backColor
         cell.foreColor = msg.foreColor || cell.foreColor
         cell.character = msg.character || cell.foreColor
         cell.transparent = msg.transparent && true
+    })
+}
+if(DEBUG.DEBUG_DRAW){
+    PUBSUB.subscribe(TOPICS.DEBUG_DRAW_FN, (msg: any): void => {
+        msg.fn(debugGrid)
     })
 }
 
@@ -191,102 +199,9 @@ tileGrid.forEach((t: Tile): void => {
 // Let's go ahead and try and build those ellipses instead before moving them into the generator
 const levelIterator = progressiveMapGenerator(tileGrid, rooms)
 levelIterator.next()
-let floodFillGenerator = null
+
 {
-    // Let's build a small series of test
-    tileGrid.getSubgrid(Rect.make(2,2, 50, 50)).forEach((cell, index, x, y): void => {
-        cell.material = TileMaterial.Asteroid
-        if(x === 0 || x === 49 || y === 0 || y == 49){
-            cell.blockMove = true
-            cell.blockSight = true
-        } else {
-            cell.blockMove = RANDOM.next() > 0.7
-            cell.blockSight = cell.blockMove
-        }
-    })
-
-    // next thing I want to do is start a network based off of criteria
-    //const moveNetwork = GridNetwork.make(tileGrid, 3, 3, (t) => !t.blockMove);
-    // we're going to start out doing this progressively, and then move it into it's own thing later
-    const floodGrid = new Grid<any>(tileGrid.width, tileGrid.height);
-    floodGrid.setEach((fgCell, index, x, y) => {
-        const tgCell = tileGrid.getXY(x,y)
-        return { cell: tgCell, visited: false, generation: Infinity }
-    })
-    
-    const clearDebug = () => {
-        if(DEBUG.DEBUG_DRAW){
-            debugGrid.forEach(dc => {
-                dc.transparent = true
-                dc.character = ''
-            })
-        }
-    }
-    const drawCell = (x,y) => {
-        PUBSUB.publish('debug_draw', {x, y, transparent: false, backColor: COLORS.DEBUG, character: '!'})
-    }
-    const drawVisited = () => {
-        // not efficient, but whatevs
-        if(!DEBUG.DEBUG_DRAW){
-            return
-        }
-        floodGrid.forEach((fgCell, index, x, y): void => {
-            if(fgCell.visited && debugGrid.inBoundsXY(x,y)){
-                const dgCell = debugGrid.getXY(x,y);
-                dgCell.character = (fgCell.generation % 16).toString(16)
-                dgCell.backColor = (fgCell.generation % 16 === 0) ? COLORS.DEBUG : COLORS.palette.white
-                dgCell.transparent = false
-            }
-        })
-    }
-
-    // weird way of doing it, we move on release, and if both are pressed down we continiously look
-
-    const nodes = [floodGrid.getXY(5,5)]
-    nodes[0].visited = true
-    nodes[0].generation = 0
-    let index = 0
-    // change this into a proper queue
-    function * processNetwork(evalFn){
-        clearDebug()
-        // let's start with a simple bfs search
-        while(index < nodes.length){
-            clearDebug()
-            drawVisited()
-
-            let node = nodes[index++]
-            node.visited = true
-            
-            drawCell(node.cell.x, node.cell.y)
-            const neighbors = floodGrid.getNeighborsXY(node.cell.x, node.cell.y);
-            neighbors.forEach(n => {
-                n.generation = Math.min(node.generation + 1, n.generation)
-                if(!n.visited && evalFn(n.cell)){
-                    
-                    n.visited = true
-                    nodes.push(n)
-                }
-            })
-            console.log(nodes.length)
-        }
-    }
-    floodFillGenerator = processNetwork(c => !c.blockMove)
-}
-
-
-if(!DEBUG.SKIP_ENTITY_PLACEMENT){
-    for(let i = 1; i < (rooms.length - 2); i++){
-        if(RANDOM.next() < 0.3){
-            const placedEntities: Entity[] = []
-            placeEntitiesInRoom(rooms[i],placedEntities)
-            placedEntities.forEach((e: Entity): void => {entities.push(e)})
-        }
-    }
-}
-
-// Some placement sections
-// should put this logic somewhere else
-{
+    // player and npc placement
     if(rooms.length > 0){
         const pcenter = Rect.center(rooms[0])
         Point.set(player, pcenter.x, pcenter.y)
@@ -308,6 +223,24 @@ if(!DEBUG.SKIP_ENTITY_PLACEMENT){
         fovGrid.y = cameraFrame.y
     }
 }
+// We'll have to use this with networks in order to mark rooms as connected or not, which probably won't be too bad
+// this is definitely why we are having some constraints on the size of the asteroid and might move it into a different section
+let floodFillGenerator = processNetwork(tileGrid, (c: Tile): boolean => !c.blockMove && c.material !== TileMaterial.Space, player.x, player.y)
+
+
+if(!DEBUG.SKIP_ENTITY_PLACEMENT){
+    for(let i = 1; i < (rooms.length - 2); i++){
+        if(RANDOM.next() < 0.3){
+            const placedEntities: Entity[] = []
+            placeEntitiesInRoom(rooms[i],placedEntities)
+            placedEntities.forEach((e: Entity): void => {entities.push(e)})
+        }
+    }
+}
+
+// Some placement sections
+// should put this logic somewhere else
+
 // Narrative subscriber to moved
 let foundCivilian = false
 let exited = false
@@ -319,20 +252,20 @@ PUBSUB.subscribe('moved', (msg): void => {
         const lastTile = tileGrid.getP(Point.subtract(player, msg.delta))
         
         if(currentTile.contained && !lastTile.contained){
-            PUBSUB.publish('messagelog', GAME_TEXT.SPACE_RETURN_AIRLOCK)
+            PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.SPACE_RETURN_AIRLOCK)
         }
         
         if(npc.x === currentTile.x && npc.y === currentTile.y){
             foundCivilian = true
-            PUBSUB.publish('messagelog', GAME_TEXT.DEAD_CIVILIAN)
+            PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.DEAD_CIVILIAN)
         }
 
         if(!currentTile.contained && foundCivilian && !exited){
             exited = true
-            PUBSUB.publish('messagelog', GAME_TEXT.LEAVE_DEAD_CIVILIAN)
+            PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.LEAVE_DEAD_CIVILIAN)
             // Game end at this point
         } else if(lastTile.contained && !currentTile.contained){
-            PUBSUB.publish('messagelog', GAME_TEXT.AIRLOCK_TO_SPACE)
+            PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.AIRLOCK_TO_SPACE)
         }
 
     }
@@ -342,7 +275,7 @@ PUBSUB.subscribe('moved', (msg): void => {
 const messageLog = new MessageLog()
 
 // Formatter
-PUBSUB.subscribe('messagelog', (msg): void => {
+PUBSUB.subscribe(TOPICS.MESSAGE_LOG, (msg): void => {
     messageLog.addMessage(wrapText(msg.text))
 })
 
@@ -395,7 +328,7 @@ loadImage('assets/out.png').then((image: any): void => {
 
                         if(target !== null){
                             // Republish this as an act
-                            PUBSUB.publish('messagelog', {text: 'You kick the ' + target.name + ' in the shins, annoying it greatly' })
+                            PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: 'You kick the ' + target.name + ' in the shins, annoying it greatly' })
                         } else {
                             mover.move(move.x, move.y)
                             if(mover.id === player.id){
@@ -436,4 +369,4 @@ loadImage('assets/out.png').then((image: any): void => {
 
 }).catch((err: any): void => console.log(err)) //eslint-disable-line no-console
 
-window.PUBSUB = PUBSUB
+//window.PUBSUB = PUBSUB
