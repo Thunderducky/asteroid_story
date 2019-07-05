@@ -50,6 +50,9 @@ import { TOPICS } from './pubSub/pubsubTopicList'
 
 import { ColorBar } from './_debugTools/colorBar'
 
+import { GameData } from './gameData/gameData'
+GameData.init()
+
 // INITIALIZE OUR SEED -> Should probably move this into it's own section, but whatever
 RANDOM.initializeSystem()
 
@@ -123,20 +126,7 @@ if(DEBUG.DEBUG_DRAW){
 
 // FOV
 let fovRecompute = !DEBUG.DISABLE_FOV
-const fovGrid: Grid<FOVCell> = new Grid<FOVCell>(cameraFrame.width, cameraFrame.height)
-fovGrid.setEach((): FOVCell => { return {
-    visible: false // I don't necessarily want visibility turned on by default
-}})
 
-// Tile Grid
-const tileGrid: Grid<Tile> = new Grid<Tile>(MAP_WIDTH, MAP_HEIGHT)
-tileGrid.setEach((cell: Tile, index: number, x: number, y: number): Tile => {
-    const t = new Tile(x,y, true)
-    if(DEBUG.DISABLE_FOV){
-        t.explored = true
-    }
-    return t
-})
 // Set up Entities
 const player: Entity = new Entity(ID_MANAGER.next(), 'player',  3,4, '@', COLORS.player) // TODO: Move this name into gameText
 const npc: Entity = new Entity(ID_MANAGER.next(), 'npc', 3,5, '@', COLORS.npc, false) // TODO: Move this name into gameText
@@ -156,38 +146,38 @@ PUBSUB.subscribe('move', (msg): void =>{
 
 // Subscribe to moved to center the camera
 PUBSUB.subscribe('moved', (msg): void =>{
-    if(msg.id === player.id && !DEBUG.DISABLE_TRACKING){
-        // probably should just rebroadcast to character move
-        cameraFrame.x = Math.floor(player.x - cameraFrame.width/2)
-        cameraFrame.y = Math.floor(player.y - cameraFrame.height/2)
-        fovGrid.x = cameraFrame.x
-        fovGrid.y = cameraFrame.y
+    const fn = (fovGrid: Grid<FOVCell>): void => {
+        if(msg.id === player.id && !DEBUG.DISABLE_TRACKING){
+            // probably should just rebroadcast to character move
+            cameraFrame.x = Math.floor(player.x - cameraFrame.width/2)
+            cameraFrame.y = Math.floor(player.y - cameraFrame.height/2)
+            fovGrid.x = cameraFrame.x
+            fovGrid.y = cameraFrame.y
+        }
     }
+    PUBSUB.publish('system_request_fov_fn', { fn })
+    
 })
-
-// For when the camera moves independently
-PUBSUB.subscribe('camera_move', (msg): void => {
-    cameraFrame.x += msg.delta.x
-    cameraFrame.y += msg.delta.y
-    fovGrid.x = cameraFrame.x
-    fovGrid.y = cameraFrame.y
-})
-
-// Note anything connected by pubsub can probably be handle by SYSTEMS
-
 
 // the rooms won't be quite right since we are passing back the room in a small area, or maybe we just need to keep track of that inside of the generator
 // when we hand it back since the grid offers it's x and y coordinates
 // build the asteroid before we pass it off to the level generator, then we'll find the closest room and connect it to that one
-tileGrid.forEach((t: Tile): void => {
-    t.contained = false
-    t.blockMove = false
-    t.blockSight = false
-    t.explored = true
+
+PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, (gameData: any): void => {
+    gameData.tileGrid.forEach((t: Tile): void => {
+        t.contained = false
+        t.blockMove = false
+        t.blockSight = false
+        t.explored = true
+    })
 })
 
 // Let's go ahead and try and build those ellipses instead before moving them into the generator
-const levelIterator = progressiveMapGenerator(tileGrid, rooms)
+let levelIterator: any;
+PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, (gameData: any): void => {
+        levelIterator = progressiveMapGenerator(gameData.tileGrid, rooms)
+    }
+)
 levelIterator.next()
 
 {
@@ -199,23 +189,31 @@ levelIterator.next()
         Point.set(npc, npcenter.x, npcenter.y)
     }
 
-    // center the camera and fov on the player
-    if(!DEBUG.DISABLE_TRACKING){
-        cameraFrame.x = Math.floor(player.x - cameraFrame.width/2)
-        cameraFrame.y = Math.floor(player.y - cameraFrame.height/2)
-        fovGrid.x = cameraFrame.x
-        fovGrid.y = cameraFrame.y
-    } else {
-        // center everything
-        cameraFrame.x = Math.floor(tileGrid.width/2 - cameraFrame.width/2)
-        cameraFrame.y = Math.floor(tileGrid.height/2  - cameraFrame.height/2)
-        fovGrid.x = cameraFrame.x
-        fovGrid.y = cameraFrame.y
+    const fn = (system: any): void => {
+        const {fovGrid, tileGrid} = system;
+        // center the camera and fov on the player
+        if(!DEBUG.DISABLE_TRACKING){
+            cameraFrame.x = Math.floor(player.x - cameraFrame.width/2)
+            cameraFrame.y = Math.floor(player.y - cameraFrame.height/2)
+            fovGrid.x = cameraFrame.x
+            fovGrid.y = cameraFrame.y
+        } else {
+            // center everything
+            cameraFrame.x = Math.floor(tileGrid.width/2 - cameraFrame.width/2)
+            cameraFrame.y = Math.floor(tileGrid.height/2  - cameraFrame.height/2)
+            fovGrid.x = cameraFrame.x
+            fovGrid.y = cameraFrame.y
+        }
     }
+    PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, fn)
+
 }
 // We'll have to use this with networks in order to mark rooms as connected or not, which probably won't be too bad
 // this is definitely why we are having some constraints on the size of the asteroid and might move it into a different section
-let floodFillGenerator = processNetwork(tileGrid, (c: Tile): boolean => !c.blockMove && c.material !== TileMaterial.Space, player.x, player.y)
+let floodFillGenerator: any;
+PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, (gameData: any): void => {
+    floodFillGenerator = processNetwork(gameData.tileGrid, (c: Tile): boolean => !c.blockMove && c.material !== TileMaterial.Space, player.x, player.y)
+});
 
 
 if(!DEBUG.SKIP_ENTITY_PLACEMENT){
@@ -236,29 +234,31 @@ let foundCivilian = false
 let exited = false
 // Narrativeizer
 PUBSUB.subscribe('moved', (msg): void => {
-    if(msg.id === player.id){
-        // Did we just leave the airlock
-        const currentTile = tileGrid.getP(player)
-        const lastTile = tileGrid.getP(Point.subtract(player, msg.delta))
-        
-        if(currentTile.contained && !lastTile.contained){
-            PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.SPACE_RETURN_AIRLOCK)
-        }
-        
-        if(npc.x === currentTile.x && npc.y === currentTile.y){
-            foundCivilian = true
-            PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.DEAD_CIVILIAN)
-        }
+    PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, (gameData: any) => {
+        if(msg.id === player.id){
+            // Did we just leave the airlock
+            const currentTile = gameData.tileGrid.getP(player)
+            const lastTile = gameData.tileGrid.getP(Point.subtract(player, msg.delta))
+            
+            if(currentTile.contained && !lastTile.contained){
+                PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.SPACE_RETURN_AIRLOCK)
+            }
+            
+            if(npc.x === currentTile.x && npc.y === currentTile.y){
+                foundCivilian = true
+                PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.DEAD_CIVILIAN)
+            }
 
-        if(!currentTile.contained && foundCivilian && !exited){
-            exited = true
-            PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.LEAVE_DEAD_CIVILIAN)
-            // Game end at this point
-        } else if(lastTile.contained && !currentTile.contained){
-            PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.AIRLOCK_TO_SPACE)
-        }
+            if(!currentTile.contained && foundCivilian && !exited){
+                exited = true
+                PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.LEAVE_DEAD_CIVILIAN)
+                // Game end at this point
+            } else if(lastTile.contained && !currentTile.contained){
+                PUBSUB.publish(TOPICS.MESSAGE_LOG, GAME_TEXT.AIRLOCK_TO_SPACE)
+            }
 
-    }
+        }
+    })
 })
 
 
@@ -295,48 +295,56 @@ loadImage('assets/out.png').then((image: any): void => {
         // process moves
         // eventually we'll componentize this better
         {
-            MoveProcessor.moves.forEach((msg: any): void => {
-                const move = msg.delta
-                const id = msg.id
+            PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, (gameData: any): void => {
+                MoveProcessor.moves.forEach((msg: any): void => {
+                    const move = msg.delta
+                    const id = msg.id
 
-                const mover = entities.find((e): boolean => e.id == id)
-                if(!mover){
-                    return
-                }
-                // TODO: maybe split this into two moves?
-                const destinationX = mover.x + move.x
-                const destinationY = mover.y + move.y
-                if(tileGrid.inBoundsXY(destinationX, destinationY)){
-                    const tile = tileGrid.getXY(destinationX, destinationY)
-                    if(!tile.blockMove || (DEBUG.ENABLE_CLIPPING && mover.id === player.id)){
-                        // Now we need to handle attacking in here as well, as well as mitigate the debug settings
-                        // check for blocking objects
-                        const target = Entity.getBlockingEntityAtLocation(entities, destinationX, destinationY)
-
-                        if(target !== null){
-                            // Republish this as an act
-                            PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: 'You kick the ' + target.name + ' in the shins, annoying it greatly' })
-                        } else {
-                            mover.move(move.x, move.y)
-                            if(mover.id === player.id){
-                                fovRecompute = true
-                            }
-                            PUBSUB.publish('moved', msg) // only publish move if the entity actually completed the move
-                        }
-
-                        
+                    const mover = entities.find((e): boolean => e.id == id)
+                    if(!mover){
+                        return
                     }
-                }
-            })
-            MoveProcessor.moves.length = 0
+                    // TODO: maybe split this into two moves?
+                    const destinationX = mover.x + move.x
+                    const destinationY = mover.y + move.y
+                    if(gameData.tileGrid.inBoundsXY(destinationX, destinationY)){
+                        const tile = gameData.tileGrid.getXY(destinationX, destinationY)
+                        if(!tile.blockMove || (DEBUG.ENABLE_CLIPPING && mover.id === player.id)){
+                            // Now we need to handle attacking in here as well, as well as mitigate the debug settings
+                            // check for blocking objects
+                            const target = Entity.getBlockingEntityAtLocation(entities, destinationX, destinationY)
+
+                            if(target !== null){
+                                // Republish this as an act
+                                PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: 'You kick the ' + target.name + ' in the shins, annoying it greatly' })
+                            } else {
+                                mover.move(move.x, move.y)
+                                if(mover.id === player.id){
+                                    fovRecompute = true
+                                }
+                                PUBSUB.publish('moved', msg) // only publish move if the entity actually completed the move
+                            }
+
+                            
+                        }
+                    }
+                })
+                MoveProcessor.moves.length = 0
+            });
+            
         }
 
         if(fovRecompute && !DEBUG.DISABLE_FOV){
-            calculateFOV(fovGrid, tileGrid, player, FOV_RADIUS)
+            const fn = (gameData: any): void => {
+                calculateFOV(gameData.fovGrid, gameData.tileGrid, player, FOV_RADIUS)
+            }
+            PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, fn)
         }
         // Convert to render format
-        
-        renderToGrid(tileGrid, fovGrid, entities, cameraRenderGrid, cameraFrame, debugGrid)
+        const renderFn = (gameData: any): void => {
+            renderToGrid(gameData.tileGrid, gameData.fovGrid, entities, cameraRenderGrid, cameraFrame, debugGrid)
+        }
+        PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, renderFn)
         const relativeBox = Rect.copy(messageLogFrame)
         relativeBox.x = 0
         relativeBox.y = 0

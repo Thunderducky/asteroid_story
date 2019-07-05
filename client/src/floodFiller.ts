@@ -3,7 +3,7 @@ import { PUBSUB } from './pubSub/pubSub'
 import { IRenderCell } from './rendering/renderCell'
 import { Grid } from './grid'
 import COLORS from './_settings/colors'
-import { TOPICS } from './pubSub/pubsubTopicList';
+import { TOPICS } from './pubSub/pubsubTopicList'
 
 
 // DEBUG HELPERS
@@ -42,9 +42,9 @@ const drawVisited = (floodGrid: Grid<any>) => {
 }
 
 // change this into a proper queue
-function * processNetwork(grid: Grid<any>, evalFn:Function, startX: number, startY: number){
+function * processNetwork(grid: Grid<any>, evalFn: Function, startX: number, startY: number){
     
-    const floodGrid = new Grid<any>(grid.width, grid.height);
+    const floodGrid = new Grid<any>(grid.width, grid.height)
     floodGrid.setEach((fgCell, index, x, y) => {
         const tgCell = grid.getXY(x,y)
         return { cell: tgCell, visited: false, generation: Infinity }
@@ -66,7 +66,7 @@ function * processNetwork(grid: Grid<any>, evalFn:Function, startX: number, star
         node.visited = true
         
         drawCell(node.cell.x, node.cell.y)
-        const neighbors = floodGrid.getNeighborsXY(node.cell.x, node.cell.y);
+        const neighbors = floodGrid.getNeighborsXY(node.cell.x, node.cell.y)
         neighbors.forEach(n => {
             n.generation = Math.min(node.generation + 1, n.generation)
             if(!n.visited && evalFn(n.cell)){
