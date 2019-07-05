@@ -15,7 +15,7 @@ import { Grid } from './grid'
 // Inputs
 import { KeyboardMonitor } from './keyboardMonitor'
 import { MouseMonitor } from './mouseMonitor'
-import { handleInput } from './handleInput'
+import { handleInput, newKeyPress } from './handleInput'
 
 // Renderer
 import { IRenderCell, RenderCell } from './renderCell'
@@ -27,7 +27,7 @@ import { drawBoxOnGrid, drawStringToGrid } from './renderHelpers'
 import { calculateFOV, FOVCell } from './fov'
 
 // GameData
-import { Tile } from './tile'
+import { Tile, TileMaterial } from './tile'
 import { Entity } from './entity'
 import { loadImage } from './assetHelper'
 
@@ -43,8 +43,10 @@ import COLORS from './_settings/colors'
 import GAME_TEXT from './_data/gameText'
 
 // Map Generator
-import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
-//import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
+//import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
+import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
+
+
 import { placeEntitiesInRoom } from './entityPlacer'
 // UI
 import { MessageLog, wrapText} from './messageLog'
@@ -107,8 +109,19 @@ const messageLogRenderGrid = renderGrid.getSubgrid(messageLogFrame)
 // THESE ARE HERE BY DEFAULT, BUT WON'T BE SHOWN UNLESS ENABLED
 const debugGrid = new Grid<IRenderCell>(MAP_WIDTH, MAP_HEIGHT)
 debugGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell => {
-    return RenderCell.make(x,y,'', COLORS.palette.black, COLORS.palette.black)
+    return RenderCell.make(x,y,'', COLORS.palette.black, COLORS.palette.black, true)
 })
+
+if(DEBUG.DEBUG_DRAW){
+    PUBSUB.subscribe('debug_draw', (msg: any): void => {
+        // this is in screen coordinates
+        const cell = debugGrid.getXY(msg.x, msg.y)
+        cell.backColor = msg.backColor || cell.backColor
+        cell.foreColor = msg.foreColor || cell.foreColor
+        cell.character = msg.character || cell.foreColor
+        cell.transparent = msg.transparent && true
+    })
+}
 
 // FOV
 let fovRecompute = !DEBUG.DISABLE_FOV
@@ -178,12 +191,96 @@ tileGrid.forEach((t: Tile): void => {
 // Let's go ahead and try and build those ellipses instead before moving them into the generator
 const levelIterator = progressiveMapGenerator(tileGrid, rooms)
 levelIterator.next()
+let floodFillGenerator = null
+{
+    // Let's build a small series of test
+    tileGrid.getSubgrid(Rect.make(2,2, 50, 50)).forEach((cell, index, x, y): void => {
+        cell.material = TileMaterial.Asteroid
+        if(x === 0 || x === 49 || y === 0 || y == 49){
+            cell.blockMove = true
+            cell.blockSight = true
+        } else {
+            cell.blockMove = RANDOM.next() > 0.7
+            cell.blockSight = cell.blockMove
+        }
+    })
 
-for(let i = 1; i < (rooms.length - 2); i++){
-    if(RANDOM.next() < 0.3){
-        const placedEntities: Entity[] = []
-        placeEntitiesInRoom(rooms[i],placedEntities)
-        placedEntities.forEach((e: Entity): void => {entities.push(e)})
+    // next thing I want to do is start a network based off of criteria
+    //const moveNetwork = GridNetwork.make(tileGrid, 3, 3, (t) => !t.blockMove);
+    // we're going to start out doing this progressively, and then move it into it's own thing later
+    const floodGrid = new Grid<any>(tileGrid.width, tileGrid.height);
+    floodGrid.setEach((fgCell, index, x, y) => {
+        const tgCell = tileGrid.getXY(x,y)
+        return { cell: tgCell, visited: false, generation: Infinity }
+    })
+    
+    const clearDebug = () => {
+        if(DEBUG.DEBUG_DRAW){
+            debugGrid.forEach(dc => {
+                dc.transparent = true
+                dc.character = ''
+            })
+        }
+    }
+    const drawCell = (x,y) => {
+        PUBSUB.publish('debug_draw', {x, y, transparent: false, backColor: COLORS.DEBUG, character: '!'})
+    }
+    const drawVisited = () => {
+        // not efficient, but whatevs
+        if(!DEBUG.DEBUG_DRAW){
+            return
+        }
+        floodGrid.forEach((fgCell, index, x, y): void => {
+            if(fgCell.visited && debugGrid.inBoundsXY(x,y)){
+                const dgCell = debugGrid.getXY(x,y);
+                dgCell.character = (fgCell.generation % 16).toString(16)
+                dgCell.backColor = (fgCell.generation % 16 === 0) ? COLORS.DEBUG : COLORS.palette.white
+                dgCell.transparent = false
+            }
+        })
+    }
+
+    // weird way of doing it, we move on release, and if both are pressed down we continiously look
+
+    const nodes = [floodGrid.getXY(5,5)]
+    nodes[0].visited = true
+    nodes[0].generation = 0
+    let index = 0
+    // change this into a proper queue
+    function * processNetwork(evalFn){
+        clearDebug()
+        // let's start with a simple bfs search
+        while(index < nodes.length){
+            clearDebug()
+            drawVisited()
+
+            let node = nodes[index++]
+            node.visited = true
+            
+            drawCell(node.cell.x, node.cell.y)
+            const neighbors = floodGrid.getNeighborsXY(node.cell.x, node.cell.y);
+            neighbors.forEach(n => {
+                n.generation = Math.min(node.generation + 1, n.generation)
+                if(!n.visited && evalFn(n.cell)){
+                    
+                    n.visited = true
+                    nodes.push(n)
+                }
+            })
+            console.log(nodes.length)
+        }
+    }
+    floodFillGenerator = processNetwork(c => !c.blockMove)
+}
+
+
+if(!DEBUG.SKIP_ENTITY_PLACEMENT){
+    for(let i = 1; i < (rooms.length - 2); i++){
+        if(RANDOM.next() < 0.3){
+            const placedEntities: Entity[] = []
+            placeEntitiesInRoom(rooms[i],placedEntities)
+            placedEntities.forEach((e: Entity): void => {entities.push(e)})
+        }
     }
 }
 
@@ -270,6 +367,10 @@ loadImage('assets/out.png').then((image: any): void => {
             //PUBSUB.publish('messagelog', { text: "the monsters twiddle their thumbs, and wait"})
             gameState = GameStates.PLAYERS_TURN
         }
+
+        if(newKeyPress(km, 'q')){
+            floodFillGenerator.next()
+        }
         
         // process moves
         // eventually we'll componentize this better
@@ -334,3 +435,5 @@ loadImage('assets/out.png').then((image: any): void => {
     window.requestAnimationFrame(loop)
 
 }).catch((err: any): void => console.log(err)) //eslint-disable-line no-console
+
+window.PUBSUB = PUBSUB

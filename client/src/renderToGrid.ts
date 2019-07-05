@@ -116,21 +116,16 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
     })
 
     if(DEBUG.DEBUG_DRAW){
-        for(let relCameraY = 0; relCameraY < cameraFrame.height; relCameraY++){
-            for(let relCameraX = 0; relCameraX < cameraFrame.width; relCameraX++){
-                // this maps to the renderGrid and the cameras
-                Point.set(screenP, relCameraX, relCameraY)
-                // this maps to the tileGrid, fovGrid, and entities
-                Point.set(worldP, screenP.x + cameraFrame.x, screenP.y + cameraFrame.y)
-
-
-                const renderCell  = renderGrid.getP(screenP)
-                if(debugGrid.inBoundsXY(worldP.x, worldP.y)){
-                    const debugCell = debugGrid.getP(worldP)
-                    if(debugCell.backColor != COLORS.palette.black){
-                        renderCell.backColor = debugCell.backColor
-                        renderCell.character = debugCell.character
-                        renderCell.foreColor = debugCell.foreColor
+        // copy this over to use screen coordinates
+        for(let y = 0; y < debugGrid.height; y++){
+            for(let x = 0; x < debugGrid.width; x++){
+                const cell = debugGrid.getXY(x,y)
+                if(!cell.transparent){
+                    if(renderGrid.inBoundsXY(x,y)){
+                        const rCell = renderGrid.getXY(x,y)
+                        rCell.foreColor = cell.foreColor
+                        rCell.backColor = cell.backColor
+                        rCell.character = cell.character    
                     }
                 }
             }
