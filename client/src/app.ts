@@ -1,24 +1,10 @@
 // DEBUG
 import { ColorSquare } from './_debugTools/colorSquare'
 import { ColorBar } from './_debugTools/colorBar'
+import DEBUG from './_settings/debugSettings'
+
+if(DEBUG.SHOW_COLOR_BAR)
 {
-    // const a = new ColorSquare();
-    // a.parent = a.colorsRoot.asteroid.wall;
-    // a.keyName = 'dark'
-    // a.activateMonitor()
-    // const b = new ColorSquare(1);
-    // b.parent = b.colorsRoot.asteroid.wall;
-    // b.keyName = 'light'
-    // b.activateMonitor()
-    // const c = new ColorSquare(1);
-    // c.parent = c.colorsRoot.asteroid.ground;
-    // c.keyName = 'dark'
-    // c.activateMonitor()
-    // const c = new ColorSquare(1);
-    // c.parent = c.colorsRoot.asteroid.ground;
-    // c.keyName = 'dark'
-    // c.activateMonitor()
-    // Lets dynamically build this whole list based off of color, along with labels the whole way through
     ColorBar.activate()
 }
 
@@ -53,7 +39,7 @@ import { ID_MANAGER } from './idManager'
 
 // Settings & data
 import SETTINGS from './_settings/gameSettings'
-import DEBUG from './_settings/debugSettings'
+
 import COLORS from './_settings/colors'
 import GAME_TEXT from './_data/gameText'
 
@@ -113,7 +99,7 @@ const messageLogFrame = Rect.make(CAMERA_WIDTH, 0, SCREEN_WIDTH - CAMERA_WIDTH, 
 // Initialize our Grids
 const renderGrid = new Grid<IRenderCell>(SCREEN_WIDTH, SCREEN_HEIGHT)
 renderGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell => {
-    return RenderCell.make(x,y,'', COLORS.black, COLORS.black)
+    return RenderCell.make(x,y,'', COLORS.palette.black, COLORS.palette.black)
 })
 // split up the rendergrid into the following pieces
 const cameraRenderGrid = renderGrid.getSubgrid(cameraFrame)
@@ -122,7 +108,7 @@ const messageLogRenderGrid = renderGrid.getSubgrid(messageLogFrame)
 // THESE ARE HERE BY DEFAULT, BUT WON'T BE SHOWN UNLESS ENABLED
 const debugGrid = new Grid<IRenderCell>(MAP_WIDTH, MAP_HEIGHT)
 debugGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell => {
-    return RenderCell.make(x,y,'', COLORS.black, COLORS.black)
+    return RenderCell.make(x,y,'', COLORS.palette.black, COLORS.palette.black)
 })
 
 // FOV
@@ -337,7 +323,7 @@ loadImage('assets/out.png').then((image: any): void => {
         // actually render to canvas
         drawBoxOnGrid(messageLogRenderGrid, relativeBox)
         messageLog.renderToGrid(messageLogRenderGrid)
-        drawStringToGrid(messageLogRenderGrid, 'message log', 2, 0, COLORS.white, COLORS.black)
+        drawStringToGrid(messageLogRenderGrid, 'message log', 2, 0, COLORS.palette.white, COLORS.palette.black)
 
         renderer.clear()
         renderer.render(renderGrid)

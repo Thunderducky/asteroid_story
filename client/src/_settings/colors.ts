@@ -3,15 +3,22 @@
 // As opposed to empty space
 const COLORS = {
     DEBUG: '#FF3333',
-    black: '#000000',
-    white: '#FFFFFF',
+    palette: {
+        black: '#000000',
+        devilsGray: "#666666",
+        white: '#FFFFFF',
+    },
+    text: {
+      dark: '#333333',
+      light: '#CCCCCC'
+    },
 
     player: '#FFFFFF',
     npc: '#CC0000',
-    
+
     // 'dark_door':'#550000',
     // 'light_door': '#FF2222',
-    
+
     outside: {
         dark: '#001429', // '#002244',
         light: '#002b47' //'#265380'
@@ -29,20 +36,14 @@ const COLORS = {
     metal: {
         wall: {
             dark:  '#363636', // '#4A4A4A',
-            light: '#858585'
+            light: '#ABABAB' //'#858585'
         },
         ground: {
             dark: '#616161',
-            light: '#BFBFBF'
+            light: '#858585'// '#BFBFBF'
         }
     }
 
 }
-
-// SOME GRAY TYPES
-// #4A4A4A
-// #616161
-// #858585
-// #BFBFBF
 
 export default COLORS

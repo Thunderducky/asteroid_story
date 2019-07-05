@@ -10,12 +10,12 @@ import DEBUG from './_settings/debugSettings'
 
 /**
  * This is the heart of the render system, everything else is just a 'platform' layer to adapt to a particular output
- * @param tileGrid 
- * @param fovGrid 
- * @param entities 
- * @param renderGrid 
- * @param cameraFrame 
- * @param debugGrid 
+ * @param tileGrid
+ * @param fovGrid
+ * @param entities
+ * @param renderGrid
+ * @param cameraFrame
+ * @param debugGrid
  */
 export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>, cameraFrame: IRect, debugGrid: Grid<IRenderCell>): void => {
     // renderGrid is in SCREEN coordinates, and will have it's XY ignored for our purposes
@@ -53,7 +53,7 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
             } else {
                 const tile = tileGrid.getXY(worldP.x, worldP.y)
                 if(!tile.explored && !DEBUG.SHOW_UNEXPLORED){
-                    renderCell.backColor = COLORS.black
+                    renderCell.backColor = COLORS.palette.black
                 } else {
                     const isDoor = !tile.blockMove && tile.blockSight
                     const isWindow = tile.blockMove && !tile.blockSight
@@ -61,92 +61,43 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                     const isGround = !isWall && tile.contained
                     const isSpace = !isWall && !tile.contained
 
-                    // TODO: Refactor Into Materials
-                    if(tile.material === TileMaterial.Metal){
-                        if(isSpace){
-                            if(isLit){
-                                renderCell.backColor = COLORS.outside.light
-                            } else {
-                                renderCell.backColor = COLORS.outside.dark
-                            }
-                        } else if(isDoor){
-                            renderCell.character = 'D'
-                            if(isLit){
-                                renderCell.backColor = COLORS.metal.wall.light
-                                renderCell.foreColor = COLORS.black
-                            } else {
-                                renderCell.backColor = COLORS.metal.wall.dark
-                                renderCell.foreColor = COLORS.white
-                            }
-                        }
-                        else if(isWindow){
-                            renderCell.character = 'W'
-                            if(isLit){
-                                renderCell.backColor = COLORS.metal.ground.light
-                                renderCell.foreColor = COLORS.black
-                            } else {
-                                renderCell.backColor = COLORS.metal.ground.dark
-                                renderCell.foreColor = COLORS.white
-                            }
-                        }
-                        else if(isGround){
-                            if(isLit){
-                                renderCell.backColor = COLORS.metal.ground.light
-                            } else {
-                                renderCell.backColor = COLORS.metal.ground.dark
-                            }
-                        } else if(isWall){
-                            if(isLit){
-                                renderCell.backColor = COLORS.metal.wall.light
-                            } else {
-                                renderCell.backColor = COLORS.metal.wall.dark
-                            }
-                        } else {
-
-                        }
+                    // Let's condense this by type
+                    let materialColorObj = COLORS.outside;
+                    if(tile.material === TileMaterial.Space){
+                        materialColorObj = COLORS.outside
                     } else {
-                        if(isSpace){
-                            if(isLit){
-                                renderCell.backColor = COLORS.outside.light
-                            } else {
-                                renderCell.backColor = COLORS.outside.dark
-                            }
-                        } else if(isDoor){
-                            renderCell.character = 'D'
-                            if(isLit){
-                                renderCell.backColor = COLORS.asteroid.wall.light
-                                renderCell.foreColor = COLORS.black
-                            } else {
-                                renderCell.backColor = COLORS.asteroid.wall.dark
-                                renderCell.foreColor = COLORS.white
-                            }
-                        } else if(isWindow){
-                            renderCell.character = 'W'
-                            if(isLit){
-                                renderCell.backColor = COLORS.asteroid.ground.light
-                                renderCell.foreColor = COLORS.black
-                            } else {
-                                renderCell.backColor = COLORS.asteroid.ground.dark
-                                renderCell.foreColor = COLORS.white
-                            }
-                        }else if(isGround){
-                            if(isLit){
-                                renderCell.backColor = COLORS.asteroid.ground.light
-                            } else {
-                                renderCell.backColor = COLORS.asteroid.ground.dark
-                            }
-                        } else if(isWall){
-                            if(isLit){
-                                renderCell.backColor = COLORS.asteroid.wall.light
-                            } else {
-                                renderCell.backColor = COLORS.asteroid.wall.dark
-                            }
+                        let mat; // = COLORS.asteroid
+                        if(tile.material === TileMaterial.Metal){
+                            mat = COLORS.metal
                         } else {
+                            mat = COLORS.asteroid
+                        }
 
+                        if(isWall || isDoor || isWindow){
+                            materialColorObj = mat.wall
+                        } else if(isGround){
+                            materialColorObj = mat.ground
                         }
                     }
+
+                    if(isLit){
+                        renderCell.backColor = materialColorObj.light
+                        renderCell.foreColor = COLORS.text.dark //COLORS.palette.black
+                    } else {
+                        renderCell.backColor = materialColorObj.dark
+                        renderCell.foreColor = COLORS.text.light //COLORS.palette.white
+                    }
+
+                    // Determine character
+                    if(isDoor){
+                        renderCell.character = 'D'
+                    } else if(isWindow){
+                        renderCell.character = 'W'
+                    }
+
                 }
             }
+
         }
     }
 
@@ -177,7 +128,7 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
                 const renderCell  = renderGrid.getP(screenP)
                 if(debugGrid.inBoundsXY(worldP.x, worldP.y)){
                     const debugCell = debugGrid.getP(worldP)
-                    if(debugCell.backColor != COLORS.black){
+                    if(debugCell.backColor != COLORS.palette.black){
                         renderCell.backColor = debugCell.backColor
                         renderCell.character = debugCell.character
                         renderCell.foreColor = debugCell.foreColor

@@ -1,7 +1,8 @@
 import COLORS from '../_settings/colors'
 
+
 class ColorSquare {
-    parent: object;
+    parent: any;
     keyName: string;
     colorsRoot: object
     element: HTMLDivElement;
@@ -12,18 +13,12 @@ class ColorSquare {
         this.element = document.createElement('div')
         this.element.classList.add('colorSquare')
         this.element.style.width = '100px'
-        this.element.style.height = '100px'
-        // this.element.style.position = 'fixed'
-        // this.element.style.bottom = '5px'
-        // this.element.style.left = 5 + left * 55 + 'px'
-        // this.element.style.backgroundColor = 'black'
-        // document.body.appendChild(this.element)
+        this.element.style.height = '60px'
     }
 
 
     activateMonitor(): void{
-        // continiously monitor and update the color to whatever I've picked
-        this.element.style.backgroundColor = this.parent[this.keyName];
+        this.element.style.backgroundColor = this.parent[this.keyName] as string;
         setInterval((): void => {
             this.parent[this.keyName] = this.element.style.backgroundColor
         }, 1)

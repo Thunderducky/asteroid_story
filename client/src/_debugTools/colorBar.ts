@@ -10,10 +10,10 @@ const ColorBar = {
         console.log('colors bar')
         // Let's object traverse colors
         
-        const visitObject = (obj, path:string[] = []): void => {
+        const visitObject = (obj: any, path:string[] = []): void => {
             for(let prop in obj){
                 console.log(prop, path)
-                const val = obj[prop]
+                const val = obj[prop] as any
                 if(typeof val === 'string'){
                     // we have found an endpoint, construct a ColorSquare for it
                     const a = new ColorSquare(this.squares.length)
