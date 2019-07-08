@@ -7,7 +7,7 @@ import DEBUG from '../_settings/debugSettings'
 import { TOPICS } from '../pubSub/pubsubTopicList'
 import { IRenderCell, RenderCell } from '../rendering/renderCell'
 import COLORS from '../_settings/colors'
-import { Rect } from '../shapes/rect'
+import { Rect, IRect } from '../shapes/rect'
 import { Entity } from '../entity'
 import { ID_MANAGER } from '../utils/idManager'
 import { MessageLog } from '../messageLog'
@@ -48,7 +48,8 @@ const canvas = document.querySelector('canvas') as HTMLCanvasElement
 canvas.width = SETTINGS.SCREEN_WIDTH * SETTINGS.TILE_WIDTH
 canvas.height = SETTINGS.SCREEN_HEIGHT * SETTINGS.TILE_HEIGHT
 const messageLog = new MessageLog()
-
+const rooms: IRect[] = []
+const airlocks: IRect[] = []
 const cameraFrame = Rect.make(0,0, SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)
 const messageLogFrame = Rect.make(SETTINGS.CAMERA_WIDTH ,0, SETTINGS.SCREEN_WIDTH - SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)
 const GameData = {
@@ -63,15 +64,16 @@ const GameData = {
         npc,
         entities
     },
+    mapBuilderData: {
+        rooms,
+        airlocks // this is a subset of all the rooms
+    },
     tileGrid,
     renderGrid,
     debugGrid,
 
     messageLog, // This should be more decouple functionality wise
 
-    // Managing switching between modes
-    // Hell, we can do that with web pages just connected to the same local storage :P
-    // or at worst we just disable our core loop and pop up a screen behind this
     moves: [], // keeps track of our moves
     cameraFrame,
     messageLogFrame,
@@ -141,7 +143,8 @@ const GameData = {
         PUBSUB.subscribe('SYSTEM_ENTITY_PLACEMENT_REQUEST_FN', (fn): void => {
             fn({
                 tileGrid: GameData.tileGrid,
-                entityData: GameData.entityData
+                entityData: GameData.entityData,
+                mapBuilderData: GameData.mapBuilderData
             })
         })
 
@@ -149,6 +152,13 @@ const GameData = {
             fn({
                 canvas: GameData.canvas,
                 entityData: GameData.entityData
+            })
+        })
+
+        PUBSUB.subscribe('SYSTEM_MAP_BUILDER_REQUEST_FN', (fn): void => {
+            fn({
+                tileGrid: GameData.tileGrid,
+                mapBuilderData: GameData.mapBuilderData
             })
         })
     }

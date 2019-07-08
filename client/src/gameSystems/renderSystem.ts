@@ -15,11 +15,14 @@ const RenderSystem = {
     },
     render: (): void => {
         const renderFn = (gameData: any): void => {
+            const cameraSizer = Rect.copy(gameData.cameraFrame)
+            cameraSizer.x = 0
+            cameraSizer.y = 0
             renderToGrid(
                 gameData.tileGrid, 
                 gameData.fovGrid, 
                 gameData.entityData.entities, 
-                gameData.renderGrid.getSubgrid(gameData.cameraFrame), 
+                gameData.renderGrid.getSubgrid(cameraSizer), 
                 gameData.cameraFrame, 
                 gameData.debugGrid)
         

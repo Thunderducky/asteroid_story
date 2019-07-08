@@ -10,13 +10,15 @@ const EntityPlacementSystem = {
     init: (): void => {
         // Maybe we populate entity data
     },
-    placeInitialEntities: (rooms: IRect[]): void => {
+    placeInitialEntities: (): void => {
         PUBSUB.publish('SYSTEM_ENTITY_PLACEMENT_REQUEST_FN', (gameData: any): void => {
             const { player, npc } = gameData.entityData
+            const rooms = gameData.mapBuilderData.rooms as IRect[]
             // player and npc placement
             if(rooms.length > 0){
                 const pcenter = Rect.center(rooms[0])
                 Point.set(player, pcenter.x, pcenter.y)
+                gameData.tileGrid.getXY(player.x, player.y).explored = true
                 const npcenter = Rect.center(rooms[rooms.length - 1])
                 Point.set(npc, npcenter.x, npcenter.y)
             }

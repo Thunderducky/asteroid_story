@@ -11,12 +11,13 @@ const CameraSystem = {
         PUBSUB.publish('SYSTEM_CAMERA_REQUEST_FN', (gameData: any): void => {
             const target = gameData.entityData.player as Entity
             const cameraFrame = gameData.cameraFrame as IRect
+            debugger
             if(!DEBUG.DISABLE_TRACKING){
                 cameraFrame.x = Math.floor(target.x - cameraFrame.width / 2)
                 cameraFrame.y = Math.floor(target.y - cameraFrame.height / 2)
             } else {
                 cameraFrame.x = Math.floor(gameData.tileGrid.width/2 - cameraFrame.width / 2)
-                cameraFrame.y = Math.floor(gameData.tileGrid.height/2 - cameraFrame.width / 2)
+                cameraFrame.y = Math.floor(gameData.tileGrid.height/2 - cameraFrame.height / 2)
             }
             PUBSUB.publish('camera_moved', cameraFrame)
         })

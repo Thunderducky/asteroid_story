@@ -1,54 +1,6 @@
-import DEBUG from '../_settings/debugSettings'
-import { PUBSUB } from '../pubSub/pubSub'
-import { IRenderCell } from '../rendering/renderCell'
 import { Grid } from '../grid'
-import COLORS from '../_settings/colors'
-import { TOPICS } from '../pubSub/pubsubTopicList'
 
-
-// DEBUG HELPERS
-const clearDebug = (): void => {
-    if(DEBUG.DEBUG_DRAW){
-        const clear = (debugGrid: Grid<IRenderCell>): void => {
-            debugGrid.forEach((dc): void => {
-                dc.transparent = true
-                dc.character = ''
-            })
-        }
-        PUBSUB.publish('debug_draw_fn', { fn: clear })
-    }
-}
-const drawCell = (x: number,y: number): void => {
-    if(DEBUG.DEBUG_DRAW){
-        PUBSUB.publish(TOPICS.DEBUG_DRAW_CELL, {x, y, transparent: false, backColor: COLORS.DEBUG, character: '!'})
-    }
-}
-const drawVisited = (floodGrid: Grid<any>): void => {
-    // not efficient, but whatevs
-    if(!DEBUG.DEBUG_DRAW){
-        return
-    }
-    const draw = (debugGrid: Grid<IRenderCell>): void => {
-        floodGrid.forEach((fgCell, index, x, y): void => {
-            const dgCell = debugGrid.getXY(x, y)
-            if(fgCell.visited && debugGrid.inBoundsXY(x,y)){
-                dgCell.character = (fgCell.generation % 16).toString(16)
-                dgCell.backColor = (fgCell.generation % 16 === 0) ? COLORS.DEBUG : COLORS.palette.white
-                dgCell.transparent = false
-            }
-        })
-    }
-    PUBSUB.publish(TOPICS.DEBUG_DRAW_FN, {fn: draw})
-}
-
-// change this into a proper queue
-function * processNetwork(grid: Grid<any>, evalFn: Function, startX: number, startY: number): any{
-    
-    const floodGrid = new Grid<any>(grid.width, grid.height)
-    floodGrid.setEach((fgCell, index, x, y): any => {
-        const tgCell = grid.getXY(x,y)
-        return { cell: tgCell, visited: false, generation: Infinity }
-    })
+function * processNetwork(floodGrid: Grid<any>, evalFn: Function, startX: number, startY: number): any{
 
     const nodes = [floodGrid.getXY(startX,startY)]
     nodes[0].visited = true
@@ -56,16 +8,16 @@ function * processNetwork(grid: Grid<any>, evalFn: Function, startX: number, sta
 
     let index = 0
 
-    clearDebug()
+    //clearDebug()
     // let's start with a simple bfs search
     while(index < nodes.length){
-        clearDebug()
-        drawVisited(floodGrid)
+        //clearDebug()
+        //drawVisited(floodGrid)
 
         let node = nodes[index++]
         node.visited = true
-        
-        drawCell(node.cell.x, node.cell.y)
+
+        //drawCell(node.cell.x, node.cell.y)
         const neighbors = floodGrid.getNeighborsXY(node.cell.x, node.cell.y)
         neighbors.forEach((n): void => {
             n.generation = Math.min(node.generation + 1, n.generation)
@@ -74,9 +26,17 @@ function * processNetwork(grid: Grid<any>, evalFn: Function, startX: number, sta
                 nodes.push(n)
             }
         })
-        yield
+        //yield
     }
 }
-//processNetwork(tileGrid, (c: Tile): boolean => !c.blockMove)
 
-export { processNetwork}
+const generateFloodGrid = (originalGrid: Grid<any>): Grid<any> => {
+    const newGrid = new Grid<any>(originalGrid.width, originalGrid.height)
+    newGrid.setEach((ogCell, index, x, y): any => {
+        const cell = originalGrid.getXY(x,y)
+        return { cell, x,y, visited: false, generation: Infinity }
+    })
+    return newGrid
+}
+
+export { processNetwork, generateFloodGrid }

@@ -1,22 +1,12 @@
-// Shapes
-import { IRect } from './shapes/rect'
-
 // GameData
-import { Tile, TileMaterial } from './tile'
 import { loadImage } from './assetHelper'
 
 // Game Utilities
 import { RANDOM } from './utils/rngHelper'
 import { PUBSUB } from './pubSub/pubSub'
 
-// Map Generator
-import { progressiveMapGenerator } from './mapGeneration/bsp/bspMapGenerator'
-//import { openSquareGenerator as progressiveMapGenerator } from './mapGeneration/staticGenerators/testMapGenerator'
-
 // UI
 import GameStates from './gameStates'
-import { processNetwork } from './utils/floodFiller'
-import { TOPICS } from './pubSub/pubsubTopicList'
 
 // Game Data
 import { GameData } from './gameData/gameData'
@@ -31,19 +21,14 @@ import { NarrativeSystem } from './gameSystems/narrativeSystem'
 import { InputSystem } from './gameSystems/inputSystem'
 import { EntityPlacementSystem } from './gameSystems/entityPlacementSystem'
 import { MessageLogSystem } from './gameSystems/messageLogSystem'
+import { MapBuilderSystem } from './gameSystems/mapBuilderSystem'
 
-GameData.init()
 RANDOM.initializeSystem()
 
-let gameState = GameStates.PLAYERS_TURN
-const rooms: IRect[] = []
+GameData.init()
 
-// MOVE THIS
-let levelIterator: any
-PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, (gameData: any): void => {
-    levelIterator = progressiveMapGenerator(gameData.tileGrid, rooms)
-})
-levelIterator.next()
+
+let gameState = GameStates.PLAYERS_TURN
 
 // Mark things as being the enemy turn, not sure how to handle that one
 PUBSUB.subscribe('player_wants_to_move', (msg): void => {
@@ -52,9 +37,11 @@ PUBSUB.subscribe('player_wants_to_move', (msg): void => {
 })
 
 // All of this is good
+MapBuilderSystem.init()
+MapBuilderSystem.buildMap()
 EntityPlacementSystem.init()
 MessageLogSystem.init(GameData.messageLog) // Still need to do this
-EntityPlacementSystem.placeInitialEntities(rooms) // Rooms should be moved inside gameData as well
+EntityPlacementSystem.placeInitialEntities() // Rooms should be moved inside gameData as well
 DebugDrawSystem.init()
 FovSystem.init()
 CameraSystem.init()
@@ -62,11 +49,6 @@ NarrativeSystem.init()
 MoveSystem.init()
 InputSystem.init()
 
-// MOVE THIS
-let floodFillGenerator: any
-PUBSUB.publish(TOPICS.SYSTEM_REQUEST_FN, (gameData: any): void => {
-    floodFillGenerator = processNetwork(gameData.tileGrid, (c: Tile): boolean => !c.blockMove && c.material !== TileMaterial.Space, GameData.entityData.player.x, GameData.entityData.player.y)
-})
 
 loadImage('assets/out.png').then((image: any): void => {
     RenderSystem.init(image)
@@ -80,11 +62,7 @@ loadImage('assets/out.png').then((image: any): void => {
             gameState = GameStates.PLAYERS_TURN // Handle monster/world turns here
         }
 
-        // Check our map generator
-        if(InputSystem.newKeyPress('q')){
-            floodFillGenerator.next()
-        }
-        
+
         MoveSystem.processMoves()
         FovSystem.calculateFOV()
         RenderSystem.render()
