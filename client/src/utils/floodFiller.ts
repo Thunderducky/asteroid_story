@@ -8,16 +8,11 @@ function * processNetwork(floodGrid: Grid<any>, evalFn: Function, startX: number
 
     let index = 0
 
-    //clearDebug()
-    // let's start with a simple bfs search
     while(index < nodes.length){
-        //clearDebug()
-        //drawVisited(floodGrid)
 
         let node = nodes[index++]
         node.visited = true
 
-        //drawCell(node.cell.x, node.cell.y)
         const neighbors = floodGrid.getNeighborsXY(node.cell.x, node.cell.y)
         neighbors.forEach((n): void => {
             n.generation = Math.min(node.generation + 1, n.generation)

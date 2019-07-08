@@ -9,6 +9,7 @@ import { Grid } from '../grid'
 const FovSystem = {
     init: (): void => {
         PUBSUB.subscribe('camera_moved', (cameraFrame): void => {
+            
             PUBSUB.publish('SYSTEM_FOV_REQUEST_FN', (gameData: any): void => {
                 const fovGrid = gameData.fov.grid as Grid<FOVCell>
                 fovGrid.x = cameraFrame.x

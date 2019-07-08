@@ -49,10 +49,10 @@ NarrativeSystem.init()
 MoveSystem.init()
 InputSystem.init()
 
-
 loadImage('assets/out.png').then((image: any): void => {
     RenderSystem.init(image)
-
+    // Need to have this marked appropriately
+    PUBSUB.publish('fov_recompute', true)
     // Loop
     const loop = (): void => {
 
