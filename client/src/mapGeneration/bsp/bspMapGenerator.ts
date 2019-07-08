@@ -4,7 +4,7 @@ import { Tile, TileMaterial } from '../../tile'
 import { IRect, Rect } from '../../shapes/rect'
 
 import { IEllipse, Ellipse } from '../../shapes/ellipse'
-import { RANDOM } from '../../rngHelper'
+import { RANDOM } from '../../utils/rngHelper'
 
 import BSP_SETTINGS from '../../_settings/bspMapGeneratorSettings'
 import { Leaf } from './bspLeaf'
@@ -102,7 +102,7 @@ const carveEllipse = (tileGrid: Grid<Tile>, ellipse: IEllipse): void => {
 // Exterior rooms and interior rooms
 // if no exterior rooms exist, we'll force one, but one probably will
 
-function * progressiveMapGenerator(tileGrid: Grid<Tile>, finalRooms: IRect[]): any{
+function * progressiveMapGenerator(tileGrid: Grid<Tile>, finalRooms: IRect[], airlocks: IRect[]): any{
     // Section 1: Build the shell
     const SECTION_COUNT = ASTEROID_SECTION_COUNT
     const MARGINS = ASTEROID_MAP_MARGINS
@@ -191,7 +191,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, finalRooms: IRect[]): a
     // Criteria for an airlock: 
     // Must have some pieces touching the outside, and some pieces touching the outside, and be lucky
     // sort each of our exterior rooms into airlocks and edgeRooms
-    const airlocks: IRect[] = []
+    // const airlocks: IRect[] = []
     const edgeRooms: IRect[] = []
     {
         // Categorize into edge rooms and potential airlocks
@@ -266,6 +266,7 @@ function * progressiveMapGenerator(tileGrid: Grid<Tile>, finalRooms: IRect[]): a
                 t.blockMove = true
                 t.blockSight = false
             }
+            // Find a spot for a door
             const t = outerEdges[RANDOM.nextInt(0, outerEdges.length - 1)]
             t.blockMove = false
             t.blockSight = true

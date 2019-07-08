@@ -1,4 +1,4 @@
-import { RANDOM } from '../../rngHelper'
+import { RANDOM } from '../../utils/rngHelper'
 import { Point } from '../../shapes/point'
 import { IRect, Rect } from '../../shapes/rect'
 import BSP_SETTINGS from '../../_settings/bspMapGeneratorSettings'

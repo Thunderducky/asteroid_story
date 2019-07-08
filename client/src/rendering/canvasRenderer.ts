@@ -1,9 +1,9 @@
 import { IRenderCell } from './renderCell'
-import { Grid } from './grid'
+import { Grid } from '../grid'
 import { CODE_TO_RECT_HASH, drawSection, code } from './renderHelpers'
-import { Rect } from './shapes/rect'
-import SETTINGS from './_settings/gameSettings'
-import COLORS from './_settings/colors'
+import { Rect } from '../shapes/rect'
+import SETTINGS from '../_settings/gameSettings'
+import COLORS from '../_settings/colors'
 
 const {TILE_WIDTH, TILE_HEIGHT} = SETTINGS
 

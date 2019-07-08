@@ -1,7 +1,7 @@
-import {IRect, Rect } from './shapes/rect'
-import { Grid } from './grid'
+import {IRect, Rect } from '../shapes/rect'
+import { Grid } from '../grid'
 import { IRenderCell } from './renderCell'
-import COLORS from './_settings/colors'
+import COLORS from '../_settings/colors'
 
 interface HashStr<T> {
     [key: string]: T;
@@ -90,6 +90,18 @@ ctrhHelper(code(CH.CHECKED_RADIO),130, 20)
 ctrhHelper(code(CH.LIGHT_DOTS),110, 10) // Untested
 ctrhHelper(code(CH.MEDIUM_DOTS),120, 10)
 ctrhHelper(code(CH.HEAVY_DOTS),130, 10)
+
+// let's do the numbers
+ctrhHelper(code('0'),160, 0)
+ctrhHelper(code('1'),170, 0)
+ctrhHelper(code('2'),180, 0)
+ctrhHelper(code('3'),190, 0)
+ctrhHelper(code('4'),200, 0)
+ctrhHelper(code('5'),210, 0)
+ctrhHelper(code('6'),220, 0)
+ctrhHelper(code('7'),230, 0)
+ctrhHelper(code('8'),240, 0)
+ctrhHelper(code('9'),250, 0)
 
 
 function drawSection(ctx: CanvasRenderingContext2D, tilesheet: any, srcRect: IRect, destRect: IRect, foreColor: string, backColor: string): void{
