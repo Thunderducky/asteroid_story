@@ -1,7 +1,7 @@
 import { KeyboardMonitor } from './keyboardMonitor'
 import { Point } from '../shapes/point'
 import { PUBSUB } from '../pubSub/pubSub'
-import { Entity } from '../entity'
+import { Entity } from '../entitySystem/entity'
 
 export const handleInput = (km: KeyboardMonitor, player: Entity): void => {
     // Todo: allow combo keys

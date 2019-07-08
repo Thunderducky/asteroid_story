@@ -3,7 +3,7 @@ import { Rect, IRect } from '../shapes/rect'
 import { Point } from '../shapes/point'
 import DEBUG from '../_settings/debugSettings'
 import { RANDOM } from '../utils/rngHelper'
-import { Entity } from '../entity'
+import { Entity } from '../entitySystem/entity'
 import { placeEntitiesInRoom } from '../entityPlacer'
 
 const EntityPlacementSystem = {

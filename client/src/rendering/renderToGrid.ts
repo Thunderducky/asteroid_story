@@ -1,7 +1,7 @@
 import { Grid } from '../grid'
 import { Tile, TileMaterial } from '../tile'
 import { FOVCell } from '../fov'
-import { Entity } from '../entity'
+import { Entity } from '../entitySystem/entity'
 import { IRenderCell } from './renderCell'
 import { Point } from '../shapes/point'
 import COLORS from '../_settings/colors'

@@ -1,4 +1,4 @@
-import { Entity } from '../entity'
+import { Entity } from '../entitySystem/entity'
 import { PUBSUB } from '../pubSub/pubSub'
 import { Grid } from '../grid'
 import { Tile } from '../tile'

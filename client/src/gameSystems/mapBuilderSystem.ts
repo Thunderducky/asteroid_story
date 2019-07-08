@@ -7,6 +7,7 @@ import { progressiveMapGenerator } from '../mapGeneration/bsp/bspMapGenerator'
 import { generateFloodGrid, processNetwork } from '../utils/floodFiller'
 import { RANDOM } from '../utils/rngHelper'
 
+// TODO: move this more into the mapBuilder
 const tryToConnectNetworks = (): void => {
     PUBSUB.publish('SYSTEM_MAP_BUILDER_REQUEST_FN', (gameData: any): void => {
 

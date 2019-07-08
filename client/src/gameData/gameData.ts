@@ -8,9 +8,10 @@ import { TOPICS } from '../pubSub/pubsubTopicList'
 import { IRenderCell, RenderCell } from '../rendering/renderCell'
 import COLORS from '../_settings/colors'
 import { Rect, IRect } from '../shapes/rect'
-import { Entity } from '../entity'
+import { Entity } from '../entitySystem/entity'
 import { ID_MANAGER } from '../utils/idManager'
 import { MessageLog } from '../messageLog'
+import { EntityMaker } from '../entitySystem/entityMaker'
 
 // This is where we would export it into it's own data init functions
 const fovGrid = new Grid<FOVCell>(SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)
@@ -38,8 +39,8 @@ debugGrid.setEach((cell: any, index: number, x: number, y: number): IRenderCell 
     return RenderCell.make(x,y,'', COLORS.palette.black, COLORS.palette.black, true)
 })
 
-const player: Entity = new Entity(ID_MANAGER.next(), 'player',  3,4, '@', COLORS.player) // TODO: Move this name into gameText
-const npc: Entity = new Entity(ID_MANAGER.next(), 'npc', 3,5, '@', COLORS.npc, false) // TODO: Move this name into gameText
+const player: Entity = EntityMaker.player() //new Entity(ID_MANAGER.next(), 'player',  3,4, '@', COLORS.player) // TODO: Move this name into gameText
+const npc: Entity = EntityMaker.npc() //new Entity(ID_MANAGER.next(), 'npc', 3,5, '@', COLORS.npc, false) // TODO: Move this name into gameText
 const entities: Entity[] = [player,npc]
 
 // fov/ grid/ recompute, put it all in one data set here

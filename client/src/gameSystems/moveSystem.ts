@@ -1,6 +1,6 @@
 import { PUBSUB } from '../pubSub/pubSub'
 import { TOPICS } from '../pubSub/pubsubTopicList'
-import { Entity } from '../entity'
+import { Entity } from '../entitySystem/entity'
 import DEBUG from '../_settings/debugSettings'
 
 // New law, no include listeners by default, they always have to be turned on
