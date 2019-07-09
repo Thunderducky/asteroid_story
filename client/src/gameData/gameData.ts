@@ -9,9 +9,9 @@ import { IRenderCell, RenderCell } from '../rendering/renderCell'
 import COLORS from '../_settings/colors'
 import { Rect, IRect } from '../shapes/rect'
 import { Entity } from '../entitySystem/entity'
-import { ID_MANAGER } from '../utils/idManager'
 import { MessageLog } from '../messageLog'
 import { EntityMaker } from '../entitySystem/entityMaker'
+import { IMoveMessage } from '../pubSub/messageTypes'
 
 // This is where we would export it into it's own data init functions
 const fovGrid = new Grid<FOVCell>(SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)
@@ -53,6 +53,8 @@ const rooms: IRect[] = []
 const airlocks: IRect[] = []
 const cameraFrame = Rect.make(0,0, SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)
 const messageLogFrame = Rect.make(SETTINGS.CAMERA_WIDTH ,0, SETTINGS.SCREEN_WIDTH - SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)
+
+const moves: IMoveMessage[] = []
 const GameData = {
     // Our normal core settings
     canvas,
@@ -75,7 +77,7 @@ const GameData = {
 
     messageLog, // This should be more decouple functionality wise
 
-    moves: [], // keeps track of our moves
+    moves, // keeps track of our moves
     cameraFrame,
     messageLogFrame,
     init: function(): void{

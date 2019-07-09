@@ -22,8 +22,8 @@ import { InputSystem } from './gameSystems/inputSystem'
 import { EntityPlacementSystem } from './gameSystems/entityPlacementSystem'
 import { MessageLogSystem } from './gameSystems/messageLogSystem'
 import { MapBuilderSystem } from './gameSystems/mapBuilderSystem'
-import { BasicMonster } from './entitySystem/components/ai';
-import { Entity } from './entitySystem/entity';
+import { BasicMonster } from './entitySystem/components/ai'
+import { Entity } from './entitySystem/entity'
 
 RANDOM.initializeSystem()
 
@@ -64,7 +64,7 @@ loadImage('assets/out.png').then((image: any): void => {
             // Process non player entities
             GameData.entityData.entities.filter((e: Entity): boolean => e.components.has('ai')).forEach((entity: Entity): void => {
                 const ai = entity.components.get('ai') as BasicMonster
-                ai.takeTurn()
+                ai.takeTurn(GameData)
             })
             gameState = GameStates.PLAYERS_TURN // Handle monster/world turns here
         }

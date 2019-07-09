@@ -2,13 +2,15 @@ import { PUBSUB } from '../pubSub/pubSub'
 import { TOPICS } from '../pubSub/pubsubTopicList'
 import { Entity } from '../entitySystem/entity'
 import DEBUG from '../_settings/debugSettings'
+import { IMoveMessage } from '../pubSub/messageTypes'
 
 // New law, no include listeners by default, they always have to be turned on
 // TODO: Improve this
+
 const MoveSystem = {
     init: (): void => {
         // Start listening for events
-        PUBSUB.subscribe('move', (msg): void => {
+        PUBSUB.subscribe('move', (msg: IMoveMessage): void => {
             PUBSUB.publish('SYSTEM_MOVE_REQUEST_FN', (moveData: any): void => {
                 moveData.moves.push(msg)
             })
@@ -17,7 +19,7 @@ const MoveSystem = {
     processMoves: (): void => {
         PUBSUB.publish('SYSTEM_MOVE_REQUEST_FN', (moveData: any): void => {
             const {player, entities} = moveData.entityData
-            moveData.moves.forEach((moveMsg: any): void => {
+            moveData.moves.forEach((moveMsg: IMoveMessage): void => {
                 const move = moveMsg.delta
                 const id = moveMsg.id
                 const mover = entities.find((e: Entity): boolean => e.id == id)
@@ -36,7 +38,11 @@ const MoveSystem = {
 
                         if(target !== null){
                             // Republish this as an act
-                            PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: 'You kick the ' + target.name + ' in the shins, annoying it greatly' })
+                            if(player.id === id){
+                                PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: 'You kick the ' + target.name + ' in the shins, annoying it greatly' })
+                            } else if(target.id === player.id){
+                                PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: 'The ' + mover.name + ' mocks you viciously!'})
+                            }
                         } else {
                             mover.move(move.x, move.y)
                             if(mover.id === player.id){
