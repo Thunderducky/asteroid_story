@@ -19,10 +19,10 @@ const DebugDrawSystem = {
         })
 
         // TODO: FIX THIS so that we just have one function
-        PUBSUB.subscribe(TOPICS.DEBUG_DRAW_FN, (msg: any): void => {
+        PUBSUB.subscribe(TOPICS.DEBUG_DRAW_FN, (fn: Function): void => {
             PUBSUB.publish('SYSTEM_DEBUG_DRAW_REQUEST_FN', (gameData: any): void => {
                 const debugGrid = gameData.debugGrid as Grid<IRenderCell>
-                msg.fn(debugGrid)
+                fn(debugGrid)
             })
         })
 

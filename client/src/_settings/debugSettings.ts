@@ -9,7 +9,7 @@ const DEBUG: Hash<boolean> = {
     DISABLE_FOV: false,          // SHOW EVERYTHING, NO HIDING STUFF BEHIND FOV, EVERYTHING ACTS LIT
     DISABLE_TRACKING: false,     // CAMERA WILL ONLY RESPOND TO DIRECT CONTROL AND WON'T TRACK CHARACTER
     ENABLE_CLIPPING: false,
-    DEBUG_DRAW: false,
+    DEBUG_DRAW: true,
     STAGE_MAP_GENERATORS: false, // We will manually progress the level generator,
     ALWAYS_SHOW_ENTITIES: false,
     SHOW_UNEXPLORED: false,

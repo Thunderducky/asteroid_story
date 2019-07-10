@@ -1,8 +1,8 @@
 // RELEASE SETTINGS
 
 const SETTINGS = {
-    TILE_WIDTH: 10,     // pixels
-    TILE_HEIGHT: 10,    // pixels
+    TILE_WIDTH: 30,     // pixels
+    TILE_HEIGHT: 30,    // pixels
     MAP_WIDTH: 120,      // everything else is in tiles
     MAP_HEIGHT: 120,
     CAMERA_WIDTH: 50,
