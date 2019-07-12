@@ -1,6 +1,6 @@
 // using this for reference: https://gamedevelopment.tutsplus.com/tutorials/how-to-use-bsp-trees-to-generate-game-maps--gamedev-12268
 import { Grid } from '../../grid'
-import { Tile } from '../../tile'
+import { Tile, TileMaterial } from '../../tile'
 import { IRect, Rect } from '../../shapes/rect'
 
 function * openSquareGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any {
@@ -10,6 +10,7 @@ function * openSquareGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any {
         t.blockSight = true
         t.explored = true
         t.contained = true
+        t.material = TileMaterial.ASTEROID
     })
 
     const interior = Rect.make(1,1,tileGrid.width-2, tileGrid.height - 2)

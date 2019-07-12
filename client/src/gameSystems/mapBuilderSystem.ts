@@ -2,7 +2,8 @@ import { PUBSUB } from '../pubSub/pubSub'
 import { Grid } from '../grid'
 import { Tile, TileMaterial } from '../tile'
 import { IRect } from '../shapes/rect'
-import { progressiveMapGenerator } from '../mapGeneration/bsp/bspMapGenerator'
+import { progressiveMapGenerator as bspGenerator } from '../mapGeneration/bsp/bspMapGenerator'
+import { openSquareGenerator as testGenerator } from '../mapGeneration/staticGenerators/testMapGenerator'
 // import { TOPICS } from '../pubSub/pubsubTopicList';
 import { generateFloodGrid, processNetwork } from '../utils/floodFiller'
 import { RANDOM } from '../utils/rngHelper'
@@ -29,13 +30,13 @@ const tryToConnectNetworks = (): void => {
             })
             return rooms.filter((v: any): any => v.visited)
         }
-        const networks = [] as any[]                                                           
+        const networks = [] as any[]
         while(isVisited.length > 0){
             const network = getConnectedRooms(
-                floodGrid, isVisited, 
+                floodGrid, isVisited,
                 (c: Tile): boolean => !c.blockMove && c.material !== TileMaterial.Space,
-                isVisited[0].room.x + isVisited[0].room.width/2 | 0, 
-                isVisited[0].room.y  + isVisited[0].room.height/2 | 0 
+                isVisited[0].room.x + isVisited[0].room.width/2 | 0,
+                isVisited[0].room.y  + isVisited[0].room.height/2 | 0
             )
             isVisited = isVisited.filter((v: any): any => !v.visited)
             networks.push(network)
@@ -61,7 +62,7 @@ const tryToConnectNetworks = (): void => {
                     }
                 }
             }
-            
+
 
             const drawV = (startY: number, endY: number, x: number): void => {
                 for(let y = startY; y <= endY; y++){
@@ -87,7 +88,7 @@ const tryToConnectNetworks = (): void => {
                     drawV(lastNRoom.y + lastNRoom.height /2 | 0, nRoom.y + nRoom.height / 2 | 0, lastNRoom.x + lastNRoom.width / 2 | 0)
                 } else {
                     drawV(nRoom.y + nRoom.height /2 | 0, lastNRoom.y + lastNRoom.height / 2 | 0, lastNRoom.x + nRoom.lastNRoom / 2 | 0)
-            
+
                 }
             }
         })
@@ -105,10 +106,19 @@ const MapBuilderSystem =  {
             const mapBuildData = gameData.mapBuilderData
             const rooms = mapBuildData.rooms as IRect[]
             const airlocks = mapBuildData.airlocks as IRect[]
-            const levelIterator = progressiveMapGenerator(tileGrid, rooms, airlocks)
+            const levelIterator = testGenerator(tileGrid, rooms, airlocks)
             levelIterator.next()
-            tryToConnectNetworks()
+            //tryToConnectNetworks()
         })
+        // PUBSUB.publish('SYSTEM_MAP_BUILDER_REQUEST_FN', (gameData: any): void => {
+        //     const tileGrid = gameData.tileGrid as Grid<Tile>
+        //     const mapBuildData = gameData.mapBuilderData
+        //     const rooms = mapBuildData.rooms as IRect[]
+        //     const airlocks = mapBuildData.airlocks as IRect[]
+        //     const levelIterator = bspGenerator(tileGrid, rooms, airlocks)
+        //     levelIterator.next()
+        //     tryToConnectNetworks()
+        // })
     },
     buildMapStep: (): void => {
         // useful for when we are working with generators

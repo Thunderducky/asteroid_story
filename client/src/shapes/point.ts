@@ -1,7 +1,7 @@
 /**
  * Interface for working with a 2D Point
  */
-interface IPoint {  
+interface IPoint {
     x: number;
     y: number;
 }
@@ -19,8 +19,8 @@ enum GridDirection {
 
 /**
  * Create a new Point
- * @param x 
- * @param y 
+ * @param x
+ * @param y
  */
 const make = (x: number, y: number): IPoint => {
     return {x,y}
@@ -42,7 +42,7 @@ const subtract = (a: IPoint, b: IPoint): IPoint => {
  * A utitily to move in a direction, allows for variability in the direction without having to resort to modifying the x and y coorindates individually
  * @param point Point to be moved, will be the return value
  * @param direction, the Grid Direction you want to move in
- * @param distance, optional defaults to 1, how far you want the point to move 
+ * @param distance, optional defaults to 1, how far you want the point to move
  */
 const move = (point: IPoint, direction: GridDirection, distance: number = 1): IPoint => {
     if(direction = GridDirection.Left){

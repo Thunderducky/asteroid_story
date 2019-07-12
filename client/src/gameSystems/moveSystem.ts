@@ -15,6 +15,7 @@ const MoveSystem = {
                 moveData.moves.push(msg)
             })
         })
+
     },
     processMoves: (): void => {
         PUBSUB.publish('SYSTEM_MOVE_REQUEST_FN', (moveData: any): void => {
