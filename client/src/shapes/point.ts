@@ -37,6 +37,9 @@ const add = (a: IPoint, b: IPoint): IPoint => {
 const subtract = (a: IPoint, b: IPoint): IPoint => {
     return make(a.x - b.x, a.y - b.y)
 }
+const manhattanDistance = (a: IPoint, b: IPoint): number => {
+    return Math.abs(b.x - a.x) + Math.abs(b.y - a.y)
+}
 
 /**
  * A utitily to move in a direction, allows for variability in the direction without having to resort to modifying the x and y coorindates individually
@@ -101,7 +104,8 @@ const Point = {
     subtract,
     addTo,
     set,
-    copy
+    copy,
+    manhattanDistance
 }
 
 export {IPoint, Point, GridDirection}

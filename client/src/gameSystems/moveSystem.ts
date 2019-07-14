@@ -3,6 +3,7 @@ import { TOPICS } from '../pubSub/pubsubTopicList'
 import { Entity } from '../entitySystem/entity'
 import DEBUG from '../_settings/debugSettings'
 import { IMoveMessage } from '../pubSub/messageTypes'
+import { Fighter } from '../entitySystem/components/fighter';
 
 // New law, no include listeners by default, they always have to be turned on
 // TODO: Improve this
@@ -23,7 +24,7 @@ const MoveSystem = {
             moveData.moves.forEach((moveMsg: IMoveMessage): void => {
                 const move = moveMsg.delta
                 const id = moveMsg.id
-                const mover = entities.find((e: Entity): boolean => e.id == id)
+                const mover = entities.find((e: Entity): boolean => e.id == id) as Entity
                 if(!mover){
                     return
                 }
@@ -37,13 +38,20 @@ const MoveSystem = {
                         // check for blocking objects
                         const target = Entity.getBlockingEntityAtLocation(entities, destinationX, destinationY)
 
+                        // we should be moving this over to a combat system eventually
                         if(target !== null){
                             // Republish this as an act
                             if(player.id === id){
-                                PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: 'You kick the ' + target.name + ' in the shins, annoying it greatly' })
+                                if(target.components.has('fighter')){
+                                    PUBSUB.publish('attack', { attacker: player, defender: target})
+                                }
+                                
                             } else if(target.id === player.id){
-                                PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: 'The ' + mover.name + ' mocks you viciously!'})
+                                if(mover.components.has('fighter')){
+                                    PUBSUB.publish('attack', { attacker: mover, defender: player})
+                                } 
                             }
+                            // Monsters will currently not try and attack each other
                         } else {
                             mover.move(move.x, move.y)
                             if(mover.id === player.id){

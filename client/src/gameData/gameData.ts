@@ -164,6 +164,18 @@ const GameData = {
                 mapBuilderData: GameData.mapBuilderData
             })
         })
+
+        PUBSUB.subscribe('SYSTEM_PATHFINDING_REQUEST', (fn): void => {
+            fn({
+                tileGrid: GameData.tileGrid
+            })
+        })
+
+        PUBSUB.subscribe("SYSTEM_COMBAT_REQUEST_FN", (fn): void => {
+            fn({
+                entityData: GameData.entityData
+            })
+        })
     }
 }
 

@@ -1,5 +1,5 @@
 import { Grid } from './grid'
-import { IPoint } from './shapes/point'
+import { IPoint, Point } from './shapes/point'
 import { Tile } from './tile'
 
 class PathNode<T> {
@@ -50,7 +50,7 @@ class PathNodePriorityQueue<T> {
 }
 
 const estimateDistance = (p1: IPoint, p2: IPoint): number => {
-    return Math.max(Math.abs(p2.x - p1.x), Math.abs(p2.y - p1.y))
+    return Point.manhattanDistance(p1, p2)
 }
 
 // We'll do this using A* pathfinding, in all 8 directions
@@ -91,8 +91,10 @@ const processPathfindingGrid = function * (origin: IPoint, destination: IPoint, 
         const neighbors = pathNodeGrid.getNeighborsXY(pathNode.x, pathNode.y).filter((n): boolean => !n.cell.blockMove)
         for(let i = 0; i < neighbors.length; i++){
             const n = neighbors[i]
-            if(pathNode.distanceFromOrigin + 1 < n.distanceFromOrigin){
-                n.distanceFromOrigin = pathNode.distanceFromOrigin + 1
+            // lets calculate the actual distance
+            const distance = Point.manhattanDistance(n, pathNode)
+            if(pathNode.distanceFromOrigin + distance < n.distanceFromOrigin){
+                n.distanceFromOrigin = pathNode.distanceFromOrigin + distance
                 n.previous = pathNode
             }
             n.estimatedDistanceToTarget = estimateDistance(n, destination)

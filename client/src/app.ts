@@ -26,11 +26,17 @@ import { BasicMonster } from './entitySystem/components/ai'
 import { Entity } from './entitySystem/entity'
 import { TOPICS } from './pubSub/pubsubTopicList'
 import { Grid } from './grid'
-import { IRenderCell } from './rendering/renderCell'
+import { IRenderCell, RenderOrder } from './rendering/renderCell'
 import { Point, IPoint } from './shapes/point'
 import { processPathfindingGrid } from './pathfinding'
-import { Rect } from './shapes/rect';
-import { EntityMaker } from './entitySystem/entityMaker';
+import { Rect } from './shapes/rect'
+import { EntityMaker } from './entitySystem/entityMaker'
+import { Tile } from './tile';
+import { PathfindingSystem } from './gameSystems/pathfindingSystem'
+import { CombatSystem } from './gameSystems/combatSystem'
+import { drawStringToGrid } from './rendering/renderHelpers';
+import COLORS from './_settings/colors';
+import { Fighter } from './entitySystem/components/fighter';
 
 RANDOM.initializeSystem()
 
@@ -57,48 +63,34 @@ CameraSystem.init()
 NarrativeSystem.init()
 MoveSystem.init()
 InputSystem.init()
-
-// This is based off of terrain
-// I'm really happy with a lot of my underlying library
-// functions
-
-// so let's build a system we can request pathfinding from
-// this doesn't work with grouped moves, so we need a way to shift that I suppose
-const pathfindingSystem = {
-  requestPath: function(origin, destination, tileGrid){
-  // inside is where we can do more optimizations
-  // well worn territory is good, we should try there first, and I like
-  // the idea that we can 'tread' and create roads that way
-    let pathfind = processPathfindingGrid(origin, destination, tileGrid);
-    let isDone = pathfind.next().done || false
-    let value = []
-    while(!isDone){
-      const next = pathfind.next()
-      value = next.value || value;
-      isDone = next.done
-    }
-    console.log(value);
-    return value;
-    // and then be done
-  }
-}
-// subturn scheduling and rework
-
-// pathfindingSystem.requestPath(origin, destination, squareGrid);
-// pathfindingSystem.requestPath(destination, origin, squareGrid);
-
+PathfindingSystem.init()
+CombatSystem.init()
 
 //just allowing these out while we figure out what to do next
 // generators are kind of really cool!
-GameData.entityData.player.x = 1;
-GameData.entityData.player.y = 1;
+GameData.entityData.player.x = 1
+GameData.entityData.player.y = 1
 const spaceOrc = EntityMaker.spaceOrc(10, 10)
 const spaceOrc2 = EntityMaker.spaceOrc(12, 12)
 const spaceOrc3 = EntityMaker.spaceOrc(8, 13)
 GameData.entityData.entities.push(spaceOrc)
 GameData.entityData.entities.push(spaceOrc2)
 GameData.entityData.entities.push(spaceOrc3)
-GameData.tileGrid.getSubgrid(Rect.make(5, 5, 8, 1)).forEach(t => { t.blockMove = true; t.blockSight = true})
+
+GameData.tileGrid.getSubgrid(Rect.make(5, 5, 8, 1)).forEach(t => { t.blockMove = true; t.blockSight = true })
+
+// I would need to manually lower the priority on this one
+PUBSUB.subscribe('dies', ({ id }) => {
+    if (id === GameData.entityData.player.id) {
+        gameState = GameStates.PLAYER_DEAD // game over man
+        PUBSUB.publish(TOPICS.MESSAGE_LOG, { 
+            text: `Game over man!`
+        })
+    }
+});
+
+// Let's handle some death sequences in here as well
+gameState = GameStates.PLAYERS_TURN
 loadImage('assets/out.png').then((image: any): void => {
     RenderSystem.init(image)
 
@@ -107,39 +99,54 @@ loadImage('assets/out.png').then((image: any): void => {
     // Loop
     const loop = (): void => {
 
-        if(gameState === GameStates.PLAYERS_TURN){
+        // TODO: slowly let the game keep playing out if the player is dead, like let it flip
+        // every so often in clock cycles
+        if (gameState === GameStates.PLAYERS_TURN) {
             InputSystem.handleInput() // Translate player intention into system input
-        } else {
+        } else if (gameState === GameStates.ENEMY_TURN) {
             // Process non player entities
             GameData.entityData.entities.filter((e: Entity): boolean => e.components.has('ai')).forEach((entity: Entity): void => {
+                // TODO: Only VISIBLE entities
                 const ai = entity.components.get('ai') as BasicMonster
-                //ai.takeTurn(GameData)
+                ai.takeTurn(GameData)
+                MoveSystem.processMoves()
             })
-            gameState = GameStates.PLAYERS_TURN // Handle monster/world turns here
-        }
-        if(InputSystem.newKeyPress('n')){
-            const seed = btoa(new Date().toString())
-            const newurl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?seed=' + seed
-            window.location.href = newurl
-        }
-        if(InputSystem.newKeyPress('q')){
-            if(pathfind.next().done){
-                const node = backPath.pop()
-                if(node){
-                    origin.x = node.x
-                    origin.y = node.y
-                }
+
+            if (gameState === GameStates.ENEMY_TURN) {
+                gameState = GameStates.PLAYERS_TURN
             }
         }
+
 
         // Publish Move Towards and the movesystem handles that
         MoveSystem.processMoves()
         FovSystem.calculateFOV()
-        RenderSystem.render()
+        // Let's add our stuff to the renderGrid here
+        const renderGrid = GameData.renderGrid;
+        const HP_BAR_Y = 21;
 
+        RenderSystem.render()
+        for(let i = 0; i < 20; i++){
+
+        }
+        renderGrid.getXY(0, HP_BAR_Y)
+        const playerFighter = GameData.entityData.player.components.get('fighter') as Fighter
+        if(playerFighter){
+            for(var i = 0; i < playerFighter.hpMax; i++){
+                const rCell = renderGrid.getXY(i, HP_BAR_Y )
+                rCell.character = ''
+            }
+            drawStringToGrid(renderGrid, `HP ${playerFighter.hp}/${playerFighter.hpMax}`, 1, 21, COLORS.palette.white)
+            for(var i = 0; i < playerFighter.hpMax; i++){
+                const rCell = renderGrid.getXY(i, HP_BAR_Y )
+                rCell.backColor = (i <= playerFighter.hp) ? "#006600" : "#220000"
+            }
+        }
         InputSystem.reset()
         window.requestAnimationFrame(loop)
     }
     window.requestAnimationFrame(loop)
 
 }).catch((err: any): void => console.log(err)) //eslint-disable-line no-console
+
+// FINISH THE INTERFACE AND THEN COMMIT

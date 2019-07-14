@@ -10,7 +10,7 @@ function * openSquareGenerator(tileGrid: Grid<Tile>, rooms: IRect[]): any {
         t.blockSight = true
         t.explored = true
         t.contained = true
-        t.material = TileMaterial.ASTEROID
+        t.material = TileMaterial.Asteroid
     })
 
     const interior = Rect.make(1,1,tileGrid.width-2, tileGrid.height - 2)
