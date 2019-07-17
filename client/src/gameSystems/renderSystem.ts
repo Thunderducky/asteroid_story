@@ -1,6 +1,6 @@
 import { renderToGrid } from '../rendering/renderToGrid'
 import { Rect } from '../shapes/rect'
-import { drawBoxOnGrid, drawStringToGrid, drawPhrasesToGrid } from '../rendering/renderHelpers'
+import { drawBoxOnGrid, drawStringToGrid } from '../rendering/renderHelpers'
 import COLORS from '../_settings/colors'
 import { PUBSUB } from '../pubSub/pubSub'
 import { CanvasRenderer } from '../rendering/canvasRenderer'

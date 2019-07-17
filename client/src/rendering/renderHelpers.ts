@@ -136,16 +136,15 @@ const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y
         }
     }
 }
-const makePhrases = (start, color) => {
-    let phrases = [{ text: start, color}];
+const makePhrases = (start: string, color: string): any => {
+    let phrases = [{ text: start, color}]
     return {
-        then: function(next, color){
+        then: function(next: string, color: string): any{
             phrases.push({text: next, color})
-            return this;
+            return this
         },
-        done: function(){
-            return phrases;
-            return this;
+        done: function(): any[]{
+            return phrases
         }
     }
 }
@@ -153,9 +152,9 @@ const makePhrases = (start, color) => {
 const drawPhrasesToGrid = (grid: Grid<IRenderCell>, phrases: any, x: number, y: number): void => {
     let currentX = x
     let currentY = y
-    for(var p = 0; p < phrases.length; p++){
-        const message = phrases[p].text as string;
-        const foreColor = phrases[p].color as string;
+    for(let p = 0; p < phrases.length; p++){
+        const message = phrases[p].text as string
+        const foreColor = phrases[p].color as string
         // const message = phrase.text as string;
         // const foreColor = phrase.color as string;
         for(let i = 0; i < message.length; i++){
