@@ -1,9 +1,14 @@
 import { renderToGrid } from '../rendering/renderToGrid'
 import { Rect } from '../shapes/rect'
-import { drawBoxOnGrid, drawStringToGrid } from '../rendering/renderHelpers'
+import { drawBoxOnGrid, drawStringToGrid, drawPhrasesToGrid } from '../rendering/renderHelpers'
 import COLORS from '../_settings/colors'
 import { PUBSUB } from '../pubSub/pubSub'
 import { CanvasRenderer } from '../rendering/canvasRenderer'
+
+// Let's write a function that will draw a phrase, allowing us to color it a specific way if we like
+
+// Phrase tree
+// We're going to a left to right traversal across the tree if we need toz
 
 const renderer = new CanvasRenderer()
 const RenderSystem = {
@@ -34,7 +39,9 @@ const RenderSystem = {
             drawBoxOnGrid(messageLogRenderGrid, relativeBox)
             gameData.messageLog.renderToGrid(messageLogRenderGrid)
             drawStringToGrid(messageLogRenderGrid, 'message log', 2, 0, COLORS.palette.white, COLORS.palette.black)
-        
+            
+            // const phrases = makePhrases("something ", "#FFFFFF").then("blue ", "#0000FF").then("red ", "#FF0000").done();
+            // drawPhrasesToGrid(gameData.renderGrid, phrases, 0, 0)
             renderer.clear()
         
             renderer.render(gameData.renderGrid)

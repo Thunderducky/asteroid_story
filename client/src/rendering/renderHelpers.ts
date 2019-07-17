@@ -136,6 +136,44 @@ const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y
         }
     }
 }
+const makePhrases = (start, color) => {
+    let phrases = [{ text: start, color}];
+    return {
+        then: function(next, color){
+            phrases.push({text: next, color})
+            return this;
+        },
+        done: function(){
+            return phrases;
+            return this;
+        }
+    }
+}
+
+const drawPhrasesToGrid = (grid: Grid<IRenderCell>, phrases: any, x: number, y: number): void => {
+    let currentX = x
+    let currentY = y
+    for(var p = 0; p < phrases.length; p++){
+        const message = phrases[p].text as string;
+        const foreColor = phrases[p].color as string;
+        // const message = phrase.text as string;
+        // const foreColor = phrase.color as string;
+        for(let i = 0; i < message.length; i++){
+            const letter = message[i]
+            if(grid.inBoundsXY(currentX, currentY) && letter != '\n'){
+                const target = grid.getXY(currentX,currentY)
+                target.character = letter
+                target.foreColor = foreColor
+            }
+            if(letter !== '\n'){
+                currentX++
+            } else {
+                currentY++
+                currentX = x
+            }
+        }
+    }
+}
 
 /**
  * Place a box on a render grid
@@ -185,4 +223,4 @@ const drawBoxOnGrid = (grid: Grid<IRenderCell>, box: IRect, boxFill: boolean = t
     })
 }
 
-export  { CODE_TO_RECT_HASH, CHARACTER_HELPER, code, drawSection, drawStringToGrid, drawBoxOnGrid }
+export  { CODE_TO_RECT_HASH, CHARACTER_HELPER, code, drawSection, drawStringToGrid, drawPhrasesToGrid, drawBoxOnGrid, makePhrases }
