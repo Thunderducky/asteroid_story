@@ -53,29 +53,29 @@ PUBSUB.subscribe('player_wants_to_pickup_item', (): void => {
 
 // for now you just pickup whatever you have there
 PUBSUB.subscribe('pickup', ({ actorId }): void => {
-    console.log('TRYING TO PICKUP')
+    // console.log('TRYING TO PICKUP')
     const entity = GameData.entityData.entities.find((e): boolean => e.id === actorId) as Entity
     if(!entity || !entity.components.has('inventory')){
         // Add debug flags so we can track these events
         return // couldn't find entity
     }
-    console.log(entity)
+    // console.log(entity)
     const item = GameData.entityData.entities.find((e): boolean => {
         return e.x === entity.x && e.y === entity.y && e.components.has('item')
     })
-    console.log(item)
+    // console.log(item)
     // Let's look for items in that area
     if(item){
         const inventory = entity.components.get('inventory') as Inventory
         if(inventory.addItem(item)){
             // You successfully added the item
             // not exactly the MOST performant thing, but hey :D
-            const itemIndex = GameData.entityData.entities.findIndex(e => e.id === item.id)
+            const itemIndex = GameData.entityData.entities.findIndex((e: Entity): boolean => e.id === item.id)
             GameData.entityData.entities.splice(itemIndex, 1)
             // We want to delete it GameData.entityData.entities.splice()
-            console.log('The item is picked up!')
+            // console.log('The item is picked up!')
         } else {
-            console.log('The item was not picked up')
+            // console.log('The item was not picked up')
             // Your inventory is probably full and you can't pick it up
         }
     }
