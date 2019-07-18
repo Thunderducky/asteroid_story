@@ -7,11 +7,11 @@ import { processPathfindingGrid } from '../pathfinding'
 
 const PathfindingSystem = {
     init: (): void => {
-        PUBSUB.subscribe('FIND_PATH', (msg): void => {
+        PUBSUB.subscribe('FIND_PATH', (msg: any): void => {
             const origin = msg.origin as IPoint
             const target = msg.target as IPoint
             const path = msg.path as Tile[]
-            PUBSUB.publish('SYSTEM_PATHFINDING_REQUEST', (msg): void => {
+            PUBSUB.publish('SYSTEM_PATHFINDING_REQUEST', (msg: any): void => {
                 const tileGrid = msg.tileGrid as Grid<Tile>
                 const pathfind = processPathfindingGrid(origin, target, tileGrid)
                 let isDone = pathfind.next().done || false
