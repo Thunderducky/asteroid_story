@@ -77,7 +77,7 @@ const processPathfindingGrid = function * (origin: IPoint, destination: IPoint, 
     yield pathNodeGrid // Things can use this generator if needed
     const queue = new PathNodePriorityQueue<Tile>()
     yield queue
-    const backPath = []
+    const backPath: any[] = []
     yield backPath
 
     const firstNode = pathNodeGrid.getP(origin)
@@ -107,7 +107,7 @@ const processPathfindingGrid = function * (origin: IPoint, destination: IPoint, 
                 let previous = n
                 while(previous != null){
                     backPath.push(previous.cell)
-                    previous = previous.previous
+                    previous = previous.previous as PathNode<Tile>
                     yield
                 }
                 return backPath
