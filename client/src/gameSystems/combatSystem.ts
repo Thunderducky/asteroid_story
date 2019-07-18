@@ -3,6 +3,7 @@ import { Entity } from '../entitySystem/entity'
 import { Fighter } from '../entitySystem/components/fighter'
 import { TOPICS } from '../pubSub/pubsubTopicList'
 import { RenderOrder } from '../rendering/renderCell'
+import DEBUG from '../_settings/debugSettings'
 
 const CombatSystem = {
     init: (): void => {
@@ -10,6 +11,7 @@ const CombatSystem = {
         // we might need to refactor this later
         // depending on how much we focus on combat
         PUBSUB.subscribe('attack', (msg): void => {
+
             if(!msg.attacker || !msg.defender){
                 throw new Error('attacks must have an attacker and a defender')
             }
@@ -41,7 +43,12 @@ const CombatSystem = {
 
         PUBSUB.subscribe('dies', ({ id }): void => {
             PUBSUB.publish('SYSTEM_COMBAT_REQUEST_FN', (gameData: any): void => {
+                
                 const entityData = gameData.entityData
+                if(entityData.player.id === id && DEBUG.PLAYER_UNKILLABLE){
+                    // they don't acutally die
+                    return
+                }
                 const deceased = entityData.entities.find((e: any): boolean => e.id === id) as Entity
                 PUBSUB.publish(TOPICS.MESSAGE_LOG, { 
                     text: `${deceased.name} has died`

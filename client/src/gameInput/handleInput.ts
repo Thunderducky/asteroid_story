@@ -100,6 +100,10 @@ export const handleInput = (km: KeyboardMonitor, player: Entity): void => {
         }
     }
 
+    if(newKeyPress(km, 'g', false)){
+        PUBSUB.publish('player_wants_to_pickup_item', null)
+    }
+
 
     // quick number generator
     if(!km.getKeyState('n').isDown && (km.getKeyState('n').halfSteps > 0)){
