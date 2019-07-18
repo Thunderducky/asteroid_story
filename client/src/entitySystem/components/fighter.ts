@@ -15,8 +15,9 @@ class Fighter implements IComponent {
         this.power = power
     }
 
-    takeDamage(amount: number){
+    takeDamage(amount: number): number{
         this.hp -= amount
+        return amount
     }
     attack(target: Fighter): number{
         const damage = this.power - target.defense

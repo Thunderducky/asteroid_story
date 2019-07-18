@@ -1,4 +1,4 @@
-import { RenderOrder } from "../rendering/renderCell";
+import { RenderOrder } from '../rendering/renderCell'
 
 /**
  * A generic object to represent everything that is not the map itself

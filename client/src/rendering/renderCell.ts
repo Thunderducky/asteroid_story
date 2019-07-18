@@ -11,7 +11,7 @@ enum RenderOrder {
 interface IRenderCell {
     x: number;
     y: number;
-    order: RenderOrder
+    order: RenderOrder;
     character: string; // this should only be string of length 1
     foreColor: string;
     backColor: string;

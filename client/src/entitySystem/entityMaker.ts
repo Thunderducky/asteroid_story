@@ -3,7 +3,7 @@ import { ID_MANAGER } from '../utils/idManager'
 import COLORS from '../_settings/colors'
 import { Fighter } from './components/fighter'
 import { BasicMonster } from './components/ai'
-import { RenderOrder } from '../rendering/renderCell';
+import { RenderOrder } from '../rendering/renderCell'
 const EntityMaker =  {
     player: (): Entity => {
         const player = new Entity(ID_MANAGER.next(), 'player', 0, 0, '@', COLORS.player, true)

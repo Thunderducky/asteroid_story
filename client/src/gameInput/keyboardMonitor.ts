@@ -15,7 +15,7 @@ const makeKeyState = (key: string, isDown: boolean = false, halfSteps: number = 
         halfSteps
     }
 }
-const preventDefaultList: string[] = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
+const preventDefaultList: string[] = ['arrowup', 'arrowdown', 'arrowleft', 'arrowright']
 class KeyboardMonitor {
     keyHash: Hash<KeyState>;
     constructor(){

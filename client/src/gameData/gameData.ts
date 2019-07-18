@@ -171,7 +171,7 @@ const GameData = {
             })
         })
 
-        PUBSUB.subscribe("SYSTEM_COMBAT_REQUEST_FN", (fn): void => {
+        PUBSUB.subscribe('SYSTEM_COMBAT_REQUEST_FN', (fn): void => {
             fn({
                 entityData: GameData.entityData
             })

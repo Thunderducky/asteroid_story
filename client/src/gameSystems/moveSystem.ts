@@ -1,9 +1,9 @@
 import { PUBSUB } from '../pubSub/pubSub'
-import { TOPICS } from '../pubSub/pubsubTopicList'
+// import { TOPICS } from '../pubSub/pubsubTopicList'
 import { Entity } from '../entitySystem/entity'
 import DEBUG from '../_settings/debugSettings'
 import { IMoveMessage } from '../pubSub/messageTypes'
-import { Fighter } from '../entitySystem/components/fighter';
+// import { Fighter } from '../entitySystem/components/fighter'
 
 // New law, no include listeners by default, they always have to be turned on
 // TODO: Improve this

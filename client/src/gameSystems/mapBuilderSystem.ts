@@ -3,7 +3,7 @@ import { Grid } from '../grid'
 import { Tile, TileMaterial } from '../tile'
 import { IRect } from '../shapes/rect'
 import { progressiveMapGenerator as bspGenerator } from '../mapGeneration/bsp/bspMapGenerator'
-import { openSquareGenerator as testGenerator } from '../mapGeneration/staticGenerators/testMapGenerator'
+//import { openSquareGenerator as testGenerator } from '../mapGeneration/staticGenerators/testMapGenerator'
 // import { TOPICS } from '../pubSub/pubsubTopicList';
 import { generateFloodGrid, processNetwork } from '../utils/floodFiller'
 import { RANDOM } from '../utils/rngHelper'
@@ -101,24 +101,24 @@ const MapBuilderSystem =  {
 
     },
     buildMap: (): void => {
-        PUBSUB.publish('SYSTEM_MAP_BUILDER_REQUEST_FN', (gameData: any): void => {
-            const tileGrid = gameData.tileGrid as Grid<Tile>
-            const mapBuildData = gameData.mapBuilderData
-            const rooms = mapBuildData.rooms as IRect[]
-            const airlocks = mapBuildData.airlocks as IRect[]
-            const levelIterator = testGenerator(tileGrid, rooms, airlocks)
-            levelIterator.next()
-            //tryToConnectNetworks()
-        })
         // PUBSUB.publish('SYSTEM_MAP_BUILDER_REQUEST_FN', (gameData: any): void => {
         //     const tileGrid = gameData.tileGrid as Grid<Tile>
         //     const mapBuildData = gameData.mapBuilderData
         //     const rooms = mapBuildData.rooms as IRect[]
         //     const airlocks = mapBuildData.airlocks as IRect[]
-        //     const levelIterator = bspGenerator(tileGrid, rooms, airlocks)
+        //     const levelIterator = testGenerator(tileGrid, rooms, airlocks)
         //     levelIterator.next()
-        //     tryToConnectNetworks()
+        //     //tryToConnectNetworks()
         // })
+        PUBSUB.publish('SYSTEM_MAP_BUILDER_REQUEST_FN', (gameData: any): void => {
+            const tileGrid = gameData.tileGrid as Grid<Tile>
+            const mapBuildData = gameData.mapBuilderData
+            const rooms = mapBuildData.rooms as IRect[]
+            const airlocks = mapBuildData.airlocks as IRect[]
+            const levelIterator = bspGenerator(tileGrid, rooms, airlocks)
+            levelIterator.next()
+            tryToConnectNetworks()
+        })
     },
     buildMapStep: (): void => {
         // useful for when we are working with generators

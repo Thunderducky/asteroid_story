@@ -22,7 +22,7 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
     // tileGrid, entities and fovGrid are in WORLD coordinates and will have their XY ignored for now
 
     // real quick, I'm going to reset the renderorder of everything
-    renderGrid.forEach(rcell => rcell.order = RenderOrder.Default)
+    renderGrid.forEach((rcell): void => { rcell.order = RenderOrder.Default })
 
     // camera and renderGrid both start at the topLeft in terms of aligning the two
     const screenP = Point.make(0,0)
