@@ -15,7 +15,7 @@ const makeKeyState = (key: string, isDown: boolean = false, halfSteps: number = 
         halfSteps
     }
 }
-const preventDefaultList: string[] = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
+const preventDefaultList: string[] = ['arrowup', 'arrowdown', 'arrowleft', 'arrowright']
 class KeyboardMonitor {
     keyHash: Hash<KeyState>;
     constructor(){
@@ -24,7 +24,7 @@ class KeyboardMonitor {
     // Attach to the DOM, usually the document as a whole, but you can make it more specific if you want
     attach(element: any): KeyboardMonitor {
         element.addEventListener('keydown', (event: any): void => {
-            const {key} = event
+            const key = event.key.toLowerCase()
             if(preventDefaultList.indexOf(key) > -1){
                 event.preventDefault()
             }
@@ -38,7 +38,7 @@ class KeyboardMonitor {
             keyState.isDown = true
         })
         element.addEventListener('keyup', (event: any): void => {
-            const {key} = event
+            const key = event.key.toLowerCase()
             if(!this.keyHash[key]){
                 this.keyHash[key] = makeKeyState(key)
             }
@@ -51,10 +51,11 @@ class KeyboardMonitor {
         return this
     }
     getKeyState(key: string): KeyState{
-        if(!this.keyHash[key]){
-            this.keyHash[key] = makeKeyState(key)
+        const lowerKey = key.toLowerCase()
+        if(!this.keyHash[lowerKey]){
+            this.keyHash[lowerKey] = makeKeyState(lowerKey)
         }
-        return this.keyHash[key]
+        return this.keyHash[lowerKey]
     }
     resetSteps(): void {
         const keys = Object.keys(this.keyHash)

@@ -103,6 +103,25 @@ ctrhHelper(code('7'),230, 0)
 ctrhHelper(code('8'),240, 0)
 ctrhHelper(code('9'),250, 0)
 
+// let's do some more symbols
+ctrhHelper(code('!'), 10, 0)
+ctrhHelper(code('"'), 20, 0)
+ctrhHelper(code('#'), 30, 0)
+ctrhHelper(code('$'), 40, 0)
+ctrhHelper(code('%'), 50, 0)
+ctrhHelper(code('&'), 60, 0)
+ctrhHelper(code('\''), 70, 0)
+ctrhHelper(code('('), 80, 0)
+ctrhHelper(code(')'), 90, 0)
+ctrhHelper(code('*'), 100, 0)
+ctrhHelper(code('+'), 110, 0)
+ctrhHelper(code(','), 120, 0)
+ctrhHelper(code('-'), 130, 0)
+ctrhHelper(code('.'), 140, 0)
+ctrhHelper(code('/'), 150, 0)
+
+
+
 
 function drawSection(ctx: CanvasRenderingContext2D, tilesheet: any, srcRect: IRect, destRect: IRect, foreColor: string, backColor: string): void{
     ctx.clearRect(destRect.x, destRect.y, destRect.width, destRect.height)

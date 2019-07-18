@@ -1,8 +1,8 @@
 import { Grid } from '../grid'
 import { Tile, TileMaterial } from '../tile'
 import { FOVCell } from '../fov'
-import { Entity } from '../entity'
-import { IRenderCell } from './renderCell'
+import { Entity } from '../entitySystem/entity'
+import { IRenderCell, RenderOrder } from './renderCell'
 import { Point } from '../shapes/point'
 import COLORS from '../_settings/colors'
 import { IRect } from '../shapes/rect'
@@ -20,6 +20,9 @@ import DEBUG from '../_settings/debugSettings'
 export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entities: Entity[], renderGrid: Grid<IRenderCell>, cameraFrame: IRect, debugGrid: Grid<IRenderCell>): void => {
     // renderGrid is in SCREEN coordinates, and will have it's XY ignored for our purposes
     // tileGrid, entities and fovGrid are in WORLD coordinates and will have their XY ignored for now
+
+    // real quick, I'm going to reset the renderorder of everything
+    renderGrid.forEach((rcell): void => { rcell.order = RenderOrder.Default })
 
     // camera and renderGrid both start at the topLeft in terms of aligning the two
     const screenP = Point.make(0,0)
@@ -107,10 +110,17 @@ export const renderToGrid = (tileGrid: Grid<Tile>, fovGrid: Grid<FOVCell>, entit
             cameraFrame.y <= entity.y && entity.y <= cameraFrame.y + cameraFrame.height - 1){
             const rCell: IRenderCell = renderGrid.getP(screenP)
             const fovCell: FOVCell = fovGrid.getP(screenP)
-            if(fovCell.visible || DEBUG.ALWAYS_SHOW_ENTITIES){
-                rCell.foreColor = entity.color
-                rCell.character = entity.character
+
+            // if we've got different competing entities then we will establish what to draw with render order
+            if(entity.renderOrder >= rCell.order){
+                rCell.order = entity.renderOrder
+                if(fovCell.visible || DEBUG.ALWAYS_SHOW_ENTITIES){
+                    rCell.foreColor = entity.color
+                    rCell.character = entity.character
+                }
+                
             }
+            
         }
 
     })

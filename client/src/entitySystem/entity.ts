@@ -1,7 +1,13 @@
+import { RenderOrder } from '../rendering/renderCell'
+
 /**
  * A generic object to represent everything that is not the map itself
  * For that, see the Tile class
  */
+interface IComponent {
+    owner: Entity;
+}
+
 class Entity {
     id: number;
     x: number;
@@ -10,6 +16,8 @@ class Entity {
     character: string;
     color: string;
     blocksMove: boolean;
+    renderOrder: RenderOrder;
+    components: Map<string, IComponent>;
     constructor(id: number, name: string, x: number,y: number, character: string, color: string, blocksMove = true){
         this.id = id
         this.name = name
@@ -18,6 +26,9 @@ class Entity {
         this.character = character
         this.color = color
         this.blocksMove = blocksMove
+        // allows us to potentially have multiple of a type, even if it has different names
+        this.components = new Map<string, IComponent>()
+        this.renderOrder = RenderOrder.Default
     }
 
     /**
@@ -41,4 +52,4 @@ class Entity {
     }
 }
 
-export { Entity }
+export { Entity, IComponent }

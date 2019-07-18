@@ -22,6 +22,14 @@ import { InputSystem } from './gameSystems/inputSystem'
 import { EntityPlacementSystem } from './gameSystems/entityPlacementSystem'
 import { MessageLogSystem } from './gameSystems/messageLogSystem'
 import { MapBuilderSystem } from './gameSystems/mapBuilderSystem'
+import { BasicMonster } from './entitySystem/components/ai'
+import { Entity } from './entitySystem/entity'
+import { TOPICS } from './pubSub/pubsubTopicList'
+import { PathfindingSystem } from './gameSystems/pathfindingSystem'
+import { CombatSystem } from './gameSystems/combatSystem'
+import { drawStringToGrid } from './rendering/renderHelpers'
+import COLORS from './_settings/colors'
+import { Fighter } from './entitySystem/components/fighter'
 
 RANDOM.initializeSystem()
 
@@ -48,28 +56,81 @@ CameraSystem.init()
 NarrativeSystem.init()
 MoveSystem.init()
 InputSystem.init()
+PathfindingSystem.init()
+CombatSystem.init()
 
+// Test that all the systems are activated?
+//just allowing these out while we figure out what to do next
+// generators are kind of really cool!
+
+// I would need to manually lower the priority on this one
+PUBSUB.subscribe('dies', ({ id }): void => {
+    if (id === GameData.entityData.player.id) {
+        gameState = GameStates.PLAYER_DEAD // game over man
+        PUBSUB.publish(TOPICS.MESSAGE_LOG, { 
+            text: 'Game over man!'
+        })
+    }
+})
+
+// Let's handle some death sequences in here as well
+gameState = GameStates.PLAYERS_TURN
 loadImage('assets/out.png').then((image: any): void => {
     RenderSystem.init(image)
+
     // Need to have this marked appropriately
     PUBSUB.publish('fov_recompute', true)
     // Loop
     const loop = (): void => {
 
-        if(gameState === GameStates.PLAYERS_TURN){
+        // TODO: slowly let the game keep playing out if the player is dead, like let it flip
+        // every so often in clock cycles
+        if (gameState === GameStates.PLAYERS_TURN) {
             InputSystem.handleInput() // Translate player intention into system input
-        } else {
-            gameState = GameStates.PLAYERS_TURN // Handle monster/world turns here
+        } else if (gameState === GameStates.ENEMY_TURN) {
+            // Process non player entities
+            GameData.entityData.entities.filter((e: Entity): boolean => e.components.has('ai')).forEach((entity: Entity): void => {
+                // TODO: Only VISIBLE entities
+                const ai = entity.components.get('ai') as BasicMonster
+                ai.takeTurn(GameData)
+                MoveSystem.processMoves()
+            })
+
+            if (gameState === GameStates.ENEMY_TURN) {
+                gameState = GameStates.PLAYERS_TURN
+            }
         }
 
 
+        // Publish Move Towards and the movesystem handles that
         MoveSystem.processMoves()
         FovSystem.calculateFOV()
-        RenderSystem.render()
+        // Let's add our stuff to the renderGrid here
+        const renderGrid = GameData.renderGrid
+        const HP_BAR_Y = 51
 
+        RenderSystem.render()
+        for(let i = 0; i < 20; i++){
+
+        }
+        renderGrid.getXY(0, HP_BAR_Y)
+        const playerFighter = GameData.entityData.player.components.get('fighter') as Fighter
+        if(playerFighter){
+            for(let i = 0; i < playerFighter.hpMax; i++){
+                const rCell = renderGrid.getXY(i, HP_BAR_Y )
+                rCell.character = ''
+            }
+            drawStringToGrid(renderGrid, `HP ${playerFighter.hp}/${playerFighter.hpMax}`, 1, HP_BAR_Y, COLORS.palette.white)
+            for(let i = 0; i < playerFighter.hpMax; i++){
+                const rCell = renderGrid.getXY(i, HP_BAR_Y )
+                rCell.backColor = (i <= playerFighter.hp) ? '#006600' : '#220000'
+            }
+        }
         InputSystem.reset()
         window.requestAnimationFrame(loop)
     }
     window.requestAnimationFrame(loop)
 
 }).catch((err: any): void => console.log(err)) //eslint-disable-line no-console
+
+// FINISH THE INTERFACE AND THEN COMMIT

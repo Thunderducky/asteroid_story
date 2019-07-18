@@ -30,4 +30,4 @@ const InputSystem = {
     }
 }
 
-export { InputSystem}
+export { InputSystem }

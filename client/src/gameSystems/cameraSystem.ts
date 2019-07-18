@@ -1,5 +1,5 @@
 import { PUBSUB } from '../pubSub/pubSub'
-import { Entity } from '../entity'
+import { Entity } from '../entitySystem/entity'
 import DEBUG from '../_settings/debugSettings'
 import { IRect } from '../shapes/rect'
 
