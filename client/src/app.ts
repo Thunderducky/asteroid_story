@@ -144,6 +144,7 @@ loadImage('assets/out.png').then((image: any): void => {
                 gameState = GameStates.PLAYERS_TURN
             }
         }
+        // Move a lot of this into a UI system that inspects things, and also keeps track of ui state
 
 
         // Publish Move Towards and the movesystem handles that
