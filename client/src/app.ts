@@ -30,6 +30,8 @@ import { CombatSystem } from './gameSystems/combatSystem'
 import { drawStringToGrid } from './rendering/renderHelpers'
 import COLORS from './_settings/colors'
 import { Fighter } from './entitySystem/components/fighter'
+import DEBUG from './_settings/debugSettings'
+import { Inventory } from './entitySystem/components/inventory'
 
 RANDOM.initializeSystem()
 
@@ -43,6 +45,46 @@ PUBSUB.subscribe('player_wants_to_move', (msg): void => {
     PUBSUB.publish('move', msg)
     gameState = GameStates.ENEMY_TURN
 })
+
+PUBSUB.subscribe('player_wants_to_pickup_item', (): void => {
+    PUBSUB.publish('pickup', {actorId: GameData.entityData.player.id})
+    gameState = GameStates.ENEMY_TURN
+})
+
+// for now you just pickup whatever you have there
+PUBSUB.subscribe('pickup', ({ actorId }): void => {
+    // console.log('TRYING TO PICKUP')
+    const entity = GameData.entityData.entities.find((e): boolean => e.id === actorId) as Entity
+    if(!entity || !entity.components.has('inventory')){
+        // Add debug flags so we can track these events
+        return // couldn't find entity
+    }
+    // console.log(entity)
+    const item = GameData.entityData.entities.find((e): boolean => {
+        return e.x === entity.x && e.y === entity.y && e.components.has('item')
+    })
+    // console.log(item)
+    // Let's look for items in that area
+    if(item){
+        const inventory = entity.components.get('inventory') as Inventory
+        if(inventory.addItem(item)){
+            // You successfully added the item
+            // not exactly the MOST performant thing, but hey :D
+            const itemIndex = GameData.entityData.entities.findIndex((e: Entity): boolean => e.id === item.id)
+            GameData.entityData.entities.splice(itemIndex, 1)
+            // We want to delete it GameData.entityData.entities.splice()
+            // console.log('The item is picked up!')
+        } else {
+            // console.log('The item was not picked up')
+            // Your inventory is probably full and you can't pick it up
+        }
+    }
+})
+if(DEBUG.MOUNT_WINDOW_DATA){
+    const w = window as any
+    w.GameData = GameData
+    w.PUBSUB = PUBSUB
+}
 
 // All of this is good
 MapBuilderSystem.init()
@@ -65,7 +107,7 @@ CombatSystem.init()
 
 // I would need to manually lower the priority on this one
 PUBSUB.subscribe('dies', ({ id }): void => {
-    if (id === GameData.entityData.player.id) {
+    if (id === GameData.entityData.player.id && !DEBUG.PLAYER_UNKILLABLE) {
         gameState = GameStates.PLAYER_DEAD // game over man
         PUBSUB.publish(TOPICS.MESSAGE_LOG, { 
             text: 'Game over man!'
@@ -89,17 +131,20 @@ loadImage('assets/out.png').then((image: any): void => {
             InputSystem.handleInput() // Translate player intention into system input
         } else if (gameState === GameStates.ENEMY_TURN) {
             // Process non player entities
-            GameData.entityData.entities.filter((e: Entity): boolean => e.components.has('ai')).forEach((entity: Entity): void => {
-                // TODO: Only VISIBLE entities
-                const ai = entity.components.get('ai') as BasicMonster
-                ai.takeTurn(GameData)
-                MoveSystem.processMoves()
-            })
+            if(!DEBUG.SKIP_ENEMY_TURN){
+                GameData.entityData.entities.filter((e: Entity): boolean => e.components.has('ai')).forEach((entity: Entity): void => {
+                    // TODO: Only VISIBLE entities
+                    const ai = entity.components.get('ai') as BasicMonster
+                    ai.takeTurn(GameData)
+                    MoveSystem.processMoves()
+                })
+            }
 
             if (gameState === GameStates.ENEMY_TURN) {
                 gameState = GameStates.PLAYERS_TURN
             }
         }
+        // Move a lot of this into a UI system that inspects things, and also keeps track of ui state
 
 
         // Publish Move Towards and the movesystem handles that
