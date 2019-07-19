@@ -32,6 +32,8 @@ import COLORS from './_settings/colors'
 import { Fighter } from './entitySystem/components/fighter'
 import DEBUG from './_settings/debugSettings'
 import { Inventory } from './entitySystem/components/inventory'
+import { Rect } from './shapes/rect';
+import { wrapText } from './messageLog';
 
 RANDOM.initializeSystem()
 
@@ -114,6 +116,21 @@ PUBSUB.subscribe('dies', ({ id }): void => {
         })
     }
 })
+const textMonitor = {
+    // convert this to work with phrases
+    text: "this is some text",
+    foreColor: "#FFFFFF",
+    backColor: "#000000",
+    screenFrame: Rect.make(0,0,30, 30) // these are 
+}
+const renderTextMonitorToGrid = (renderGrid): void => {
+    const adjustedText = wrapText(textMonitor.text, textMonitor.screenFrame.width)
+    drawStringToGrid(renderGrid, adjustedText, textMonitor.screenFrame.x, textMonitor.screenFrame.y, textMonitor.foreColor, textMonitor.backColor)
+}
+{
+    const w = window as any
+    w.textMonitor = textMonitor
+}
 
 // Let's handle some death sequences in here as well
 gameState = GameStates.PLAYERS_TURN
@@ -146,18 +163,19 @@ loadImage('assets/out.png').then((image: any): void => {
         }
         // Move a lot of this into a UI system that inspects things, and also keeps track of ui state
 
+        // Let's pull something off of renderGrid, we can also set renderOrders of grids, but thats another concern
+
+        // Monitor
+        // WHat's a monitor it just tries to display text on page, the monitors text can be update, but it doesn't really care about that, it just tries to fit it in the render grid
+        
 
         // Publish Move Towards and the movesystem handles that
         MoveSystem.processMoves()
         FovSystem.calculateFOV()
         // Let's add our stuff to the renderGrid here
+        RenderSystem.clear();
         const renderGrid = GameData.renderGrid
         const HP_BAR_Y = 51
-
-        RenderSystem.render()
-        for(let i = 0; i < 20; i++){
-
-        }
         renderGrid.getXY(0, HP_BAR_Y)
         const playerFighter = GameData.entityData.player.components.get('fighter') as Fighter
         if(playerFighter){
@@ -171,11 +189,13 @@ loadImage('assets/out.png').then((image: any): void => {
                 rCell.backColor = (i <= playerFighter.hp) ? '#006600' : '#220000'
             }
         }
+        RenderSystem.renderToGrid()
+        renderTextMonitorToGrid(renderGrid)
+        RenderSystem.render()
         InputSystem.reset()
         window.requestAnimationFrame(loop)
     }
     window.requestAnimationFrame(loop)
 
 }).catch((err: any): void => console.log(err)) //eslint-disable-line no-console
-
 // FINISH THE INTERFACE AND THEN COMMIT
