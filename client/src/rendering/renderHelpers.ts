@@ -120,8 +120,12 @@ ctrhHelper(code('-'), 130, 0)
 ctrhHelper(code('.'), 140, 0)
 ctrhHelper(code('/'), 150, 0)
 
-
-
+ctrhHelper(code(':'), 260, 0)
+ctrhHelper(code(';'), 270, 0)
+ctrhHelper(code('<'), 280, 0)
+ctrhHelper(code('='), 290, 0)
+ctrhHelper(code('>'), 300, 0)
+ctrhHelper(code('?'), 310, 0)
 
 function drawSection(ctx: CanvasRenderingContext2D, tilesheet: any, srcRect: IRect, destRect: IRect, foreColor: string, backColor: string): void{
     ctx.clearRect(destRect.x, destRect.y, destRect.width, destRect.height)
@@ -155,20 +159,8 @@ const drawStringToGrid = (grid: Grid<IRenderCell>, message: string, x: number, y
         }
     }
 }
-const makePhrases = (start: string, color: string): any => {
-    let phrases = [{ text: start, color}]
-    return {
-        then: function(next: string, color: string): any{
-            phrases.push({text: next, color})
-            return this
-        },
-        done: function(): any[]{
-            return phrases
-        }
-    }
-}
 
-const drawPhrasesToGrid = (grid: Grid<IRenderCell>, phrases: any, x: number, y: number): void => {
+const drawPhrasesToGrid = (grid: Grid<IRenderCell>, phrases: any, x: number, y: number, backColor?: string): void => {
     let currentX = x
     let currentY = y
     for(let p = 0; p < phrases.length; p++){
@@ -182,6 +174,9 @@ const drawPhrasesToGrid = (grid: Grid<IRenderCell>, phrases: any, x: number, y: 
                 const target = grid.getXY(currentX,currentY)
                 target.character = letter
                 target.foreColor = foreColor
+                if(backColor){
+                    target.backColor = backColor
+                }
             }
             if(letter !== '\n'){
                 currentX++
@@ -241,4 +236,4 @@ const drawBoxOnGrid = (grid: Grid<IRenderCell>, box: IRect, boxFill: boolean = t
     })
 }
 
-export  { CODE_TO_RECT_HASH, CHARACTER_HELPER, code, drawSection, drawStringToGrid, drawPhrasesToGrid, drawBoxOnGrid, makePhrases }
+export  { CODE_TO_RECT_HASH, CHARACTER_HELPER, code, drawSection, drawStringToGrid, drawPhrasesToGrid, drawBoxOnGrid}

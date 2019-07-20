@@ -15,6 +15,9 @@ const InputSystem = {
             mm.attach(canvas)
         })
     },
+    getMouse(): MouseMonitor{
+        return mm
+    },
     handleInput: (): void => {
         PUBSUB.publish('SYSTEM_INPUT_REQUEST_FN', (gameData: any): void => {
             const player = gameData.entityData.player

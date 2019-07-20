@@ -32,8 +32,12 @@ import COLORS from './_settings/colors'
 import { Fighter } from './entitySystem/components/fighter'
 import DEBUG from './_settings/debugSettings'
 import { Inventory } from './entitySystem/components/inventory'
-import { Rect } from './shapes/rect';
-import { wrapText } from './messageLog';
+import { Rect } from './shapes/rect'
+import { Grid } from './grid'
+import { IRenderCell } from './rendering/renderCell'
+import { wrapText } from './utils/textHelper'
+import SETTINGS from './_settings/gameSettings'
+import { Point } from './shapes/point'
 
 RANDOM.initializeSystem()
 
@@ -72,6 +76,7 @@ PUBSUB.subscribe('pickup', ({ actorId }): void => {
         if(inventory.addItem(item)){
             // You successfully added the item
             // not exactly the MOST performant thing, but hey :D
+            PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: `${entity.name} picked up ${item.name}`})
             const itemIndex = GameData.entityData.entities.findIndex((e: Entity): boolean => e.id === item.id)
             GameData.entityData.entities.splice(itemIndex, 1)
             // We want to delete it GameData.entityData.entities.splice()
@@ -116,17 +121,33 @@ PUBSUB.subscribe('dies', ({ id }): void => {
         })
     }
 })
+// const phraseMonitor = {
+//     // convert this to work with phrases
+//     phrase: makePhrases('something', '#0022FF').then('nothing', '#0022FF').done(),
+//     backColor: '#000000',
+//     screenFrame: Rect.make(0,0,30, 30) // these are 
+// }
+// Add Text Monitor
+// Add Update function
+
+// TODO: MOVE THIS SOMEWHERE ELSE
 const textMonitor = {
-    // convert this to work with phrases
-    text: "this is some text",
-    foreColor: "#FFFFFF",
-    backColor: "#000000",
-    screenFrame: Rect.make(0,0,30, 30) // these are 
+    text: 'this is a test',
+    foreColor: '#002200',
+    backColor: '#FF00FF',
+    screenFrame: Rect.make(0,50,30, 30) // these are 
 }
-const renderTextMonitorToGrid = (renderGrid): void => {
-    const adjustedText = wrapText(textMonitor.text, textMonitor.screenFrame.width)
-    drawStringToGrid(renderGrid, adjustedText, textMonitor.screenFrame.x, textMonitor.screenFrame.y, textMonitor.foreColor, textMonitor.backColor)
+
+const renderTextMonitorToGrid = (renderGrid: Grid<IRenderCell>, textMonitor: any): void => {
+
+    // drawPhrasesToGrid(renderGrid, wrapPhrases(phraseMonitor.phrase), phraseMonitor.screenFrame.x, phraseMonitor.screenFrame.y, phraseMonitor.backColor)
+    // we need to keep it in bounds, we can measure and omit any lines that don't fit
+    // of course ideally we just do that once, or do that inside of textMonitor methods
+    // more and more I think we should just be making this a data class
+    // but that does draw away from the simplicity of it all, but hey, we'll work on it
+    drawStringToGrid(renderGrid, wrapText(textMonitor.text, textMonitor.screenFrame.width), textMonitor.screenFrame.x, textMonitor.screenFrame.y, textMonitor.foreColor, textMonitor.backColor)
 }
+// Mount it to the window for testing
 {
     const w = window as any
     w.textMonitor = textMonitor
@@ -165,15 +186,11 @@ loadImage('assets/out.png').then((image: any): void => {
 
         // Let's pull something off of renderGrid, we can also set renderOrders of grids, but thats another concern
 
-        // Monitor
-        // WHat's a monitor it just tries to display text on page, the monitors text can be update, but it doesn't really care about that, it just tries to fit it in the render grid
-        
-
         // Publish Move Towards and the movesystem handles that
         MoveSystem.processMoves()
         FovSystem.calculateFOV()
         // Let's add our stuff to the renderGrid here
-        RenderSystem.clear();
+        RenderSystem.clear()
         const renderGrid = GameData.renderGrid
         const HP_BAR_Y = 51
         renderGrid.getXY(0, HP_BAR_Y)
@@ -190,7 +207,44 @@ loadImage('assets/out.png').then((image: any): void => {
             }
         }
         RenderSystem.renderToGrid()
-        renderTextMonitorToGrid(renderGrid)
+        // lets update the mouse
+         
+        {
+            const mm = InputSystem.getMouse()
+            if(mm.inContainer){
+                const screenP = Point.make(
+                    Math.floor(mm.position.x / SETTINGS.TILE_WIDTH),
+                    Math.floor(mm.position.y / SETTINGS.TILE_HEIGHT)
+                )
+                const worldP = Point.add(screenP, GameData.cameraFrame)
+                // Let's look for things we can describe
+                let isVisible = false
+                let occupant = ''
+                
+                if(GameData.fov.grid.inBoundsXY(screenP.x, screenP.y) && GameData.fov.grid.getP(screenP).visible){
+                    isVisible = true
+                }
+                if(isVisible){
+                    // let's get all the entities that might be there and join them together
+                    const tg = GameData.tileGrid
+                    if(tg.inBoundsXY(worldP.x, worldP.y)){
+                        occupant = GameData.entityData.entities.filter(
+                            (e: Entity): boolean => e.x === worldP.x && e.y === worldP.y
+                        ).map(
+                            (e: Entity): string => e.name
+                        ).join(' and  ')
+                        
+                    }
+                }
+                // The wrap in here is not quite working, but that's okay we'll figure it out
+                textMonitor.text = `Screen: ${screenP.x} ${screenP.y}, World: ${worldP.x} ${worldP.y}`+
+                `\nVisible: ${isVisible.toString()}\nOccupants: ${occupant}`
+            } else {
+                textMonitor.text = ''
+            }
+        }
+        
+        renderTextMonitorToGrid(renderGrid, textMonitor)
         RenderSystem.render()
         InputSystem.reset()
         window.requestAnimationFrame(loop)

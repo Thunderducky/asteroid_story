@@ -4,6 +4,8 @@ import { drawBoxOnGrid, drawStringToGrid } from '../rendering/renderHelpers'
 import COLORS from '../_settings/colors'
 import { PUBSUB } from '../pubSub/pubSub'
 import { CanvasRenderer } from '../rendering/canvasRenderer'
+import { IRenderCell } from '../rendering/renderCell'
+import { Grid } from '../grid'
 
 // Let's write a function that will draw a phrase, allowing us to color it a specific way if we like
 
@@ -19,6 +21,14 @@ const RenderSystem = {
         
     },
     clear: (): void => {
+        PUBSUB.publish('SYSTEM_RENDER_REQUEST_FN', (gameData: any): void => {
+            const renderGrid = gameData.renderGrid as Grid<IRenderCell>
+            renderGrid.forEach((cell: IRenderCell): void => {
+                cell.backColor = '#000000'
+                cell.foreColor = '#000000'
+                cell.character = ''
+            })
+        })
         renderer.clear()
     },
     renderToGrid: (): void => {

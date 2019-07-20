@@ -1,50 +1,9 @@
 import { IRenderCell } from './rendering/renderCell'
 import { Grid } from './grid'
 import { drawStringToGrid } from './rendering/renderHelpers'
-import { IRect, Rect } from './shapes/rect'
 import { Point } from './shapes/point'
 import COLORS from './_settings/colors'
-
-const measureText = (input: string): IRect => {
-    // this rect is in tile units
-    const container = Rect.make(0,0,0,0)
-    const lines = input.split('\n')
-    let maxWidth = 0
-    container.height = lines.length
-    lines.forEach((l): void => {
-        if(l.length > maxWidth){
-            maxWidth = l.length
-        }
-    })
-    container.width = maxWidth
-    return container
-}
-
-const wrapText = (input: string, maxWidth: number = 25): string => {
-    // let's split everything up by existing lines already
-    const firstLines = input.split('\n')
-    const secondLines: string[] = []
-    firstLines.forEach((fl: string): void => {
-        const words = fl.split(' ')
-        let newLine = ''
-        words.forEach((w: string): void => {
-            if(newLine.length + 1 + w.length <= maxWidth){
-                newLine += ' ' + w
-            } else {
-                if(newLine.trim().length > 0){
-                    secondLines.push(newLine.trim())
-                }
-                newLine = w
-            }
-        })
-        if(newLine.trim().length > 0){
-            secondLines.push(newLine.trim())
-        }
-        secondLines.push('\n')
-        // we don't account for really big words currently
-    })
-    return secondLines.join('\n')
-}
+import { measureText } from './utils/textHelper'
 
 
 // we might turn this into a linked list so we can just page through it easier?
@@ -76,5 +35,4 @@ class MessageLog {
     }
 }
 
-
-export { MessageLog, wrapText }
+export { MessageLog }

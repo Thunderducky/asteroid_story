@@ -1,6 +1,7 @@
-import { MessageLog, wrapText } from '../messageLog'
+import { MessageLog } from '../messageLog'
 import { PUBSUB } from '../pubSub/pubSub'
 import { TOPICS } from '../pubSub/pubsubTopicList'
+import { wrapText } from '../utils/textHelper'
 
 // TODO: Move into game data eventually
 
