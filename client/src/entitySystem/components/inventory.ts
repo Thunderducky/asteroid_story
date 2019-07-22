@@ -1,4 +1,5 @@
 import { Entity, IComponent } from '../entity'
+import { Item } from './item'
 
 class Inventory implements IComponent{
     owner: Entity;
@@ -28,6 +29,14 @@ class Inventory implements IComponent{
             return true
         }
        
+    }
+    removeItem(item: Entity): boolean {
+        const itemIndex = this.items.indexOf(item);
+        if(itemIndex >= 0){
+            this.items.splice(itemIndex, 1)
+            return true
+        }
+        return false
     }
 }
 

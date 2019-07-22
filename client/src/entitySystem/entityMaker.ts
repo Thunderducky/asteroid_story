@@ -35,9 +35,17 @@ const EntityMaker =  {
         return orc
     },
 
-    healingPotion: (x: number, y: number): Entity => {
+    healingPotion: (x: number, y: number, amount = 10): Entity => {
         const potion = new Entity(ID_MANAGER.next(), 'Healing Potion', x, y, '!', '#880088', false)
-        potion.components.set('item', new Item(potion))
+        const healFunction = (user: Entity): boolean => {
+            if(user.components.has('fighter')){
+                const fighter = user.components.get('fighter') as Fighter;
+                fighter.heal(amount)
+                return true
+            }
+            return false
+        }
+        potion.components.set('item', new Item(potion, healFunction))
         return potion
     }
 

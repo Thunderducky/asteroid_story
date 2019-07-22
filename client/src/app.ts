@@ -27,66 +27,68 @@ import { Entity } from './entitySystem/entity'
 import { TOPICS } from './pubSub/pubsubTopicList'
 import { PathfindingSystem } from './gameSystems/pathfindingSystem'
 import { CombatSystem } from './gameSystems/combatSystem'
-import { drawStringToGrid } from './rendering/renderHelpers'
+import { drawStringToGrid, drawBoxOnGrid } from './rendering/renderHelpers'
 import COLORS from './_settings/colors'
 import { Fighter } from './entitySystem/components/fighter'
 import DEBUG from './_settings/debugSettings'
 import { Inventory } from './entitySystem/components/inventory'
-import { Rect } from './shapes/rect'
+import { Rect, IRect } from './shapes/rect'
 import { Grid } from './grid'
 import { IRenderCell } from './rendering/renderCell'
 import { wrapText } from './utils/textHelper'
 import SETTINGS from './_settings/gameSettings'
-import { Point } from './shapes/point'
+import { Point, IPoint } from './shapes/point'
+import { Item } from './entitySystem/components/item';
+import { FOVCell } from './fov';
 
 RANDOM.initializeSystem()
 
 GameData.init()
 
 
-let gameState = GameStates.PLAYERS_TURN
-
 // Mark things as being the enemy turn, not sure how to handle that one
 PUBSUB.subscribe('player_wants_to_move', (msg): void => {
     PUBSUB.publish('move', msg)
-    gameState = GameStates.ENEMY_TURN
+    GameData.gameState = GameStates.ENEMY_TURN
 })
 
 PUBSUB.subscribe('player_wants_to_pickup_item', (): void => {
     PUBSUB.publish('pickup', {actorId: GameData.entityData.player.id})
-    gameState = GameStates.ENEMY_TURN
+    GameData.gameState = GameStates.ENEMY_TURN
 })
 
 // for now you just pickup whatever you have there
-PUBSUB.subscribe('pickup', ({ actorId }): void => {
-    // console.log('TRYING TO PICKUP')
-    const entity = GameData.entityData.entities.find((e): boolean => e.id === actorId) as Entity
-    if(!entity || !entity.components.has('inventory')){
-        // Add debug flags so we can track these events
-        return // couldn't find entity
-    }
-    // console.log(entity)
-    const item = GameData.entityData.entities.find((e): boolean => {
-        return e.x === entity.x && e.y === entity.y && e.components.has('item')
-    })
-    // console.log(item)
-    // Let's look for items in that area
-    if(item){
-        const inventory = entity.components.get('inventory') as Inventory
-        if(inventory.addItem(item)){
-            // You successfully added the item
-            // not exactly the MOST performant thing, but hey :D
-            PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: `${entity.name} picked up ${item.name}`})
-            const itemIndex = GameData.entityData.entities.findIndex((e: Entity): boolean => e.id === item.id)
-            GameData.entityData.entities.splice(itemIndex, 1)
-            // We want to delete it GameData.entityData.entities.splice()
-            // console.log('The item is picked up!')
-        } else {
-            // console.log('The item was not picked up')
-            // Your inventory is probably full and you can't pick it up
+{
+    PUBSUB.subscribe('pickup', ({ actorId }): void => {
+        // console.log('TRYING TO PICKUP')
+        const entity = GameData.entityData.entities.find((e): boolean => e.id === actorId) as Entity
+        if(!entity || !entity.components.has('inventory')){
+            // Add debug flags so we can track these events
+            return // couldn't find entity
         }
-    }
-})
+        // console.log(entity)
+        const item = GameData.entityData.entities.find((e): boolean => {
+            return e.x === entity.x && e.y === entity.y && e.components.has('item')
+        })
+        // console.log(item)
+        // Let's look for items in that area
+        if(item){
+            const inventory = entity.components.get('inventory') as Inventory
+            if(inventory.addItem(item)){
+                // You successfully added the item
+                // not exactly the MOST performant thing, but hey :D
+                PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: `${entity.name} picked up ${item.name}`})
+                const itemIndex = GameData.entityData.entities.findIndex((e: Entity): boolean => e.id === item.id)
+                GameData.entityData.entities.splice(itemIndex, 1)
+                // We want to delete it GameData.entityData.entities.splice()
+                // console.log('The item is picked up!')
+            } else {
+                // console.log('The item was not picked up')
+                // Your inventory is probably full and you can't pick it up
+            }
+        }
+    })
+}
 if(DEBUG.MOUNT_WINDOW_DATA){
     const w = window as any
     w.GameData = GameData
@@ -113,14 +115,16 @@ CombatSystem.init()
 // generators are kind of really cool!
 
 // I would need to manually lower the priority on this one
-PUBSUB.subscribe('dies', ({ id }): void => {
-    if (id === GameData.entityData.player.id && !DEBUG.PLAYER_UNKILLABLE) {
-        gameState = GameStates.PLAYER_DEAD // game over man
-        PUBSUB.publish(TOPICS.MESSAGE_LOG, { 
-            text: 'Game over man!'
-        })
-    }
-})
+{
+    PUBSUB.subscribe('dies', ({ id }): void => {
+        if (id === GameData.entityData.player.id && !DEBUG.PLAYER_UNKILLABLE) {
+            GameData.gameState = GameStates.PLAYER_DEAD // game over man
+            PUBSUB.publish(TOPICS.MESSAGE_LOG, { 
+                text: 'Game over man!'
+            })
+        }
+    })
+}
 // const phraseMonitor = {
 //     // convert this to work with phrases
 //     phrase: makePhrases('something', '#0022FF').then('nothing', '#0022FF').done(),
@@ -153,8 +157,94 @@ const renderTextMonitorToGrid = (renderGrid: Grid<IRenderCell>, textMonitor: any
     w.textMonitor = textMonitor
 }
 
+// for right now these are just a series of options
+class UIMenu {
+    title: string;
+    options: string[];
+    frame: IRect;
+    constructor(title: string, options: string[], frame: IRect){
+        this.title = title
+        this.options = options
+        this.frame = frame
+        // TODO, work out color options, for now we are just going to use hardcoded colors
+    }
+}
+
+const drawMenu = (renderGrid: Grid<IRenderCell>, menu: UIMenu) => {
+    drawBoxOnGrid(renderGrid, menu.frame, true)
+    // Now let's draw the title
+    drawStringToGrid(renderGrid, menu.title, menu.frame.x + 1, menu.frame.y)
+    // draw menu along with character choices
+    const x = menu.frame.x + 3;
+    const code = 'a'.charCodeAt(0);
+    for(let i = 0; i < menu.options.length; i++){
+        const letter = String.fromCharCode(code + i);
+        const y = menu.frame.y + 3 + i
+        drawStringToGrid(renderGrid, `${letter}) ${menu.options[i]}`, x, y)
+    }
+}
+
+const getEntitiesInFovGrid = (entities: Entity[], fovGrid: Grid<FOVCell>): Entity[] => {
+    // TODO: Fill this one in
+    return entities.filter((e: Entity): boolean => {
+        const screenP = Point.subtract(e, fovGrid)
+        console.log(screenP)
+        if(fovGrid.inBoundsXY(screenP.x, screenP.y)){
+            return (fovGrid.getP(screenP).visible)
+        } else {
+            return false
+        }
+    })
+}
+
+const getClosestEntity = (origin: IPoint, entities: Entity[]): Entity => {
+    // TODO: Fill this one in
+    entities.map(e => e).sort((a,b): number => {
+        const aDistance = Math.abs(origin.x - a.x) + Math.abs(origin.y - a.y)
+        const bDistance = Math.abs(origin.x - b.x) + Math.abs(origin.y - b.y)
+        return aDistance - bDistance
+    })
+    return entities[0]
+}
+
+// Let's make a results hash
+
+const cast_lightening = (msg: any) => {
+    const caster = msg.caster as Entity
+    const damage = msg.damage as number;
+    const maximumRange = msg.maximumRange as number;
+
+    // So what happens?
+    const entities = GameData.entityData.entities.filter(e => e.id !== caster.id && e.components.has('fighter'))
+    const fovGrid = GameData.fov.grid;
+
+    if(entities.length > 0){
+        const targets = getEntitiesInFovGrid(entities, fovGrid)
+        if(targets.length === 0){
+            return false
+        }
+
+        const target = getClosestEntity(caster, targets)
+        if(target){
+            // something got consumed
+            // let's attack it
+            const fighter = target.components.get('fighter') as Fighter
+            fighter.takeDamage(damage)
+            return true
+        } else {
+            return false
+        }
+    } else {
+        // can't shoot this one... :(
+            return false
+    }
+    
+    // Let's find the closest entity to the caster in range, we are unnecessarily relying on an fov map that is the player, after all, electricity can happen to anyone
+}
+
+const uiMenu = new UIMenu("Inventory", ["An option", 'another option', 'the very third option'], Rect.make(45,5,30,30))
+
 // Let's handle some death sequences in here as well
-gameState = GameStates.PLAYERS_TURN
 loadImage('assets/out.png').then((image: any): void => {
     RenderSystem.init(image)
 
@@ -165,9 +255,17 @@ loadImage('assets/out.png').then((image: any): void => {
 
         // TODO: slowly let the game keep playing out if the player is dead, like let it flip
         // every so often in clock cycles
-        if (gameState === GameStates.PLAYERS_TURN) {
+        if (GameData.gameState === GameStates.PLAYERS_TURN) {
             InputSystem.handleInput() // Translate player intention into system input
-        } else if (gameState === GameStates.ENEMY_TURN) {
+            if(InputSystem.newKeyPress('i')){
+                uiMenu.title = "Use Item"
+                GameData.gameState = GameStates.SHOW_INVENTORY
+            }
+            else if(InputSystem.newKeyPress('o')){
+                uiMenu.title = "Drop Item"
+                GameData.gameState = GameStates.DROP_INVENTORY
+            }
+        } else if (GameData.gameState === GameStates.ENEMY_TURN) {
             // Process non player entities
             if(!DEBUG.SKIP_ENEMY_TURN){
                 GameData.entityData.entities.filter((e: Entity): boolean => e.components.has('ai')).forEach((entity: Entity): void => {
@@ -178,9 +276,65 @@ loadImage('assets/out.png').then((image: any): void => {
                 })
             }
 
-            if (gameState === GameStates.ENEMY_TURN) {
-                gameState = GameStates.PLAYERS_TURN
+            if (GameData.gameState === GameStates.ENEMY_TURN) {
+                GameData.gameState = GameStates.PLAYERS_TURN
             }
+        }
+        else if(GameData.gameState === GameStates.SHOW_INVENTORY){
+            const inventory = GameData.entityData.player.components.get('inventory') as Inventory
+            // let's check if any of our keys got pressed
+            const aCode = 'a'.charCodeAt(0);
+            let selected = -1
+            for(let i = 0; i < uiMenu.options.length; i++){
+                const letter = String.fromCharCode(aCode + i);
+                if(InputSystem.newKeyPress(letter)){
+                    selected = i;
+                    break;
+                }
+            }
+            if(selected != -1){
+                // Run the use command for that item in the inventory
+                const item = inventory.items[selected].components.get('item') as Item;
+                if(item.use(GameData.entityData.player)){
+                    // item was consumed
+                    // we'll come up with some better systems for this
+                    // let's remove the item from inventroy
+                    inventory.removeItem(item.owner)
+                }
+                GameData.gameState = GameStates.ENEMY_TURN
+            }
+            if(InputSystem.newKeyPress('escape')){
+                GameData.gameState = GameStates.PLAYERS_TURN
+            }
+            // wait for a menu choice
+        } else if(GameData.gameState === GameStates.DROP_INVENTORY){
+            const inventory = GameData.entityData.player.components.get('inventory') as Inventory
+            // let's check if any of our keys got pressed
+            const aCode = 'a'.charCodeAt(0);
+            let selected = -1
+            for(let i = 0; i < uiMenu.options.length; i++){
+                const letter = String.fromCharCode(aCode + i);
+                if(InputSystem.newKeyPress(letter)){
+                    selected = i;
+                    break;
+                }
+            }
+            if(selected != -1){
+                // Run the use command for that item in the inventory
+                console.log("tried to drop")
+                // remove it from inventory
+                const item = inventory.items[selected];
+                inventory.removeItem(item)
+                // let's put it down here with the same coordinates as the player
+                item.x = inventory.owner.x
+                item.y = inventory.owner.y
+                GameData.entityData.entities.push(item)
+                GameData.gameState = GameStates.ENEMY_TURN
+            }
+            if(InputSystem.newKeyPress('escape')){
+                GameData.gameState = GameStates.PLAYERS_TURN
+            }
+            // wait for a menu choice
         }
         // Move a lot of this into a UI system that inspects things, and also keeps track of ui state
 
@@ -244,7 +398,15 @@ loadImage('assets/out.png').then((image: any): void => {
             }
         }
         
-        renderTextMonitorToGrid(renderGrid, textMonitor)
+        if(GameData.gameState === GameStates.SHOW_INVENTORY || GameData.gameState === GameStates.DROP_INVENTORY)
+        {
+            const playerInventory = GameData.entityData.player.components.get('inventory') as Inventory;
+            uiMenu.options = playerInventory.items.map(n => n.name);
+            renderTextMonitorToGrid(renderGrid, textMonitor)
+            drawMenu(renderGrid, uiMenu)
+        }
+        
+        
         RenderSystem.render()
         InputSystem.reset()
         window.requestAnimationFrame(loop)

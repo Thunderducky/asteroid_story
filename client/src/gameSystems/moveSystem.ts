@@ -8,6 +8,9 @@ import { IMoveMessage } from '../pubSub/messageTypes'
 // New law, no include listeners by default, they always have to be turned on
 // TODO: Improve this
 
+/**
+ * This system is responsible for processing moves, including preventing invalid moves
+ */
 const MoveSystem = {
     init: (): void => {
         // Start listening for events

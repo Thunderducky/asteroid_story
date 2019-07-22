@@ -15,7 +15,7 @@ const DEBUG: Hash<boolean> = {
     SHOW_UNEXPLORED: true,
     SHOW_COLOR_BAR: false,
     SKIP_ENTITY_PLACEMENT: false,
-    SKIP_ENEMY_TURN: true,
+    SKIP_ENEMY_TURN: false,
     PLAYER_UNKILLABLE: true,
     MOUNT_WINDOW_DATA: false
 }
