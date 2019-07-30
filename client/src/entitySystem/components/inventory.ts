@@ -31,7 +31,7 @@ class Inventory implements IComponent{
        
     }
     removeItem(item: Entity): boolean {
-        const itemIndex = this.items.indexOf(item);
+        const itemIndex = this.items.indexOf(item)
         if(itemIndex >= 0){
             this.items.splice(itemIndex, 1)
             return true

@@ -37,9 +37,8 @@ import { Grid } from './grid'
 import { IRenderCell } from './rendering/renderCell'
 import { wrapText } from './utils/textHelper'
 import SETTINGS from './_settings/gameSettings'
-import { Point, IPoint } from './shapes/point'
-import { Item } from './entitySystem/components/item';
-import { FOVCell } from './fov';
+import { Point } from './shapes/point'
+import { Item } from './entitySystem/components/item'
 
 RANDOM.initializeSystem()
 
@@ -170,79 +169,78 @@ class UIMenu {
     }
 }
 
-const drawMenu = (renderGrid: Grid<IRenderCell>, menu: UIMenu) => {
+const drawMenu = (renderGrid: Grid<IRenderCell>, menu: UIMenu): void => {
     drawBoxOnGrid(renderGrid, menu.frame, true)
     // Now let's draw the title
     drawStringToGrid(renderGrid, menu.title, menu.frame.x + 1, menu.frame.y)
     // draw menu along with character choices
-    const x = menu.frame.x + 3;
-    const code = 'a'.charCodeAt(0);
+    const x = menu.frame.x + 3
+    const code = 'a'.charCodeAt(0)
     for(let i = 0; i < menu.options.length; i++){
-        const letter = String.fromCharCode(code + i);
+        const letter = String.fromCharCode(code + i)
         const y = menu.frame.y + 3 + i
         drawStringToGrid(renderGrid, `${letter}) ${menu.options[i]}`, x, y)
     }
 }
 
-const getEntitiesInFovGrid = (entities: Entity[], fovGrid: Grid<FOVCell>): Entity[] => {
-    // TODO: Fill this one in
-    return entities.filter((e: Entity): boolean => {
-        const screenP = Point.subtract(e, fovGrid)
-        console.log(screenP)
-        if(fovGrid.inBoundsXY(screenP.x, screenP.y)){
-            return (fovGrid.getP(screenP).visible)
-        } else {
-            return false
-        }
-    })
-}
+// const getEntitiesInFovGrid = (entities: Entity[], fovGrid: Grid<FOVCell>): Entity[] => {
+//     // TODO: Fill this one in
+//     return entities.filter((e: Entity): boolean => {
+//         const screenP = Point.subtract(e, fovGrid)
+//         if(fovGrid.inBoundsXY(screenP.x, screenP.y)){
+//             return (fovGrid.getP(screenP).visible)
+//         } else {
+//             return false
+//         }
+//     })
+// }
 
-const getClosestEntity = (origin: IPoint, entities: Entity[]): Entity => {
-    // TODO: Fill this one in
-    entities.map(e => e).sort((a,b): number => {
-        const aDistance = Math.abs(origin.x - a.x) + Math.abs(origin.y - a.y)
-        const bDistance = Math.abs(origin.x - b.x) + Math.abs(origin.y - b.y)
-        return aDistance - bDistance
-    })
-    return entities[0]
-}
+// const getClosestEntity = (origin: IPoint, entities: Entity[]): Entity => {
+//     // TODO: Fill this one in
+//     entities.map((e: Entity): Entity => e).sort((a,b): number => {
+//         const aDistance = Math.abs(origin.x - a.x) + Math.abs(origin.y - a.y)
+//         const bDistance = Math.abs(origin.x - b.x) + Math.abs(origin.y - b.y)
+//         return aDistance - bDistance
+//     })
+//     return entities[0]
+// }
 
 // Let's make a results hash
 
-const cast_lightening = (msg: any) => {
-    const caster = msg.caster as Entity
-    const damage = msg.damage as number;
-    const maximumRange = msg.maximumRange as number;
+// const cast_lightening = (msg: any): boolean => {
+//     const caster = msg.caster as Entity
+//     const damage = msg.damage as number
+//     //const maximumRange = msg.maximumRange as number
 
-    // So what happens?
-    const entities = GameData.entityData.entities.filter(e => e.id !== caster.id && e.components.has('fighter'))
-    const fovGrid = GameData.fov.grid;
+//     // So what happens?
+//     const entities = GameData.entityData.entities.filter((e: Entity): boolean => e.id !== caster.id && e.components.has('fighter'))
+//     const fovGrid = GameData.fov.grid
 
-    if(entities.length > 0){
-        const targets = getEntitiesInFovGrid(entities, fovGrid)
-        if(targets.length === 0){
-            return false
-        }
+//     if(entities.length > 0){
+//         const targets = getEntitiesInFovGrid(entities, fovGrid)
+//         if(targets.length === 0){
+//             return false
+//         }
 
-        const target = getClosestEntity(caster, targets)
-        if(target){
-            // something got consumed
-            // let's attack it
-            const fighter = target.components.get('fighter') as Fighter
-            fighter.takeDamage(damage)
-            return true
-        } else {
-            return false
-        }
-    } else {
-        // can't shoot this one... :(
-            return false
-    }
+//         const target = getClosestEntity(caster, targets)
+//         if(target){
+//             // something got consumed
+//             // let's attack it
+//             const fighter = target.components.get('fighter') as Fighter
+//             fighter.takeDamage(damage)
+//             return true
+//         } else {
+//             return false
+//         }
+//     } else {
+//         // can't shoot this one... :(
+//         return false
+//     }
     
-    // Let's find the closest entity to the caster in range, we are unnecessarily relying on an fov map that is the player, after all, electricity can happen to anyone
-}
+//     // Let's find the closest entity to the caster in range, we are unnecessarily relying on an fov map that is the player, after all, electricity can happen to anyone
+// }
 
-const uiMenu = new UIMenu("Inventory", ["An option", 'another option', 'the very third option'], Rect.make(45,5,30,30))
+const uiMenu = new UIMenu('Inventory', ['An option', 'another option', 'the very third option'], Rect.make(45,5,30,30))
 
 // Let's handle some death sequences in here as well
 loadImage('assets/out.png').then((image: any): void => {
@@ -258,11 +256,11 @@ loadImage('assets/out.png').then((image: any): void => {
         if (GameData.gameState === GameStates.PLAYERS_TURN) {
             InputSystem.handleInput() // Translate player intention into system input
             if(InputSystem.newKeyPress('i')){
-                uiMenu.title = "Use Item"
+                uiMenu.title = 'Use Item'
                 GameData.gameState = GameStates.SHOW_INVENTORY
             }
             else if(InputSystem.newKeyPress('o')){
-                uiMenu.title = "Drop Item"
+                uiMenu.title = 'Drop Item'
                 GameData.gameState = GameStates.DROP_INVENTORY
             }
         } else if (GameData.gameState === GameStates.ENEMY_TURN) {
@@ -283,18 +281,18 @@ loadImage('assets/out.png').then((image: any): void => {
         else if(GameData.gameState === GameStates.SHOW_INVENTORY){
             const inventory = GameData.entityData.player.components.get('inventory') as Inventory
             // let's check if any of our keys got pressed
-            const aCode = 'a'.charCodeAt(0);
+            const aCode = 'a'.charCodeAt(0)
             let selected = -1
             for(let i = 0; i < uiMenu.options.length; i++){
-                const letter = String.fromCharCode(aCode + i);
+                const letter = String.fromCharCode(aCode + i)
                 if(InputSystem.newKeyPress(letter)){
-                    selected = i;
-                    break;
+                    selected = i
+                    break
                 }
             }
             if(selected != -1){
                 // Run the use command for that item in the inventory
-                const item = inventory.items[selected].components.get('item') as Item;
+                const item = inventory.items[selected].components.get('item') as Item
                 if(item.use(GameData.entityData.player)){
                     // item was consumed
                     // we'll come up with some better systems for this
@@ -310,20 +308,19 @@ loadImage('assets/out.png').then((image: any): void => {
         } else if(GameData.gameState === GameStates.DROP_INVENTORY){
             const inventory = GameData.entityData.player.components.get('inventory') as Inventory
             // let's check if any of our keys got pressed
-            const aCode = 'a'.charCodeAt(0);
+            const aCode = 'a'.charCodeAt(0)
             let selected = -1
             for(let i = 0; i < uiMenu.options.length; i++){
-                const letter = String.fromCharCode(aCode + i);
+                const letter = String.fromCharCode(aCode + i)
                 if(InputSystem.newKeyPress(letter)){
-                    selected = i;
-                    break;
+                    selected = i
+                    break
                 }
             }
             if(selected != -1){
                 // Run the use command for that item in the inventory
-                console.log("tried to drop")
                 // remove it from inventory
-                const item = inventory.items[selected];
+                const item = inventory.items[selected]
                 inventory.removeItem(item)
                 // let's put it down here with the same coordinates as the player
                 item.x = inventory.owner.x
@@ -400,8 +397,8 @@ loadImage('assets/out.png').then((image: any): void => {
         
         if(GameData.gameState === GameStates.SHOW_INVENTORY || GameData.gameState === GameStates.DROP_INVENTORY)
         {
-            const playerInventory = GameData.entityData.player.components.get('inventory') as Inventory;
-            uiMenu.options = playerInventory.items.map(n => n.name);
+            const playerInventory = GameData.entityData.player.components.get('inventory') as Inventory
+            uiMenu.options = playerInventory.items.map((n: Entity): string => n.name)
             renderTextMonitorToGrid(renderGrid, textMonitor)
             drawMenu(renderGrid, uiMenu)
         }

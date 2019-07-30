@@ -39,7 +39,7 @@ const EntityMaker =  {
         const potion = new Entity(ID_MANAGER.next(), 'Healing Potion', x, y, '!', '#880088', false)
         const healFunction = (user: Entity): boolean => {
             if(user.components.has('fighter')){
-                const fighter = user.components.get('fighter') as Fighter;
+                const fighter = user.components.get('fighter') as Fighter
                 fighter.heal(amount)
                 return true
             }

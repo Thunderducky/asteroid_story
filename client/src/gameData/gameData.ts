@@ -12,7 +12,7 @@ import { Entity } from '../entitySystem/entity'
 import { MessageLog } from '../messageLog'
 import { EntityMaker } from '../entitySystem/entityMaker'
 import { IMoveMessage } from '../pubSub/messageTypes'
-import GameStates from '../gameStates';
+import GameStates from '../gameStates'
 
 // This is where we would export it into it's own data init functions
 const fovGrid = new Grid<FOVCell>(SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)

@@ -1,5 +1,5 @@
 import { Entity, IComponent } from '../entity'
-import { PUBSUB } from '../../pubSub/pubSub';
+import { PUBSUB } from '../../pubSub/pubSub'
 
 // We'll look at giving fighter a component interface when necessary
 class Fighter implements IComponent {
