@@ -35,10 +35,9 @@ const CombatSystem = {
             PUBSUB.publish(TOPICS.MESSAGE_LOG, { 
                 text: `${attacker.name} attacks ${defender.name} for ${damage} damage`
             })
-
-            if(bFighter.hp < 0){
-                PUBSUB.publish('dies', { id: defender.id })
-            }
+            // if(bFighter.hp < 0){
+            //     PUBSUB.publish('dies', { id: defender.id })
+            // }
         })
 
         PUBSUB.subscribe('dies', ({ id }): void => {

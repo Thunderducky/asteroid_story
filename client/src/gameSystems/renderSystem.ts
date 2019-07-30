@@ -4,6 +4,8 @@ import { drawBoxOnGrid, drawStringToGrid } from '../rendering/renderHelpers'
 import COLORS from '../_settings/colors'
 import { PUBSUB } from '../pubSub/pubSub'
 import { CanvasRenderer } from '../rendering/canvasRenderer'
+import { IRenderCell } from '../rendering/renderCell'
+import { Grid } from '../grid'
 
 // Let's write a function that will draw a phrase, allowing us to color it a specific way if we like
 
@@ -18,7 +20,18 @@ const RenderSystem = {
         })
         
     },
-    render: (): void => {
+    clear: (): void => {
+        PUBSUB.publish('SYSTEM_RENDER_REQUEST_FN', (gameData: any): void => {
+            const renderGrid = gameData.renderGrid as Grid<IRenderCell>
+            renderGrid.forEach((cell: IRenderCell): void => {
+                cell.backColor = '#000000'
+                cell.foreColor = '#000000'
+                cell.character = ''
+            })
+        })
+        renderer.clear()
+    },
+    renderToGrid: (): void => {
         const renderFn = (gameData: any): void => {
             const cameraSizer = Rect.copy(gameData.cameraFrame)
             cameraSizer.x = 0
@@ -40,13 +53,16 @@ const RenderSystem = {
             gameData.messageLog.renderToGrid(messageLogRenderGrid)
             drawStringToGrid(messageLogRenderGrid, 'message log', 2, 0, COLORS.palette.white, COLORS.palette.black)
             
-            // const phrases = makePhrases("something ", "#FFFFFF").then("blue ", "#0000FF").then("red ", "#FF0000").done();
-            // drawPhrasesToGrid(gameData.renderGrid, phrases, 0, 0)
-            renderer.clear()
         
-            renderer.render(gameData.renderGrid)
+            
         }
         PUBSUB.publish('SYSTEM_RENDER_REQUEST_FN', renderFn)
+    },
+    render: (): void => {
+        PUBSUB.publish('SYSTEM_RENDER_REQUEST_FN', (gameData: any): void => {
+            renderer.render(gameData.renderGrid)
+        })
+        
     }
 }
 

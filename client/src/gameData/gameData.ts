@@ -12,6 +12,7 @@ import { Entity } from '../entitySystem/entity'
 import { MessageLog } from '../messageLog'
 import { EntityMaker } from '../entitySystem/entityMaker'
 import { IMoveMessage } from '../pubSub/messageTypes'
+import GameStates from '../gameStates'
 
 // This is where we would export it into it's own data init functions
 const fovGrid = new Grid<FOVCell>(SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)
@@ -53,9 +54,10 @@ const rooms: IRect[] = []
 const airlocks: IRect[] = []
 const cameraFrame = Rect.make(0,0, SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)
 const messageLogFrame = Rect.make(SETTINGS.CAMERA_WIDTH ,0, SETTINGS.SCREEN_WIDTH - SETTINGS.CAMERA_WIDTH, SETTINGS.CAMERA_HEIGHT)
-
+const gameState = GameStates.PLAYERS_TURN
 const moves: IMoveMessage[] = []
 const GameData = {
+    gameState,
     // Our normal core settings
     canvas,
     fov: {
