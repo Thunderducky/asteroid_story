@@ -228,17 +228,23 @@ PUBSUB.subscribe('ligthening_strike', (msg): void => {
         // let's pick one
         const fighterOwner = fighterOwners[RANDOM.nextInt(0, fighterOwners.length - 1)]
         const fighter = fighterOwner.components.get("fighter") as Fighter
+        PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: `ligtening leaps from your hand and strikes the ${fighterOwner.name} for ${damage} points of damage!`})
         fighter.takeDamage(damage)
+    } else {
+        PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: `the lightening fizzles in your hand`})
     }
 })
 
 PUBSUB.subscribe('explosion', (msg): void => {
     const {center, radius, damage} = msg;
     const spaceRect = Rect.make(center.x - radius, center.y - radius, radius* 2 + 1, radius * 2 + 1)
+    PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: `you launch the fireball!`})
     GameData.entityData.entities.filter(e => e.components.has("fighter")).forEach(e => {
         if(Rect.containsXY(spaceRect, e.x, e.y)){
             console.log(e.name)
             const fighter = e.components.get("fighter") as Fighter
+            
+            PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: `the explosion hits the ${fighter.owner.name} for ${damage} points of damage!`})
             fighter.takeDamage(damage)
             if(fighter.hp <= 0){
                 PUBSUB.publish("dies", {id: fighter.owner.id})
@@ -250,6 +256,7 @@ PUBSUB.subscribe('explosion', (msg): void => {
 // let's force a file scroll
 const inv = GameData.entityData.player.components.get('inventory') as Inventory;
 inv.addItem(EntityMaker.lighteningScroll(0,0))
+inv.addItem(EntityMaker.fireballScroll(0,0))
 
 // Let's handle some death sequences in here as well
 loadImage('assets/out.png').then((image: any): void => {

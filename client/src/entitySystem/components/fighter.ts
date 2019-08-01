@@ -18,7 +18,7 @@ class Fighter implements IComponent {
 
     takeDamage(amount: number): number{
         this.hp -= amount
-        if(this.hp < 0){
+        if(this.hp <= 0){
             PUBSUB.publish('dies', { id: this.owner.id })
         }
         return amount
