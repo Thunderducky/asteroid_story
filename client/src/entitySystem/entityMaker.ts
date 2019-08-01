@@ -68,6 +68,7 @@ const EntityMaker =  {
         return scroll
     },
 
+    // TODO: Write target validator functions
     fireballScroll: (x: number, y: number, damage = 10, radius = 5, range = 5): Entity => {
         const scroll = new Entity(ID_MANAGER.next(), 'Fireball Scroll', x, y, '!', '#FF4444', false)
         const fireballScrollFn = (user: Entity, worldPoint: IPoint): boolean => {
@@ -81,6 +82,21 @@ const EntityMaker =  {
             return true
         }
         const item = new Item(scroll, fireballScrollFn)
+        item.needsTarget = true
+        scroll.components.set('item', item)
+        return scroll
+    },
+
+    confusionScroll: (x: number, y: number, range = 5): Entity => {
+        const scroll = new Entity(ID_MANAGER.next(), 'Confusion Scroll', x, y, '!', '#222222', false)
+        const confusionScrollFn = (user: Entity, worldPoint: IPoint): boolean => {
+            // TODO: Don't cast if no valid targets
+            PUBSUB.publish('confusion', {
+                target: Point.copy(worldPoint)
+            })
+            return true
+        }
+        const item = new Item(scroll, confusionScrollFn)
         item.needsTarget = true
         scroll.components.set('item', item)
         return scroll

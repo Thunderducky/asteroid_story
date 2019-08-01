@@ -1,6 +1,7 @@
 import { Entity, IComponent } from '../entity'
 import { IPoint } from '../../shapes/point';
 
+// Might want to make an area of effect component
 class Item implements IComponent{
     owner: Entity;
     useFn: Function;

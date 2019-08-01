@@ -22,7 +22,7 @@ import { InputSystem } from './gameSystems/inputSystem'
 import { EntityPlacementSystem } from './gameSystems/entityPlacementSystem'
 import { MessageLogSystem } from './gameSystems/messageLogSystem'
 import { MapBuilderSystem } from './gameSystems/mapBuilderSystem'
-import { BasicMonster } from './entitySystem/components/ai'
+import { BasicMonster, ConfusedMonster } from './entitySystem/components/ai'
 import { Entity } from './entitySystem/entity'
 import { TOPICS } from './pubSub/pubsubTopicList'
 import { PathfindingSystem } from './gameSystems/pathfindingSystem'
@@ -253,10 +253,29 @@ PUBSUB.subscribe('explosion', (msg): void => {
     })
 })
 
+PUBSUB.subscribe('confusion', (msg): void => {
+    const { target } = msg;
+    PUBSUB.publish(TOPICS.MESSAGE_LOG, {text: `you cast confuse!`})
+    const targetEntity = GameData.entityData.entities.filter(e => e.components.has("ai") ).find(e => e.x === target.x && e.y === target.y)
+    if(targetEntity){
+        const entity = targetEntity as Entity;
+        entity.components.set('ai', new ConfusedMonster(entity))
+        entity.name = 'confused ' + entity.name
+        entity.character = '?' 
+    }
+})
+
 // let's force a file scroll
-const inv = GameData.entityData.player.components.get('inventory') as Inventory;
-inv.addItem(EntityMaker.lighteningScroll(0,0))
-inv.addItem(EntityMaker.fireballScroll(0,0))
+// const inv = GameData.entityData.player.components.get('inventory') as Inventory;
+// inv.addItem(EntityMaker.lighteningScroll(0,0))
+// inv.addItem(EntityMaker.fireballScroll(0,0))
+// inv.addItem(EntityMaker.confusionScroll(0,0))
+
+// // lets make a confused or who can act
+// const spaceOrc = EntityMaker.spaceOrc(GameData.entityData.player.x, GameData.entityData.player.y - 2)
+// GameData.entityData.entities.push(spaceOrc)
+
+// PUBSUB.publish('confusion', {target: Point.copy(spaceOrc)})
 
 // Let's handle some death sequences in here as well
 loadImage('assets/out.png').then((image: any): void => {
@@ -447,7 +466,7 @@ loadImage('assets/out.png').then((image: any): void => {
                         
                     }
                     if(GameData.gameState === GameStates.TARGETING){
-                        const squareRadius = 2
+                        const squareRadius = targetingItem.radius || 0
                         // let's draw the cell the mouse is for now
                         // Red background white x
                         const cell = renderGrid.getP(screenP)

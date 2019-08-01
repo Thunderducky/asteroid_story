@@ -35,8 +35,23 @@ const placeEntitiesInRoom = (room: IRect, entities: Entity[]): void => {
         if(!entities.some((e: Entity): boolean => e.x === randomX && e.y === randomY)){
             // Roll for what kind we will put here
             // place a healing potion
-            const healingPotion = EntityMaker.healingPotion(randomX, randomY)
-            entities.push(healingPotion)
+            // 
+            const itemChance = RANDOM.nextInt(0,99)
+            if(itemChance < 70){
+                const healingPotion = EntityMaker.healingPotion(randomX, randomY)
+                entities.push(healingPotion)
+            } else if(itemChance < 80){
+                const scroll = EntityMaker.fireballScroll(randomX, randomY)
+                entities.push(scroll)
+            } else if(itemChance < 90) {
+                const scroll = EntityMaker.lighteningScroll(randomX, randomY)
+                entities.push(scroll)
+            } else if(itemChance < 90) {
+                const scroll = EntityMaker.confusionScroll(randomX, randomY)
+                entities.push(scroll)
+            }
+            // TODO: ADD CONFUSION EFFECT
+            
         }
     }
     
