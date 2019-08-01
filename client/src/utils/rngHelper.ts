@@ -53,6 +53,11 @@ const RANDOM = {
         }
         return this._generator()
     },
+    /**
+     * 
+     * @param min inclusive
+     * @param max inclusive
+     */
     nextInt(min: number, max: number): number{
         return Math.floor(this.next() * (max - min + 1)) + min
     },

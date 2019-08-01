@@ -6,6 +6,8 @@ import { BasicMonster } from './components/ai'
 import { RenderOrder } from '../rendering/renderCell'
 import { Inventory } from './components/inventory'
 import { Item } from './components/item'
+import { PUBSUB } from '../pubSub/pubSub';
+import { IPoint, Point } from '../shapes/point';
 const EntityMaker =  {
     // ACTORS
     player: (): Entity => {
@@ -47,6 +49,41 @@ const EntityMaker =  {
         }
         potion.components.set('item', new Item(potion, healFunction))
         return potion
+    },
+
+    lighteningScroll: (x: number, y: number, damage = 10, range = 5): Entity => {
+        const scroll = new Entity(ID_MANAGER.next(), 'Lightening Scroll', x, y, '!', '#FF77FF', false)
+        const lightentingScrollFn = (user: Entity, worldPoint: IPoint): boolean => {
+            // TODO: Don't cast if no valid targets
+            PUBSUB.publish('ligthening_strike', {
+                origin: Point.copy(user),
+                range,
+                damage,
+                casterId: user.id
+            })
+            return true
+        }
+        const item = new Item(scroll, lightentingScrollFn)
+        scroll.components.set('item', item)
+        return scroll
+    },
+
+    fireballScroll: (x: number, y: number, damage = 10, radius = 5, range = 5): Entity => {
+        const scroll = new Entity(ID_MANAGER.next(), 'Fireball Scroll', x, y, '!', '#FF4444', false)
+        const fireballScrollFn = (user: Entity, worldPoint: IPoint): boolean => {
+            // TODO: Don't cast if no valid targets
+            PUBSUB.publish('explosion', {
+                center: Point.copy(worldPoint),
+                range,
+                radius,
+                damage
+            })
+            return true
+        }
+        const item = new Item(scroll, fireballScrollFn)
+        item.needsTarget = true
+        scroll.components.set('item', item)
+        return scroll
     }
 
     // ITEMS

@@ -11,13 +11,13 @@ const DEBUG: Hash<boolean> = {
     ENABLE_CLIPPING: false,
     DEBUG_DRAW: false,
     STAGE_MAP_GENERATORS: false, // We will manually progress the level generator,
-    ALWAYS_SHOW_ENTITIES: false,
-    SHOW_UNEXPLORED: false,
+    ALWAYS_SHOW_ENTITIES: true,
+    SHOW_UNEXPLORED: true,
     SHOW_COLOR_BAR: false,
     SKIP_ENTITY_PLACEMENT: false,
-    SKIP_ENEMY_TURN: false,
-    PLAYER_UNKILLABLE: false,
-    MOUNT_WINDOW_DATA: false
+    SKIP_ENEMY_TURN: true,
+    PLAYER_UNKILLABLE: true,
+    MOUNT_WINDOW_DATA: true
 }
 
 

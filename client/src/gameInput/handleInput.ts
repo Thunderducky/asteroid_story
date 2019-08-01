@@ -81,6 +81,7 @@ export const handleInput = (km: KeyboardMonitor, player: Entity): void => {
     for(let i = 0; i < MOVE_KEYS.length; i++){
         const key = MOVE_KEYS[i]
         if(newKeyPress(km, key, true)){
+            console.log(key)
             if(CROSS_KEYS.includes(key)){
                 PUBSUB.publish('player_wants_to_move', { id: player.id, delta: moveKeyMap.get(key) })
                 break

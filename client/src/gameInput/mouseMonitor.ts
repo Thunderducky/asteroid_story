@@ -81,6 +81,7 @@ class MouseMonitor {
             const rect = e.target.getBoundingClientRect()
             const position = Point.make(e.clientX - rect.left, e.clientY - rect.top)
             this.halfClicks.push({ position, isDown: true })
+            this.isDown = true
         })
         // mouse button is raised
         element.addEventListener('mouseup', (e: any): void => {
@@ -91,6 +92,7 @@ class MouseMonitor {
             const rect = e.target.getBoundingClientRect()
             const position = Point.make(e.clientX - rect.left, e.clientY - rect.top)
             this.halfClicks.push({ position, isDown: false })
+            this.isDown = false
         })
 
         return this

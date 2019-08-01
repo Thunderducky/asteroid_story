@@ -37,8 +37,9 @@ import { Grid } from './grid'
 import { IRenderCell } from './rendering/renderCell'
 import { wrapText } from './utils/textHelper'
 import SETTINGS from './_settings/gameSettings'
-import { Point } from './shapes/point'
+import { Point, IPoint } from './shapes/point'
 import { Item } from './entitySystem/components/item'
+import { EntityMaker } from './entitySystem/entityMaker';
 
 RANDOM.initializeSystem()
 
@@ -183,64 +184,72 @@ const drawMenu = (renderGrid: Grid<IRenderCell>, menu: UIMenu): void => {
     }
 }
 
-// const getEntitiesInFovGrid = (entities: Entity[], fovGrid: Grid<FOVCell>): Entity[] => {
-//     // TODO: Fill this one in
-//     return entities.filter((e: Entity): boolean => {
-//         const screenP = Point.subtract(e, fovGrid)
-//         if(fovGrid.inBoundsXY(screenP.x, screenP.y)){
-//             return (fovGrid.getP(screenP).visible)
-//         } else {
-//             return false
-//         }
-//     })
-// }
-
-// const getClosestEntity = (origin: IPoint, entities: Entity[]): Entity => {
-//     // TODO: Fill this one in
-//     entities.map((e: Entity): Entity => e).sort((a,b): number => {
-//         const aDistance = Math.abs(origin.x - a.x) + Math.abs(origin.y - a.y)
-//         const bDistance = Math.abs(origin.x - b.x) + Math.abs(origin.y - b.y)
-//         return aDistance - bDistance
-//     })
-//     return entities[0]
-// }
-
-// Let's make a results hash
-
-// const cast_lightening = (msg: any): boolean => {
-//     const caster = msg.caster as Entity
-//     const damage = msg.damage as number
-//     //const maximumRange = msg.maximumRange as number
-
-//     // So what happens?
-//     const entities = GameData.entityData.entities.filter((e: Entity): boolean => e.id !== caster.id && e.components.has('fighter'))
-//     const fovGrid = GameData.fov.grid
-
-//     if(entities.length > 0){
-//         const targets = getEntitiesInFovGrid(entities, fovGrid)
-//         if(targets.length === 0){
-//             return false
-//         }
-
-//         const target = getClosestEntity(caster, targets)
-//         if(target){
-//             // something got consumed
-//             // let's attack it
-//             const fighter = target.components.get('fighter') as Fighter
-//             fighter.takeDamage(damage)
-//             return true
-//         } else {
-//             return false
-//         }
-//     } else {
-//         // can't shoot this one... :(
-//         return false
-//     }
-    
-//     // Let's find the closest entity to the caster in range, we are unnecessarily relying on an fov map that is the player, after all, electricity can happen to anyone
-// }
-
 const uiMenu = new UIMenu('Inventory', ['An option', 'another option', 'the very third option'], Rect.make(45,5,30,30))
+
+let targetingItem: any = null
+
+targetingItem = {
+    use: (worldPoint: IPoint): void => {
+        PUBSUB.publish('explosion', {center: worldPoint, radius: 2, damage: 5})
+    },
+    isTargetValid: (worldPoint: IPoint): boolean => {
+        const fg = GameData.fov.grid
+        const sp = Point.subtract(worldPoint, fg)
+        console.log(fg, sp)
+        return fg.inBoundsXY(sp.x, sp.y) && fg.getXY(sp.x, sp.y).visible
+    }
+}
+
+PUBSUB.subscribe('request_user_targeting', (msg): void => {
+    targetingItem = msg.entity
+    GameData.gameState = GameStates.TARGETING
+})
+
+PUBSUB.subscribe('ligthening_strike', (msg): void => {
+    const {origin, range, damage, casterId} = msg
+    const spaceRect = Rect.make(origin.x - range, origin.y - range, range* 2 + 1, range * 2 + 1)
+    const fighterOwners = [] as Entity[]
+    let fighterDistance = Infinity
+    GameData.entityData.entities.filter(e => e.components.has("fighter")).forEach(e => {
+        if(Rect.containsXY(spaceRect, e.x, e.y)){
+            if(e.id === casterId){
+                return false
+            }
+            const distance = Point.manhattanDistance(e, origin)
+            if(distance < fighterDistance){
+                fighterOwners.length = 0
+                fighterOwners.push(e)
+            } else if(distance === fighterDistance) {
+                fighterOwners.push(e)
+            }
+        }   
+    })
+    if(fighterOwners.length > 0){
+        // let's pick one
+        const fighterOwner = fighterOwners[RANDOM.nextInt(0, fighterOwners.length - 1)]
+        const fighter = fighterOwner.components.get("fighter") as Fighter
+        fighter.takeDamage(damage)
+    }
+})
+
+PUBSUB.subscribe('explosion', (msg): void => {
+    const {center, radius, damage} = msg;
+    const spaceRect = Rect.make(center.x - radius, center.y - radius, radius* 2 + 1, radius * 2 + 1)
+    GameData.entityData.entities.filter(e => e.components.has("fighter")).forEach(e => {
+        if(Rect.containsXY(spaceRect, e.x, e.y)){
+            console.log(e.name)
+            const fighter = e.components.get("fighter") as Fighter
+            fighter.takeDamage(damage)
+            if(fighter.hp <= 0){
+                PUBSUB.publish("dies", {id: fighter.owner.id})
+            }
+        }
+    })
+})
+
+// let's force a file scroll
+const inv = GameData.entityData.player.components.get('inventory') as Inventory;
+inv.addItem(EntityMaker.lighteningScroll(0,0))
 
 // Let's handle some death sequences in here as well
 loadImage('assets/out.png').then((image: any): void => {
@@ -251,6 +260,7 @@ loadImage('assets/out.png').then((image: any): void => {
     // Loop
     const loop = (): void => {
 
+        // SHould make this it's own section for processing player input :D
         // TODO: slowly let the game keep playing out if the player is dead, like let it flip
         // every so often in clock cycles
         if (GameData.gameState === GameStates.PLAYERS_TURN) {
@@ -262,6 +272,9 @@ loadImage('assets/out.png').then((image: any): void => {
             else if(InputSystem.newKeyPress('o')){
                 uiMenu.title = 'Drop Item'
                 GameData.gameState = GameStates.DROP_INVENTORY
+            }
+            if(InputSystem.newKeyPress('t')){
+                GameData.gameState = GameStates.TARGETING
             }
         } else if (GameData.gameState === GameStates.ENEMY_TURN) {
             // Process non player entities
@@ -293,13 +306,20 @@ loadImage('assets/out.png').then((image: any): void => {
             if(selected != -1){
                 // Run the use command for that item in the inventory
                 const item = inventory.items[selected].components.get('item') as Item
-                if(item.use(GameData.entityData.player)){
-                    // item was consumed
-                    // we'll come up with some better systems for this
-                    // let's remove the item from inventroy
+                if(item.needsTarget){
                     inventory.removeItem(item.owner)
+                    PUBSUB.publish('request_user_targeting', {
+                        entity: item
+                    })
+                } else {
+                    if(item.use(GameData.entityData.player)){
+                        // item was consumed
+                        // we'll come up with some better systems for this
+                        // let's remove the item from inventroy
+                        inventory.removeItem(item.owner)
+                    }
+                    GameData.gameState = GameStates.ENEMY_TURN
                 }
-                GameData.gameState = GameStates.ENEMY_TURN
             }
             if(InputSystem.newKeyPress('escape')){
                 GameData.gameState = GameStates.PLAYERS_TURN
@@ -332,6 +352,39 @@ loadImage('assets/out.png').then((image: any): void => {
                 GameData.gameState = GameStates.PLAYERS_TURN
             }
             // wait for a menu choice
+        } else if(GameData.gameState === GameStates.TARGETING){
+            if(!(targetingItem as any)){
+                // go ahead and make it our turn, as that's more player friendly
+                GameData.gameState = GameStates.PLAYERS_TURN
+            } 
+            const mm = InputSystem.getMouse()
+            if(mm.halfClicks.length > 0 && mm.isDown){
+                const screenP = Point.make(
+                    Math.floor(mm.position.x / SETTINGS.TILE_WIDTH),
+                    Math.floor(mm.position.y / SETTINGS.TILE_HEIGHT)
+                )
+                const worldP = Point.add(screenP, GameData.cameraFrame)
+
+                const itemFunction = (worldP: IPoint): void => {
+                    PUBSUB.publish('explosion', {center: worldP, radius: 2, damage: 5})
+                }
+                const isValid = (worldP: IPoint): boolean => {
+                    const fg = GameData.fov.grid
+                    const sp = Point.subtract(worldP, fg)
+                    console.log(fg, sp)
+                    return fg.inBoundsXY(sp.x, sp.y) && fg.getXY(sp.x, sp.y).visible
+                }
+                if(targetingItem.isTargetValid(worldP)){
+                    targetingItem.use(GameData.entityData.player, worldP)
+                    targetingItem = null
+                    GameData.gameState = GameStates.ENEMY_TURN
+                } else {
+                    // We can publish something here where it's an invalid target
+                }
+            }
+            if(InputSystem.newKeyPress('escape')){
+                GameData.gameState = GameStates.PLAYERS_TURN
+            }
         }
         // Move a lot of this into a UI system that inspects things, and also keeps track of ui state
 
@@ -386,6 +439,21 @@ loadImage('assets/out.png').then((image: any): void => {
                         ).join(' and  ')
                         
                     }
+                    if(GameData.gameState === GameStates.TARGETING){
+                        const squareRadius = 2
+                        // let's draw the cell the mouse is for now
+                        // Red background white x
+                        const cell = renderGrid.getP(screenP)
+                        renderGrid.getSubgrid(Rect.make(screenP.x - squareRadius, screenP.y - squareRadius, squareRadius * 2 + 1, squareRadius * 2 + 1)).forEach((cell): void => {
+                            cell.backColor = '#770000'
+                            cell.foreColor = '#FFFFFF'
+                            if(cell.x === screenP.x && screenP.y === cell.y){
+                                cell.character = 'X'
+                            }
+                        })
+                        
+                        
+                    }
                 }
                 // The wrap in here is not quite working, but that's okay we'll figure it out
                 textMonitor.text = `Screen: ${screenP.x} ${screenP.y}, World: ${worldP.x} ${worldP.y}`+
@@ -394,16 +462,18 @@ loadImage('assets/out.png').then((image: any): void => {
                 textMonitor.text = ''
             }
         }
+
+        
         
         if(GameData.gameState === GameStates.SHOW_INVENTORY || GameData.gameState === GameStates.DROP_INVENTORY)
         {
             const playerInventory = GameData.entityData.player.components.get('inventory') as Inventory
             uiMenu.options = playerInventory.items.map((n: Entity): string => n.name)
-            renderTextMonitorToGrid(renderGrid, textMonitor)
+            
             drawMenu(renderGrid, uiMenu)
         }
         
-        
+        renderTextMonitorToGrid(renderGrid, textMonitor)
         RenderSystem.render()
         InputSystem.reset()
         window.requestAnimationFrame(loop)
